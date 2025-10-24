@@ -1,0 +1,9 @@
+{
+	"private": true,
+	"devDependencies": {
+		"wikipeg": "^6.1.1"
+	},
+	"scripts": {
+		"regen-jq-parser": "node node_modules/wikipeg/bin/wikipeg --php --class-name JQGrammar src/JQGrammar.pegphp src/JQGrammar.php"
+	}
+}

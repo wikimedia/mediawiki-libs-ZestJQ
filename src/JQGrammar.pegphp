@@ -1,0 +1,452 @@
+{
+/* File-scope initializer */
+declare( strict_types = 1 );
+namespace Wikimedia\Zest;
+}
+
+{
+    /*
+     * PEG grammar for the JQ expression language.
+     * Translated from jqlang/jq src/parser.y.
+     *
+     * Module/import/include and pattern matching beyond $var are stubbed.
+     *
+     * AST node arrays have a 'type' key; important types:
+     *   identity, recurse, literal (value), variable (name), format (fmt)
+     *   pipe (left, right), comma (exprs[]), alternative (left, right)
+     *   or (left, right), and (left, right), compare (op, left, right)
+     *   neg (expr), binop (op, left, right)
+     *   try (body, catch), bind (expr, pattern, body)
+     *   field (expr, name, opt), index (expr, key, opt)
+     *   iter (expr, opt), slice (expr, from, to, opt)
+     *   array (expr), object (pairs[{key,value}])
+     *   call (name, args[]), def (name, params[], body, rest)
+     *   if (cond, then, else), reduce (src, pattern, init, update)
+     *   foreach (src, pattern, init, update, extract)
+     *   label (name, body), break (name), loc
+     *   string (parts[])  -- interpolated strings, TODO
+     */
+
+    private function foldLeft( array $first, array $rest, string $type ): array {
+        $node = $first;
+        foreach ( $rest as [ $op, $right ] ) {
+            $node = [ 'type' => $type, 'op' => $op, 'left' => $node, 'right' => $right ];
+        }
+        return $node;
+    }
+
+    private function foldLeftBool( array $first, array $rest, string $type ): array {
+        $node = $first;
+        foreach ( $rest as $right ) {
+            $node = [ 'type' => $type, 'left' => $node, 'right' => $right ];
+        }
+        return $node;
+    }
+
+    private function applyPostfix( array $expr, array $suffix ): array {
+        if ( $suffix['type'] === 'try' ) {
+            return [ 'type' => 'try', 'body' => $expr, 'catch' => $suffix['catch'] ];
+        }
+        return array_merge( $suffix, [ 'expr' => $expr ] );
+    }
+}
+
+/* ================================================================== */
+/*  Entry point                                                         */
+/* ================================================================== */
+
+start = _ @Query _
+
+Query = @Pipe
+
+/* ================================================================== */
+/*  Pipe  |   right-associative, lowest precedence                      */
+/*  Also handles def, "as" binding, and label at this level.           */
+/* ================================================================== */
+
+Pipe
+  = "def" !IdentChar _ name:FuncName _ params:FuncParams _ ":" _ body:Pipe _ ";" _ rest:Pipe
+    { return [ 'type' => 'def', 'name' => $name, 'params' => $params,
+               'body' => $body, 'rest' => $rest ]; }
+  / src:Alt _ "as" !IdentChar _ pat:Pattern _ "|" _ body:Pipe
+    { return [ 'type' => 'bind', 'expr' => $src, 'pattern' => $pat, 'body' => $body ]; }
+  / "label" !IdentChar _ "$" name:Name _ "|" _ body:Pipe
+    { return [ 'type' => 'label', 'name' => $name, 'body' => $body ]; }
+  / head:Comma tail:(_ "|" _ @Pipe)?
+    { return $tail === null ? $head : [ 'type' => 'pipe', 'left' => $head, 'right' => $tail ]; }
+
+/* ================================================================== */
+/*  Comma  ,   left-associative; generates multiple outputs            */
+/* ================================================================== */
+
+Comma
+  = left:Expr right:(_ "," _ @Comma)?
+    {
+      return $right === null ? $left :
+        [ 'type' => 'comma', 'left' => $left, 'right' => $right ];
+    }
+
+Expr = Alt
+
+/* ================================================================== */
+/*  Alternative  //   right-associative                                */
+/* ================================================================== */
+
+Alt
+  = left:Assign right:(_ "//" _ @Alt)?
+    { return $right===null ? $left : [ 'type' => 'alternative', 'left' => $left, 'right' => $right ]; }
+
+/* ================================================================== */
+/*  Assignments  = |= += -= *= /= %= //=                              */
+/*  Stub: selectors are read-only, no assignment needed.               */
+/*  TODO: add if write-path / update semantics are ever required.      */
+/* ================================================================== */
+
+Assign
+  = first:Or rest:(_ "=" _ @Or)+
+    { return $this->foldLeftBool( $first, $rest, '=' ); }
+  / Or
+
+/* ================================================================== */
+/*  Boolean  or / and   left-associative                               */
+/* ================================================================== */
+
+Or
+  = first:And rest:(_ "or" !IdentChar _ @And)*
+    { return $this->foldLeftBool( $first, $rest, 'or' ); }
+
+And
+  = first:Cmp rest:(_ "and" !IdentChar _ @Cmp)*
+    { return $this->foldLeftBool( $first, $rest, 'and' ); }
+
+/* ================================================================== */
+/*  Comparisons   == != < > <= >=   non-associative                    */
+/* ================================================================== */
+
+Cmp
+  = left:Add rest:(_ @CmpOp _ @Add)?
+    {
+      return ($rest===null) ? $left :
+        [ 'type' => 'compare', 'op' => $rest[0], 'left' => $left, 'right' => $rest[1] ];
+    }
+
+CmpOp "comparison operator"
+  = "==" / "!=" / "<=" / ">=" / "<" / ">"
+
+/* ================================================================== */
+/*  Additive  + -   left-associative                                   */
+/* ================================================================== */
+
+Add
+  = first:Mul rest:(_ @("+" / "-") _ @Mul)*
+    { return $this->foldLeft( $first, $rest, 'binop' ); }
+
+/* ================================================================== */
+/*  Multiplicative  * / %   left-associative                           */
+/*  '/' must not consume the first '/' of the '//' alternative op.     */
+/* ================================================================== */
+
+Mul
+  = first:Postfix rest:(_ @MulOp _ @Postfix)*
+    { return $this->foldLeft( $first, $rest, 'binop' ); }
+
+MulOp "multiplicative operator"
+  = "*"
+  / "%"
+  / @"/" !"/"
+
+/* ================================================================== */
+/*  Postfix operations   highest-precedence, left-associative          */
+/*    expr?           try (suppress errors / empty)                    */
+/*    expr.name?      field access (opt = error-suppressed)            */
+/*    expr[]?         iterator                                          */
+/*    expr[key]?      index                                             */
+/*    expr[from:to]?  slice                                             */
+/*  The '.' before '[' is optional: expr.[n] and expr[n] are the same. */
+/* ================================================================== */
+
+Postfix
+  = expr:Term suffixes:Suffix*
+    {
+        $node = $expr;
+        foreach ( $suffixes as $s ) {
+            $node = $this->applyPostfix( $node, $s );
+        }
+        return $node;
+    }
+
+Suffix
+  = "?"
+    { return [ 'type' => 'try', 'catch' => null ]; }
+  / "."? "[" _ "]" opt:"?"?
+    { return [ 'type' => 'iter', 'opt' => $opt !== null ]; }
+  / "."? "[" _ from:SliceBound ":" _ to:SliceBound "]" opt:"?"?
+    { return [ 'type' => 'slice', 'from' => $from, 'to' => $to, 'opt' => $opt !== null ]; }
+  / "."? "[" _ key:Query _ "]" opt:"?"?
+    { return [ 'type' => 'index', 'key' => $key, 'opt' => $opt !== null ]; }
+  / "."? name:FieldName opt:"?"?
+    { return [ 'type' => 'field', 'name' => $name, 'opt' => $opt !== null ]; }
+  / "."? name:String opt:"?"?
+    { return [ 'type' => 'index', 'key' => $name, 'opt' => $opt !== null ]; }
+
+/* An optional expression used as a slice bound; null if absent. */
+SliceBound = @Alt?
+
+/* ================================================================== */
+/*  Atomic terms                                                        */
+/* ================================================================== */
+
+Term
+  /* Recursive descent (..) */
+  = ".."
+    { return [ 'type' => 'recurse' ]; }
+
+  /* Field access on identity: .name or .name? */
+  / "." name:FieldName opt:"?"?
+    { return [ 'type' => 'field',
+               'expr' => [ 'type' => 'identity' ],
+               'name' => $name, 'opt' => $opt !== null ]; }
+
+  /* Bare identity: . (followed by [ is fine; Postfix handles the bracket) */
+  / "."
+    { return [ 'type' => 'identity' ]; }
+
+  /* Unary negation */
+  / "-" _ t:Term
+    { return [ 'type' => 'neg', 'expr' => $t ]; }
+
+  /* Parenthesised sub-expression */
+  / "(" _ @Query _ ")"
+
+  /* Array constructor */
+  / "[" _ expr:Query _ "]"
+    { return [ 'type' => 'array', 'expr' => $expr ]; }
+  / "[" _ "]"
+    { return [ 'type' => 'array', 'expr' => null ]; }
+
+  /* Object constructor */
+  / "{" _ pairs:DictPairs _ "}"
+    { return [ 'type' => 'object', 'pairs' => $pairs ]; }
+
+  /* String literal (possibly interpolated) */
+  / String
+
+  /* Numeric literal */
+  / Number
+
+  /* Keyword literals */
+  / "null"  !IdentChar { return [ 'type' => 'literal', 'value' => null ]; }
+  / "true"  !IdentChar { return [ 'type' => 'literal', 'value' => true ]; }
+  / "false" !IdentChar { return [ 'type' => 'literal', 'value' => false ]; }
+
+  /* $__loc__ — source location object */
+  / "$__loc__" !IdentChar { return [ 'type' => 'loc' ]; }
+
+  /* Format strings: @base64, @uri, @html, @csv, @tsv, @json, @text, @sh */
+  / "@" fmt:Name
+    { return [ 'type' => 'format', 'fmt' => $fmt ]; }
+
+  /* Variable reference */
+  / "$" name:Name
+    { return [ 'type' => 'variable', 'name' => $name ]; }
+
+  /* if-then-else */
+  / "if" !IdentChar _ cond:Query _
+    "then" !IdentChar _ then:Query _
+    body:ElseBody
+    { return [ 'type' => 'if', 'cond' => $cond, 'then' => $then, 'else' => $body ]; }
+
+  /* try-catch (body is at Postfix level to avoid consuming 'catch') */
+  / "try" !IdentChar _ body:Postfix _ catch_:TryCatch?
+    { return [ 'type' => 'try', 'body' => $body, 'catch' => $catch_ ]; }
+
+  /* reduce Expr as Pattern ( init ; update ) */
+  / "reduce" !IdentChar _ src:Postfix _
+    "as" !IdentChar _ pat:Pattern _
+    "(" _ init:Query _ ";" _ update:Query _ ")"
+    { return [ 'type' => 'reduce', 'src' => $src, 'pattern' => $pat,
+               'init' => $init, 'update' => $update ]; }
+
+  /* foreach Expr as Pattern ( init ; update ) or ( init ; update ; extract ) */
+  / "foreach" !IdentChar _ src:Expr _
+    "as" !IdentChar _ pat:Pattern _
+    "(" _ init:Query _ ";" _ update:Query extract:ForeachExtract? _ ")"
+    { return [ 'type' => 'foreach', 'src' => $src, 'pattern' => $pat,
+               'init' => $init, 'update' => $update, 'extract' => $extract ]; }
+
+  /* break $label */
+  / "break" !IdentChar _ "$" name:Name
+    { return [ 'type' => 'break', 'name' => $name ]; }
+
+  /* Function call: name(arg; arg; ...) or name with no args */
+  / name:FuncName _ "(" _ args:FuncArgs _ ")"
+    { return [ 'type' => 'call', 'name' => $name, 'args' => $args ]; }
+  / name:FuncName
+    { return [ 'type' => 'call', 'name' => $name, 'args' => [] ]; }
+
+/* ================================================================== */
+/*  Control-flow helpers                                                */
+/* ================================================================== */
+
+ElseBody
+  = "elif" !IdentChar _ cond:Query _ "then" !IdentChar _ then:Query _ rest:ElseBody
+    { return [ 'type' => 'if', 'cond' => $cond, 'then' => $then, 'else' => $rest ]; }
+  / "else" !IdentChar _ body:Query _ "end" !IdentChar
+    { return $body; }
+  / "end" !IdentChar
+    { return [ 'type' => 'literal', 'value' => null ]; }
+
+TryCatch = "catch" !IdentChar _ @Postfix
+
+ForeachExtract = _ ";" _ @Query
+
+/* ================================================================== */
+/*  Object constructor pairs                                            */
+/* ================================================================== */
+
+DictPairs
+  = first:DictPair rest:(_ "," _ @DictPair)*
+    { return [ $first, ...$rest ]; }
+  / "" { return []; }
+
+DictPair
+  /* identifier key: foo: expr */
+  = key:DictKey _ ":" _ val:DictExpr
+    { return [ 'key' => $key, 'value' => $val ]; }
+  /* shorthand: {foo} = {foo: .foo}  or  {$var} = {var: $var} */
+  / name:FieldName
+    { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
+               'value' => [ 'type' => 'field',
+                            'expr' => [ 'type' => 'identity' ],
+                            'name' => $name, 'opt' => false ] ]; }
+  / name:String
+    { return [ 'key' => $name,
+               'value' => [ 'type' => 'index',
+                            'key' => $name, 'opt' => false ] ]; }
+  / "$" name:Name
+    { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
+               'value' => [ 'type' => 'variable', 'name' => $name ] ]; }
+
+DictKey
+  /* computed key: (expr) */
+  = "(" _ @Query _ ")"
+  /* string key */
+  / String
+  /* identifier or keyword used as key */
+  / name:Name { return [ 'type' => 'literal', 'value' => $name ]; }
+
+DictExpr
+  = left:Expr right:(_ "|" _ @DictExpr)?
+  { return $right===null ? $left : [ 'type' => 'pipe', 'left' => $left, 'right' => $right ]; }
+
+/* ================================================================== */
+/*  Function definition helpers                                         */
+/* ================================================================== */
+
+FuncParams
+  = "(" _ first:FuncParam rest:(_ ";" _ @FuncParam)* _ ")"
+    { return array_merge( [ $first ], $rest ); }
+  / "" { return []; }
+
+FuncParam
+  = "$" name:Name { return [ 'kind' => 'value', 'name' => $name ]; }
+  / name:Name     { return [ 'kind' => 'filter', 'name' => $name ]; }
+
+FuncArgs
+  = first:FuncArg rest:(_ ";" _ @FuncArg)*
+    { return array_merge( [ $first ], $rest ); }
+  / "" { return []; }
+
+FuncArg = Pipe
+
+/* A function name: any identifier not reserved as a structural keyword. */
+FuncName "function name"
+  = !( ( "if" / "then" / "else" / "elif" / "end"
+       / "and" / "or" / "try" / "catch"
+       / "reduce" / "foreach" / "label" / "break"
+       / "as" / "def" / "import" / "include" / "module"
+       ) !IdentChar )
+    @Name
+
+/* ================================================================== */
+/*  Pattern matching (used in "as", reduce, foreach)                   */
+/*  Full patterns: $var, [$a,$b], {key:$var}                          */
+/* ================================================================== */
+
+Pattern
+  = "$" name:Name
+    { return [ 'type' => 'var_pattern', 'name' => $name ]; }
+  / "[" _ first:Pattern rest:(_ "," _ @Pattern)* _ "]"
+    { return [ 'type' => 'array_pattern', 'elems' => array_merge( [ $first ], $rest ) ]; }
+  / "{" _ first:ObjPat rest:(_ "," _ @ObjPat)* _ "}"
+    { return [ 'type' => 'obj_pattern', 'fields' => array_merge( [ $first ], $rest ) ]; }
+
+ObjPat
+  = key:ObjPatKey _ ":" _ pat:Pattern
+    { return [ 'key' => $key, 'pattern' => $pat ]; }
+  / "$" name:Name
+    { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
+               'pattern' => [ 'type' => 'var_pattern', 'name' => $name ] ]; }
+
+ObjPatKey
+  = String
+  / "(" _ @Query _ ")"
+  / name:Name { return [ 'type' => 'literal', 'value' => $name ]; }
+
+/* ================================================================== */
+/*  String literals                                                     */
+/*  JQ strings are double-quoted with \(expr) interpolation.           */
+/*  Single-quoted strings are not JQ syntax but accepted here for CSS. */
+/* ================================================================== */
+
+String "string"
+  = fmt:("@" @Name _ )? '"' parts:QQPart* '"'
+    {
+        if ( $fmt === null && count( $parts ) === 1 && $parts[0]['type'] === 'str_text' ) {
+            return [ 'type' => 'literal', 'value' => $parts[0]['text'] ];
+        }
+        return [ 'type' => 'string', 'fmt' => $fmt, 'parts' => $parts ];
+    }
+  / "'" chars:(!"'" @SingleChar)* "'"
+    { return [ 'type' => 'literal', 'value' => implode( '', $chars ) ]; }
+
+QQPart
+  = "\\(" _ expr:Query _ ")"
+    { return [ 'type' => 'str_interp', 'expr' => $expr ]; }
+  / text:$( !"\\(" !'"' @SingleChar)+
+    { return [ 'type' => 'str_text', 'text' => $text ]; }
+
+SingleChar
+  /* jq apparently doesn't permit \v */
+  = c:$("\\" [abfnrt\"\'\\])  { return stripcslashes( $c ); }
+  / c:$("\\u" [0-9A-F]i ([0-9A-F]i ([0-9A-F]i [0-9A-F]i?)?)?)
+    { return json_decode('"' . $c . '"'); }
+  / [^\\]
+
+/* ================================================================== */
+/*  Numeric literals                                                    */
+/* ================================================================== */
+
+Number "number"
+  = n:$( [0-9]+ ("." [0-9]*)? ([eE] [+-]? [0-9]+)? )
+    { return [ 'type' => 'literal', 'value' => strpos( $n, '.' ) !== false
+                 || strpos( $n, 'e' ) !== false || strpos( $n, 'E' ) !== false
+               ? (float)$n : (int)$n ]; }
+
+/* ================================================================== */
+/*  Lexical rules                                                        */
+/* ================================================================== */
+
+/* An unquoted identifier (field names, function names, variable names) */
+Name "name"
+  = $( [a-zA-Z_] [a-zA-Z0-9_]* )
+
+/* Field names may contain hyphens (jq allows .foo-bar in some contexts) */
+FieldName "field name"
+  = $( [a-zA-Z_] [a-zA-Z0-9_-]* )
+
+/* A character valid inside an identifier */
+IdentChar = [a-zA-Z0-9_]
+
+/* Optional whitespace */
+_ = [ \t\n\r]*
