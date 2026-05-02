@@ -573,12 +573,21 @@ class JQCompile {
 		return match ( true ) {
 			( $v === null ) => 'null',
 			is_bool( $v ) => 'boolean',
-			is_int( $v ) || is_float( $v ) => 'number',
+			self::isNumber( $v ) => 'number',
 			is_string( $v ) => 'string',
 			is_object( $v ) => 'object',
 			is_array( $v ) => 'array',
 			default => 'unknown',
 		};
+	}
+
+	/**
+	 * Return true if $v is a JQ number (PHP int or float).
+	 * JQ has a single numeric type; PHP uses two, so every numeric check
+	 * in the compiler goes through this helper to keep them consistent.
+	 */
+	public static function isNumber( mixed $v ): bool {
+		return is_int( $v ) || is_float( $v );
 	}
 
 	/**
@@ -622,8 +631,8 @@ class JQCompile {
 	 */
 	private static function jqEqual( mixed $a, mixed $b ): bool {
 		// Numeric: int and float are the same JQ type
-		if ( is_int( $a ) || is_float( $a ) ) {
-			return ( is_int( $b ) || is_float( $b ) ) && $a == $b;
+		if ( self::isNumber( $a ) ) {
+			return ( self::isNumber( $b ) ) && $a == $b;
 		}
 		// stdClass objects (JSON objects)
 		if ( is_object( $a ) ) {
@@ -670,7 +679,7 @@ class JQCompile {
 				( $v === null ) => 0,
 				( $v === false ) => 1,
 				( $v === true ) => 2,
-				( is_int( $v ) || is_float( $v ) ) => 3,
+				( self::isNumber( $v ) ) => 3,
 				is_string( $v ) => 4,
 				is_array( $v ) => 5,
 				default => 6, // stdClass object
@@ -757,7 +766,7 @@ class JQCompile {
 		$exprFn = $this->compileNode( $node['expr'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn ): Generator {
 			foreach ( $exprFn( $input, $env ) as $v ) {
-				if ( !is_int( $v ) && !is_float( $v ) ) {
+				if ( !self::isNumber( $v ) ) {
 					throw new JQError( 'Cannot negate ' . self::typeName( $v ) );
 				}
 				yield -$v;
@@ -974,7 +983,7 @@ class JQCompile {
 		}
 		$cols = [];
 		foreach ( $val as $item ) {
-			if ( is_int( $item ) || is_float( $item ) ) {
+			if ( self::isNumber( $item ) ) {
 				$cols[] = json_encode( $item ) ?: '0';
 			} elseif ( is_string( $item ) ) {
 				$cols[] = '"' . str_replace( '"', '""', $item ) . '"';
@@ -1001,7 +1010,7 @@ class JQCompile {
 		}
 		$cols = [];
 		foreach ( $val as $item ) {
-			if ( is_int( $item ) || is_float( $item ) ) {
+			if ( self::isNumber( $item ) ) {
 				$cols[] = json_encode( $item ) ?: '0';
 			} elseif ( is_string( $item ) ) {
 				$cols[] = str_replace(
@@ -1065,7 +1074,7 @@ class JQCompile {
 		if ( $b === null ) {
 			return $a;
 		}
-		if ( ( is_int( $a ) || is_float( $a ) ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( ( self::isNumber( $a ) ) && ( self::isNumber( $b ) ) ) {
 			return $a + $b;
 		}
 		if ( is_string( $a ) && is_string( $b ) ) {
@@ -1084,7 +1093,7 @@ class JQCompile {
 	 * JQ subtraction: numbers subtract; arrays remove matching elements.
 	 */
 	private static function jqSubtract( mixed $a, mixed $b ): mixed {
-		if ( ( is_int( $a ) || is_float( $a ) ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( ( self::isNumber( $a ) ) && ( self::isNumber( $b ) ) ) {
 			return $a - $b;
 		}
 		if ( is_array( $a ) && is_array( $b ) ) {
@@ -1110,13 +1119,13 @@ class JQCompile {
 		if ( $a === null || $b === null ) {
 			return null;
 		}
-		if ( ( is_int( $a ) || is_float( $a ) ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( ( self::isNumber( $a ) ) && ( self::isNumber( $b ) ) ) {
 			return $a * $b;
 		}
-		if ( is_string( $a ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( is_string( $a ) && ( self::isNumber( $b ) ) ) {
 			return $b <= 0 ? null : str_repeat( $a, (int)$b );
 		}
-		if ( ( is_int( $a ) || is_float( $a ) ) && is_string( $b ) ) {
+		if ( ( self::isNumber( $a ) ) && is_string( $b ) ) {
 			return $a <= 0 ? null : str_repeat( $b, (int)$a );
 		}
 		if ( is_object( $a ) && is_object( $b ) ) {
@@ -1142,7 +1151,7 @@ class JQCompile {
 	 * JQ division: numbers divide (zero divisor throws); strings split.
 	 */
 	private static function jqDivide( mixed $a, mixed $b ): mixed {
-		if ( ( is_int( $a ) || is_float( $a ) ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( ( self::isNumber( $a ) ) && ( self::isNumber( $b ) ) ) {
 			if ( $b == 0 ) {
 				throw new JQError( 'number (' . $a . ') and number (' . $b . ') cannot be divided because the divisor is zero' );
 			}
@@ -1158,7 +1167,7 @@ class JQCompile {
 	 * JQ modulo: integer remainder (zero divisor throws).
 	 */
 	private static function jqModulo( mixed $a, mixed $b ): mixed {
-		if ( ( is_int( $a ) || is_float( $a ) ) && ( is_int( $b ) || is_float( $b ) ) ) {
+		if ( ( self::isNumber( $a ) ) && ( self::isNumber( $b ) ) ) {
 			if ( $b == 0 ) {
 				throw new JQError( 'number (' . $a . ') modulo zero' );
 			}
