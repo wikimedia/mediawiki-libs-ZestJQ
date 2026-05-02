@@ -65,7 +65,14 @@ Query = @Pipe
 /* ================================================================== */
 
 Pipe
-  = "def" !IdentChar _ name:FuncName _ params:FuncParams _ ":" _ body:Pipe _ ";" _ rest:Pipe
+  = "import" !IdentChar _ path:String _ "as" !IdentChar _ alias:ImportAlias _ meta:ImportMeta _ ";" _ rest:Pipe
+    { return [ 'type' => 'import', 'path' => $path, 'alias' => $alias,
+               'meta' => $meta, 'rest' => $rest ]; }
+  / "include" !IdentChar _ path:String _ meta:ImportMeta _ ";" _ rest:Pipe
+    { return [ 'type' => 'include', 'path' => $path, 'meta' => $meta, 'rest' => $rest ]; }
+  / "module" !IdentChar _ meta:Query _ ";" _ rest:Pipe
+    { return [ 'type' => 'module', 'meta' => $meta, 'rest' => $rest ]; }
+  / "def" !IdentChar _ name:FuncName _ params:FuncParams _ ":" _ body:Pipe _ ";" _ rest:Pipe
     { return [ 'type' => 'def', 'name' => $name, 'params' => $params,
                'body' => $body, 'rest' => $rest ]; }
   / src:Alt _ "as" !IdentChar _ pat:Patterns _ "|" _ body:Pipe
@@ -387,6 +394,16 @@ FuncArgs
 
 FuncArg = Pipe
 
+/* Alias in import: either $name or bare name */
+ImportAlias
+  = "$" @Name
+  / @Name
+
+/* Optional metadata object after import/include path */
+ImportMeta
+  = _ meta:( "{" _ @DictPairs _ "}" ) { return $meta; }
+  / "" { return null; }
+
 /* A function name: any identifier not reserved as a structural keyword. */
 FuncName "function name"
   = !( ( "if" / "then" / "else" / "elif" / "end"
@@ -480,9 +497,9 @@ Number "number"
 /*  Lexical rules                                                        */
 /* ================================================================== */
 
-/* An unquoted identifier (field names, function names, variable names) */
+/* An unquoted identifier; supports module::name qualified identifiers */
 Name "name"
-  = $( [a-zA-Z_] [a-zA-Z0-9_]* )
+  = $( [a-zA-Z_] [a-zA-Z0-9_]* ("::" [a-zA-Z_] [a-zA-Z0-9_]*)* )
 
 FieldName "field name"
   = $( [a-zA-Z_] [a-zA-Z0-9_]* )
