@@ -82,6 +82,7 @@ class JQCompile {
 			'def'      => $this->compileDef( $node ),
 			'call'     => $this->compileCall( $node ),
 			'bind'     => $this->compileBind( $node ),
+			'compare'  => $this->compileCompare( $node ),
 			'field'    => $this->compileField( $node ),
 			'index'    => $this->compileIndex( $node ),
 			default    => throw new \LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] ),
@@ -452,6 +453,118 @@ class JQCompile {
 			return array_is_list( $v ) ? 'array' : 'object';
 		}
 		return 'unknown';
+	}
+
+	/**
+	 * Compile a comparison node (left op right).
+	 * Both operands are evaluated against the original $input (not piped).
+	 * Yields one boolean per combination of left and right outputs.
+	 *
+	 * == and != use structural JSON equality (int/float are the same numeric
+	 * type; arrays and objects are compared recursively).
+	 * <, <=, >, >= use jq's cross-type ordering: null < false < true <
+	 * number < string < array < object; within each type, the natural order.
+	 *
+	 * @param array $node Node with 'op', 'left', and 'right' keys
+	 * @return Closure(mixed,JQEnv):Generator a Filter
+	 */
+	private function compileCompare( array $node ): Closure {
+		$leftFn  = $this->compileNode( $node['left'] );
+		$rightFn = $this->compileNode( $node['right'] );
+		$op      = $node['op'];
+		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn, $op ): Generator {
+			foreach ( $leftFn( $input, $env ) as $lv ) {
+				foreach ( $rightFn( $input, $env ) as $rv ) {
+					yield match ( $op ) {
+						'==' => self::jqEqual( $lv, $rv ),
+						'!=' => !self::jqEqual( $lv, $rv ),
+						'<'  => self::jqCompare( $lv, $rv ) < 0,
+						'<=' => self::jqCompare( $lv, $rv ) <= 0,
+						'>'  => self::jqCompare( $lv, $rv ) > 0,
+						'>=' => self::jqCompare( $lv, $rv ) >= 0,
+						default => throw new JQError( 'Unknown comparison operator: ' . $op ),
+					};
+				}
+			}
+		};
+	}
+
+	/**
+	 * Structural JSON equality.
+	 * int and float are treated as the same numeric type (42 == 42.0).
+	 * Arrays and objects are compared recursively by key-value pairs.
+	 */
+	private static function jqEqual( mixed $a, mixed $b ): bool {
+		// Numeric: int and float are the same JQ type
+		if ( is_int( $a ) || is_float( $a ) ) {
+			return ( is_int( $b ) || is_float( $b ) ) && $a == $b;
+		}
+		// null, bool, string: identity
+		if ( !is_array( $a ) ) {
+			return $a === $b;
+		}
+		// array / object
+		if ( !is_array( $b ) || count( $a ) !== count( $b ) ) {
+			return false;
+		}
+		foreach ( $a as $k => $v ) {
+			if ( !array_key_exists( $k, $b ) || !self::jqEqual( $v, $b[$k] ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * JQ cross-type ordering: null(0) < false(1) < true(2) < number(3) <
+	 * string(4) < array(5) < object(6).
+	 * Returns negative, zero, or positive like the spaceship operator.
+	 */
+	private static function jqCompare( mixed $a, mixed $b ): int {
+		static $order = null;
+		$order ??= static function ( mixed $v ): int {
+			if ( $v === null ) return 0;
+			if ( $v === false ) return 1;
+			if ( $v === true ) return 2;
+			if ( is_int( $v ) || is_float( $v ) ) return 3;
+			if ( is_string( $v ) ) return 4;
+			return is_array( $v ) && array_is_list( $v ) ? 5 : 6;
+		};
+		$ta = $order( $a );
+		$tb = $order( $b );
+		if ( $ta !== $tb ) {
+			return $ta <=> $tb;
+		}
+		if ( $ta <= 2 ) {
+			return 0;  // null or a specific boolean; same rank means same value
+		}
+		if ( $ta <= 4 ) {
+			return $a <=> $b;  // number or string: natural PHP ordering
+		}
+		// array: lexicographic element comparison then by length
+		if ( $ta === 5 ) {
+			foreach ( array_map( null, $a, $b ) as [ $av, $bv ] ) {
+				$c = self::jqCompare( $av, $bv );
+				if ( $c !== 0 ) {
+					return $c;
+				}
+			}
+			return count( $a ) <=> count( $b );
+		}
+		// objects: sort by keys, then compare key-value pairs in order
+		$ka = array_keys( $a );
+		$kb = array_keys( $b );
+		sort( $ka );
+		sort( $kb );
+		if ( ( $c = self::jqCompare( $ka, $kb ) ) !== 0 ) {
+			return $c;
+		}
+		foreach ( $ka as $k ) {
+			if ( ( $c = self::jqCompare( $a[$k], $b[$k] ) ) !== 0 ) {
+				return $c;
+			}
+		}
+		return 0;
 	}
 
 	/**
