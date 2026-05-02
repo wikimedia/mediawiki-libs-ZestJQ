@@ -11,6 +11,20 @@ use Wikimedia\WikiPEG\SyntaxError;
  */
 class JQCmd {
 
+	/** When true, stderr output is accumulated in $err instead of written to STDERR. */
+	public static bool $runningTests = false;
+
+	/** Accumulated stderr output in test mode; reset before each main() call. */
+	public static string $err = '';
+
+	private static function err( string $msg ): void {
+		if ( self::$runningTests ) {
+			self::$err .= $msg;
+		} else {
+			fwrite( STDERR, $msg );
+		}
+	}
+
 	public static function main( int $argc, array $argv ): int {
 		// Parse flags and positional args (minimal jq-compatible subset)
 		$nullInput = false;
@@ -29,7 +43,7 @@ class JQCmd {
 			} elseif ( $arg === '--ast' ) {
 				$astOutput = true;
 			} elseif ( $arg[0] === '-' ) {
-				fwrite( STDERR, "zestjq: unknown option: $arg\n" );
+				self::err( "zestjq: unknown option: $arg\n" );
 				return 2;
 			} else {
 				$args[] = $arg;
@@ -37,7 +51,7 @@ class JQCmd {
 		}
 
 		if ( count( $args ) < 1 ) {
-			fwrite( STDERR, "Usage: zestjq [-n] [-r] [--ast] <filter> [file...]\n" );
+			self::err( "Usage: zestjq [-n] [-r] [--ast] <filter> [file...]\n" );
 			return 2;
 		}
 
@@ -49,7 +63,7 @@ class JQCmd {
 		try {
 			$ast = $g->parse( $filterExpr );
 		} catch ( SyntaxError $e ) {
-			fwrite( STDERR, "zestjq: syntax error in filter: " . $e->getMessage() . "\n" );
+			self::err( "zestjq: syntax error in filter: " . $e->getMessage() . "\n" );
 			return 3;
 		}
 
@@ -67,14 +81,14 @@ class JQCmd {
 				foreach ( $files as $file ) {
 					$raw = file_get_contents( $file );
 					if ( $raw === false ) {
-						fwrite( STDERR, "zestjq: cannot read file: $file\n" );
+						self::err( "zestjq: cannot read file: $file\n" );
 						$exitCode = 2;
 						continue;
 					}
 					try {
 						$input = JQUtils::jsonDecode( $raw );
 					} catch ( JQError ) {
-						fwrite( STDERR, "zestjq: invalid JSON in file: $file\n" );
+						self::err( "zestjq: invalid JSON in file: $file\n" );
 						$exitCode = 2;
 						continue;
 					}
@@ -83,20 +97,20 @@ class JQCmd {
 			} else {
 				$raw = stream_get_contents( STDIN );
 				if ( $raw === false || trim( $raw ) === '' ) {
-					fwrite( STDERR, "zestjq: no input\n" );
+					self::err( "zestjq: no input\n" );
 					return 2;
 				}
 				try {
 					$input = JQUtils::jsonDecode( $raw );
 				} catch ( JQError ) {
-					fwrite( STDERR, "zestjq: invalid JSON in stdin\n" );
+					self::err( "zestjq: invalid JSON in stdin\n" );
 					return 2;
 				}
 				$exitCode = self::runFilter( $filter, $input, $rawOutput );
 			}
 		} catch ( JQHaltException $e ) {
 			if ( $e->getMessage() !== '' ) {
-				fwrite( STDERR, $e->getMessage() );
+				self::err( $e->getMessage() );
 			}
 			return $e->getCode();
 		}
@@ -117,7 +131,7 @@ class JQCmd {
 				echo self::encodeOutput( $output, $rawOutput ) . "\n";
 			}
 		} catch ( JQError $e ) {
-			fwrite( STDERR, "zestjq: " . $e->getMessage() . "\n" );
+			self::err( "zestjq: " . $e->getMessage() . "\n" );
 			return 5;
 		}
 		return 0;
