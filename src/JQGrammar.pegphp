@@ -261,8 +261,9 @@ Term
   / "." ![0-9]
     { return [ 'type' => 'identity' ]; }
 
-  /* Unary negation */
-  / "-" _ t:Term
+  /* Unary negation — operand is Postfix so that -.foo and -.[] bind the
+     suffix to the base before negating, matching jq's precedence rules. */
+  / "-" _ t:Postfix
     { return [ 'type' => 'neg', 'expr' => $t ]; }
 
   /* Parenthesised sub-expression */

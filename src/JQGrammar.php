@@ -5350,11 +5350,11 @@ private function parseTerm($silence) {
     $this->currPos = $p6;
   } else {
     $r11 = self::$FAILED;
-    if (!$silence) { $this->fail(57); }
+    if (!$silence) { $this->fail(55); }
     $r9 = self::$FAILED;
     goto seq_7;
   }
-  $r9 = $this->parseTerm($silence);
+  $r9 = $this->parsePostfix($silence);
   if ($r9===self::$FAILED) {
     $this->currPos = $p6;
     $r9 = self::$FAILED;
