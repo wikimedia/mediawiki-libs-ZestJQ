@@ -382,8 +382,13 @@ Pattern
     { return [ 'type' => 'obj_pattern', 'fields' => array_merge( [ $first ], $rest ) ]; }
 
 ObjPat
-  = key:ObjPatKey _ ":" _ pat:Pattern
+  /* {$var: pattern} — key is the variable's name as a literal string */
+  = "$" name:Name _ ":" _ pat:Pattern
+    { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
+               'pattern' => $pat ]; }
+  / key:ObjPatKey _ ":" _ pat:Pattern
     { return [ 'key' => $key, 'pattern' => $pat ]; }
+  /* {$var} shorthand — key is the variable name, pattern binds to $var */
   / "$" name:Name
     { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
                'pattern' => [ 'type' => 'var_pattern', 'name' => $name ] ]; }
