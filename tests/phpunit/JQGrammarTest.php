@@ -86,7 +86,7 @@ class JQGrammarTest extends \PHPUnit\Framework\TestCase {
 				$query  = $groupLines[0]['line'];
 				$lineno = $groupLines[0]['lineno'];
 				$expected = array_slice(
-					array_map(fn($g)=>$g['line'],$groupLines),
+					array_map( static fn ( $g )=>$g['line'], $groupLines ),
 					2
 				);
 				$tests[] = [
