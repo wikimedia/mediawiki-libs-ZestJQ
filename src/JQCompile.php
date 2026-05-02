@@ -87,6 +87,9 @@ class JQCompile {
 			'neg'      => $this->compileNeg( $node ),
 			'field'    => $this->compileField( $node ),
 			'index'    => $this->compileIndex( $node ),
+			'comma'    => $this->compileComma( $node ),
+			'array'    => $this->compileArray( $node ),
+			'object'   => $this->compileObject( $node ),
 			default    => static function ( mixed $input, JQEnv $env ) use ( $node ): Generator {
 				yield from [];
 				throw new \LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] );
@@ -329,6 +332,81 @@ class JQCompile {
 			$fn = ( $factory )( $argFns );
 			// @phan-suppress-next-line PhanTypeInvalidCallable,PhanUndeclaredInvokeInCallable
 			yield from $fn( $input, $env );
+		};
+	}
+
+	/**
+	 * Compile a comma node (left, right).
+	 * Yields all outputs of left, then all outputs of right.
+	 *
+	 * @param array $node Node with 'left' and 'right' keys
+	 * @return Closure(mixed,JQEnv):Generator a Filter
+	 */
+	private function compileComma( array $node ): Closure {
+		$leftFn  = $this->compileNode( $node['left'] );
+		$rightFn = $this->compileNode( $node['right'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
+			yield from $leftFn( $input, $env );
+			yield from $rightFn( $input, $env );
+		};
+	}
+
+	/**
+	 * Compile an array constructor node ([expr]).
+	 * Collects every output of the inner expression into a single PHP list.
+	 * [empty_expr] produces an empty array.
+	 *
+	 * @param array $node Node with nullable 'expr' key
+	 * @return Closure(mixed,JQEnv):Generator a Filter
+	 */
+	private function compileArray( array $node ): Closure {
+		if ( $node['expr'] === null ) {
+			return static function ( mixed $input, JQEnv $env ): Generator {
+				yield [];
+			};
+		}
+		$exprFn = $this->compileNode( $node['expr'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $exprFn ): Generator {
+			$items = [];
+			foreach ( $exprFn( $input, $env ) as $val ) {
+				$items[] = $val;
+			}
+			yield $items;
+		};
+	}
+
+	/**
+	 * Compile an object constructor node ({k1: v1, k2: v2, ...}).
+	 *
+	 * Each key and value is an arbitrary filter. Multiple outputs from a key
+	 * or value expression multiply the number of output objects (Cartesian
+	 * product over pairs, evaluated left-to-right). An empty pair list yields
+	 * a single empty associative array.
+	 *
+	 * @param array $node Node with 'pairs' key (array of {key, value} nodes)
+	 * @return Closure(mixed,JQEnv):Generator a Filter
+	 */
+	private function compileObject( array $node ): Closure {
+		$pairFns = array_map(
+			fn ( $pair ) => [ $this->compileNode( $pair['key'] ), $this->compileNode( $pair['value'] ) ],
+			$node['pairs']
+		);
+		return static function ( mixed $input, JQEnv $env ) use ( $pairFns ): Generator {
+			$objects = [ [] ];
+			foreach ( $pairFns as [ $keyFn, $valFn ] ) {
+				$next = [];
+				foreach ( $objects as $obj ) {
+					foreach ( $keyFn( $input, $env ) as $key ) {
+						foreach ( $valFn( $input, $env ) as $val ) {
+							$newObj = $obj;
+							$newObj[(string)$key] = $val;
+							$next[] = $newObj;
+						}
+					}
+				}
+				$objects = $next;
+			}
+			yield from $objects;
 		};
 	}
 
