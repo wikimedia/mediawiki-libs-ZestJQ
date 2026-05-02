@@ -10,6 +10,7 @@ use Wikimedia\Zest\JQCompile;
 use Wikimedia\Zest\JQError;
 use Wikimedia\Zest\JQGrammar;
 use Wikimedia\Zest\JQLazyEnv;
+use Wikimedia\Zest\JQUtils;
 use Wikimedia\Zest\ZestJQ;
 
 // Parse flags and positional args (minimal jq-compatible subset)
@@ -94,7 +95,7 @@ if ( $astOutput ) {
 			continue;
 		}
 		try {
-			$input = ZestJQ::jsonDecode( $raw );
+			$input = JQUtils::jsonDecode( $raw );
 		} catch (\JsonException) {
 			fwrite( STDERR, "zestjq: invalid JSON in file: $file\n" );
 			$exitCode = 2;
@@ -109,7 +110,7 @@ if ( $astOutput ) {
 		exit( 2 );
 	}
 	try {
-		$input = ZestJQ::jsonDecode( $raw, false );
+		$input = JQUtils::jsonDecode( $raw, false );
 	} catch (JsonException) {
 		fwrite( STDERR, "zestjq: invalid JSON in stdin\n" );
 		exit( 2 );

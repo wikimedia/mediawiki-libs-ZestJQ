@@ -3,6 +3,9 @@ declare( strict_types = 1 );
 
 namespace Wikimedia\Zest;
 
+use Closure;
+use LogicException;
+
 /**
  * Utility functions for dealing with JQ values.
  *
@@ -303,7 +306,7 @@ class JQUtils {
 	}
 
 	// -----------------------------------------------------------------------
-	// JSON decode
+	// JSON encode/decode
 	// -----------------------------------------------------------------------
 
 	/**
@@ -316,6 +319,15 @@ class JQUtils {
 		return json_decode( $json, false, 512, JSON_THROW_ON_ERROR );
 	}
 
+	/**
+	 * In JQ, encoding failures result in `"null"`.
+	 * (This is typically due to Unicode encoding issues, like
+	 * `json_encode("\xFF")`.)
+	 */
+	public static function jsonEncode( mixed $val ): string {
+		return json_encode( $val, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ?: 'null';
+	}
+
 	// -----------------------------------------------------------------------
 	// Formatting operators
 	// -----------------------------------------------------------------------
@@ -325,31 +337,68 @@ class JQUtils {
 	 * strings pass through unchanged; everything else is JSON-encoded.
 	 */
 	public static function toString( mixed $val ): string {
-		return is_string( $val )
-			? $val
-			: ( json_encode( $val, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ?: 'null' );
+		return is_string( $val ) ? $val : self::jsonEncode( $val );
 	}
 
 	/**
-	 * Apply a named format (@html, @base64, etc.) to a value.
-	 * Non-string values are first converted with toString(), except
-	 * the json format which always JSON-encodes its input (including strings).
+	 * Return a formatter Closure for the named JQ format string.
+	 *
+	 * The returned Closure accepts any JQ value and returns a formatted string.
+	 * Non-string values are first converted with toString(), except:
+	 * - @json always JSON-encodes (including strings, which get double-quoted)
+	 * - @csv and @tsv require a list array and throw JQError otherwise
+	 *
+	 * Valid format names: text, json, html, uri, urid, base64, base64d, sh, csv, tsv.
+	 *
+	 * @throws LogicException for unknown format names
+	 * @return Closure(mixed):string
 	 */
-	public static function applyFormat( string $fmt, mixed $val ): string {
-		$str = self::toString( $val );
+	public static function formatterFor( string $fmt ): Closure {
 		return match ( $fmt ) {
-			'text'    => $str,
-			'json'    => json_encode( $val, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ?: 'null',
-			'html'    => htmlspecialchars( $str, ENT_QUOTES | ENT_XML1, 'UTF-8' ),
-			'uri'     => rawurlencode( $str ),
-			'urid'    => rawurldecode( $str ),
-			'base64'  => base64_encode( $str ),
-			'base64d' => (string)base64_decode( trim( $str ) ),
-			'sh'      => "'" . str_replace( "'", "'\\''", $str ) . "'",
-			'csv'     => self::formatCsv( $val ),
-			'tsv'     => self::formatTsv( $val ),
-			default   => throw new JQError( 'Unknown format: @' . $fmt ),
+			'text'    => self::toString( ... ),
+			'json'    => self::jsonEncode( ... ),
+			'html'    => self::formatHtml( ... ),
+			'uri'     => self::formatUri( ... ),
+			'urid'    => self::formatUrid( ... ),
+			'base64'  => self::formatBase64( ... ),
+			'base64d' => self::formatBase64d( ... ),
+			'sh'      => self::formatSh( ... ),
+			'csv'     => self::formatCsv( ... ),
+			'tsv'     => self::formatTsv( ... ),
+			default   => throw new LogicException( 'Unknown format: @' . $fmt ),
 		};
+	}
+
+	/** HTML-escape using htmlspecialchars with ENT_QUOTES|ENT_XML1 (so ' → &apos;). */
+	private static function formatHtml( mixed $val ): string {
+		return htmlspecialchars(
+			self::toString( $val ), ENT_QUOTES | ENT_XML1, 'UTF-8'
+		);
+	}
+
+	/** Percent-encode every byte that is not unreserved (RFC 3986) via rawurlencode. */
+	private static function formatUri( mixed $val ): string {
+		return rawurlencode( self::toString( $val ) );
+	}
+
+	/** Percent-decode a string value via rawurldecode ('+' is left as-is, unlike urldecode). */
+	private static function formatUrid( mixed $val ): string {
+		return rawurldecode( self::toString( $val ) );
+	}
+
+	/** Base64-encode after converting to string. */
+	private static function formatBase64( mixed $val ): string {
+		return base64_encode( self::toString( $val ) );
+	}
+
+	/** Base64-decode, stripping leading/trailing whitespace first (common in multiline PEM blocks). */
+	private static function formatBase64d( mixed $val ): string {
+		return (string)base64_decode( trim( self::toString( $val ) ) );
+	}
+
+	/** Single-quote shell-escape: wraps in ' and replaces embedded ' with '\''. */
+	private static function formatSh( mixed $val ): string {
+		return "'" . str_replace( "'", "'\\''", self::toString( $val ) ) . "'";
 	}
 
 	/**

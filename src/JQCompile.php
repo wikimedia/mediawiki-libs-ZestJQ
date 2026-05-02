@@ -6,6 +6,7 @@ namespace Wikimedia\Zest;
 
 use Closure;
 use Generator;
+use LogicException;
 
 /**
  * Compiler for JQ filter expressions.
@@ -101,7 +102,7 @@ class JQCompile {
 			'slice'    => $this->compileSlice( $node ),
 			default    => static function ( mixed $input, JQEnv $env ) use ( $node ): Generator {
 				yield from [];
-				throw new \LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] );
+				throw new LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] );
 			},
 		};
 	}
@@ -524,7 +525,7 @@ class JQCompile {
 			foreach ( $pat['fields'] as $field ) {
 				$keyNode = $field['key'];
 				if ( $keyNode['type'] !== 'literal' || !is_string( $keyNode['value'] ) ) {
-					throw new \LogicException( 'Computed keys in object patterns are not yet supported' );
+					throw new LogicException( 'Computed keys in object patterns are not yet supported' );
 				}
 				$fields[] = [ $keyNode['value'], $this->compilePattern( $field['pattern'] ) ];
 			}
@@ -562,7 +563,7 @@ class JQCompile {
 				// all alternatives failed — yield nothing
 			};
 		} else {
-			throw new \LogicException( 'Unknown pattern type: ' . $pat['type'] );
+			throw new LogicException( 'Unknown pattern type: ' . $pat['type'] );
 		}
 	}
 
@@ -589,7 +590,7 @@ class JQCompile {
 			'<=' => static fn ( $lv, $rv ) => JQUtils::compare( $lv, $rv ) <= 0,
 			'>'  => static fn ( $lv, $rv ) => JQUtils::compare( $lv, $rv ) > 0,
 			'>=' => static fn ( $lv, $rv ) => JQUtils::compare( $lv, $rv ) >= 0,
-			default => throw new \LogicException(
+			default => throw new LogicException(
 				'Unknown comparison operator: ' . $node['op']
 			),
 		};
@@ -771,7 +772,7 @@ class JQCompile {
 	 * @return Closure(mixed,JQEnv):Generator a Filter
 	 */
 	private function compileString( array $node ): Closure {
-		$fmt = $node['fmt'];
+		$formatter = JQUtils::formatterFor( $node['fmt'] ?? 'text' );
 		// XXX seems like we should be able to precompile this a bit
 		// more aggressively.
 		$compiledParts = [];
@@ -782,7 +783,7 @@ class JQCompile {
 				$compiledParts[] = [ 'text', $part['text'] ];
 			}
 		}
-		return static function ( mixed $input, JQEnv $env ) use ( $fmt, $compiledParts ): Generator {
+		return static function ( mixed $input, JQEnv $env ) use ( $formatter, $compiledParts ): Generator {
 			$strings = [ '' ];
 			foreach ( $compiledParts as [ $kind, $data ] ) {
 				if ( $kind === 'text' ) {
@@ -791,10 +792,7 @@ class JQCompile {
 					$next = [];
 					foreach ( $strings as $prefix ) {
 						foreach ( $data( $input, $env ) as $val ) {
-							$seg = $fmt !== null
-								? JQUtils::applyFormat( $fmt, $val )
-								: JQUtils::toString( $val );
-							$next[] = $prefix . $seg;
+							$next[] = $prefix . $formatter( $val );
 						}
 					}
 					$strings = $next;
@@ -812,10 +810,9 @@ class JQCompile {
 	 * @return Closure(mixed,JQEnv):Generator a Filter
 	 */
 	private function compileFormat( array $node ): Closure {
-		// XXX this could be shifted into precompilation
-		$fmt = $node['fmt'];
-		return static function ( mixed $input, JQEnv $env ) use ( $fmt ): Generator {
-			yield JQUtils::applyFormat( $fmt, $input );
+		$formatter = JQUtils::formatterFor( $node['fmt'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $formatter ): Generator {
+			yield $formatter( $input );
 		};
 	}
 
@@ -836,7 +833,7 @@ class JQCompile {
 			'*' => JQUtils::multiply( ... ),
 			'/' => JQUtils::divide( ... ),
 			'%' => JQUtils::modulo( ... ),
-			default => throw new \LogicException( 'Unknown operator: ' . $node['op'] ),
+			default => throw new LogicException( 'Unknown operator: ' . $node['op'] ),
 		};
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn, $op ): Generator {
 			foreach ( $leftFn( $input, $env ) as $lv ) {
@@ -1011,6 +1008,6 @@ class JQCompile {
 	 * @suppress PhanPluginNeverReturnMethod
 	 */
 	private function compilePath( array $node ): Closure {
-		throw new \LogicException( 'compilePath: not yet implemented for node type: ' . $node['type'] );
+		throw new LogicException( 'compilePath: not yet implemented for node type: ' . $node['type'] );
 	}
 }
