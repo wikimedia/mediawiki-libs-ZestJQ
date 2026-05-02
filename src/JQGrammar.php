@@ -4256,11 +4256,11 @@ private function parseTerm($silence) {
     $this->currPos = $p6;
   } else {
     $r25 = self::$FAILED;
-    if (!$silence) { $this->fail(41); }
+    if (!$silence) { $this->fail(6); }
     $r23 = self::$FAILED;
     goto seq_30;
   }
-  $r23 = $this->parsePostfix($silence);
+  $r23 = $this->parseAlt($silence);
   if ($r23===self::$FAILED) {
     $this->currPos = $p6;
     $r23 = self::$FAILED;
@@ -5155,7 +5155,7 @@ private function parseFieldName($silence) {
     goto seq_1;
   }
   $r5 = null;
-  if (preg_match("/[\\-0-9A-Z_a-z]*/A", $this->input, $r5, 0, $this->currPos)) {
+  if (preg_match("/[0-9A-Z_a-z]*/A", $this->input, $r5, 0, $this->currPos)) {
     $this->currPos += strlen($r5[0]);
     $r5 = true;
   } else {

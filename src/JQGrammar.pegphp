@@ -261,7 +261,7 @@ Term
     { return [ 'type' => 'try', 'body' => $body, 'catch' => $catch_ ]; }
 
   /* reduce Expr as Pattern ( init ; update ) */
-  / "reduce" !IdentChar _ src:Postfix _
+  / "reduce" !IdentChar _ src:Alt _
     "as" !IdentChar _ pat:Pattern _
     "(" _ init:Query _ ";" _ update:Query _ ")"
     { return [ 'type' => 'reduce', 'src' => $src, 'pattern' => $pat,
@@ -441,9 +441,8 @@ Number "number"
 Name "name"
   = $( [a-zA-Z_] [a-zA-Z0-9_]* )
 
-/* Field names may contain hyphens (jq allows .foo-bar in some contexts) */
 FieldName "field name"
-  = $( [a-zA-Z_] [a-zA-Z0-9_-]* )
+  = $( [a-zA-Z_] [a-zA-Z0-9_]* )
 
 /* A character valid inside an identifier */
 IdentChar = [a-zA-Z0-9_]
