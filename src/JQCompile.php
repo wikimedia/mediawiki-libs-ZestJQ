@@ -530,13 +530,13 @@ class JQCompile {
 				$fields[] = [ $keyNode['value'], $this->compilePattern( $field['pattern'] ) ];
 			}
 			return static function ( mixed $val, JQEnv $env ) use ( $fields ): Generator {
-				if ( !is_array( $val ) || array_is_list( $val ) ) {
+				if ( !is_object( $val ) ) {
 					throw new JQError( 'Cannot destructure ' . JQUtils::typeName( $val ) . ' as object' );
 				}
 				$currentEnv = $env;
 				foreach ( $fields as [ $fieldName, $fieldFn ] ) {
 					$nextEnv = null;
-					foreach ( $fieldFn( $val[$fieldName] ?? null, $currentEnv ) as $e ) {
+					foreach ( $fieldFn( $val->$fieldName ?? null, $currentEnv ) as $e ) {
 						$nextEnv = $e;
 						break;
 					}
