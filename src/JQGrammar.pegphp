@@ -13,7 +13,7 @@ namespace Wikimedia\Zest;
      *
      * AST node arrays have a 'type' key; important types:
      *   identity, recurse, literal (value), variable (name), format (fmt)
-     *   pipe (left, right), comma (exprs[]), alternative (left, right)
+     *   pipe (left, right), comma (left, right), alternative (left, right)
      *   or (left, right), and (left, right), compare (op, left, right)
      *   neg (expr), binop (op, left, right)
      *   try (body, catch), bind (expr, pattern, body)
@@ -24,10 +24,24 @@ namespace Wikimedia\Zest;
      *   if (cond, then, else), reduce (src, pattern, init, update)
      *   foreach (src, pattern, init, update, extract)
      *   label (name, body), break (name), loc
-     *   string (parts[])  -- interpolated strings, TODO
+     *   string (parts[])  -- interpolated strings
      */
 
-    private function foldLeft( array $first, array $rest, string $type ): array {
+    private static function build( array $left, ?array $right, string $type ): array {
+        if ($right === null) {
+	    return $left;
+	}
+	return [ 'type' => $type, 'left' => $left, 'right' => $right ];
+    }
+
+    private static function buildOp( array $left, ?array $right, string $type ): array {
+        if ($right === null) {
+	    return $left;
+	}
+	return [ 'type' => $type, 'op' => $right[0], 'left' => $left, 'right' => $right[1] ];
+    }
+
+    private static function foldLeftOp( array $first, array $rest, string $type ): array {
         $node = $first;
         foreach ( $rest as [ $op, $right ] ) {
             $node = [ 'type' => $type, 'op' => $op, 'left' => $node, 'right' => $right ];
@@ -35,7 +49,7 @@ namespace Wikimedia\Zest;
         return $node;
     }
 
-    private function foldLeftBool( array $first, array $rest, string $type ): array {
+    private static function foldLeft( array $first, array $rest, string $type ): array {
         $node = $first;
         foreach ( $rest as $right ) {
             $node = [ 'type' => $type, 'left' => $node, 'right' => $right ];
@@ -43,7 +57,7 @@ namespace Wikimedia\Zest;
         return $node;
     }
 
-    private function applyPostfix( array $expr, array $suffix ): array {
+    private static function applyPostfix( array $expr, array $suffix ): array {
         if ( $suffix['type'] === 'try' ) {
             return [ 'type' => 'try', 'body' => $expr, 'catch' => $suffix['catch'] ];
         }
@@ -65,10 +79,10 @@ Query = @Pipe
 /* ================================================================== */
 
 Pipe
-  = "import" !IdentChar _ path:String _ "as" !IdentChar _ alias:ImportAlias _ meta:ImportMeta _ ";" _ rest:Pipe
+  = "import" !IdentChar _ path:String _ "as" !IdentChar _ alias:ImportAlias _ meta:ImportMeta? _ ";" _ rest:Pipe
     { return [ 'type' => 'import', 'path' => $path, 'alias' => $alias,
                'meta' => $meta, 'rest' => $rest ]; }
-  / "include" !IdentChar _ path:String _ meta:ImportMeta _ ";" _ rest:Pipe
+  / "include" !IdentChar _ path:String _ meta:ImportMeta? _ ";" _ rest:Pipe
     { return [ 'type' => 'include', 'path' => $path, 'meta' => $meta, 'rest' => $rest ]; }
   / "module" !IdentChar _ meta:Query _ ";" _ rest:Pipe
     { return [ 'type' => 'module', 'meta' => $meta, 'rest' => $rest ]; }
@@ -79,8 +93,8 @@ Pipe
     { return [ 'type' => 'bind', 'expr' => $src, 'pattern' => $pat, 'body' => $body ]; }
   / "label" !IdentChar _ "$" name:Name _ "|" _ body:Pipe
     { return [ 'type' => 'label', 'name' => $name, 'body' => $body ]; }
-  / head:Comma tail:(_ "|" _ @Pipe)?
-    { return $tail === null ? $head : [ 'type' => 'pipe', 'left' => $head, 'right' => $tail ]; }
+  / left:Comma right:(_ "|" _ @Pipe)?
+    { return self::build( $left, $right, 'pipe' ); }
 
 /* ================================================================== */
 /*  Comma  ,   left-associative; generates multiple outputs            */
@@ -91,13 +105,7 @@ Pipe
 
 Comma
   = first:Expr rest:(_ "," _ @CommaRHS)*
-    {
-        $node = $first;
-        foreach ( $rest as $right ) {
-            $node = [ 'type' => 'comma', 'left' => $node, 'right' => $right ];
-        }
-        return $node;
-    }
+    {   return self::foldLeft( $first, $rest, 'comma' ); }
 
 /*
  * Right-hand side of a comma.  Mirrors the productions available at
@@ -124,16 +132,15 @@ Expr = Alt
 
 Alt
   = left:Assign right:(_ "//" _ @Alt)?
-    { return $right===null ? $left : [ 'type' => 'alternative', 'left' => $left, 'right' => $right ]; }
+    { return self::build( $left, $right, 'alternative' ); }
 
 /* ================================================================== */
 /*  Assignments  = |= += -= *= /= %= //=   non-associative            */
 /* ================================================================== */
 
 Assign
-  = left:Or _ op:AssignOp _ right:Or
-    { return [ 'type' => 'assign', 'op' => $op, 'left' => $left, 'right' => $right ]; }
-  / Or
+  = left:Or right:(_ @AssignOp _ @Or)?
+    { return self::buildOp( $left, $right, 'assign' ); }
 
 AssignOp "assignment operator"
   = "//=" / "|=" / "+=" / "-=" / "*=" / "/=" / "%=" / "="
@@ -144,22 +151,19 @@ AssignOp "assignment operator"
 
 Or
   = first:And rest:(_ "or" !IdentChar _ @And)*
-    { return $this->foldLeftBool( $first, $rest, 'or' ); }
+    { return self::foldLeft( $first, $rest, 'or' ); }
 
 And
   = first:Cmp rest:(_ "and" !IdentChar _ @Cmp)*
-    { return $this->foldLeftBool( $first, $rest, 'and' ); }
+    { return self::foldLeft( $first, $rest, 'and' ); }
 
 /* ================================================================== */
 /*  Comparisons   == != < > <= >=   non-associative                    */
 /* ================================================================== */
 
 Cmp
-  = left:Add rest:(_ @CmpOp _ @Add)?
-    {
-      return ($rest===null) ? $left :
-        [ 'type' => 'compare', 'op' => $rest[0], 'left' => $left, 'right' => $rest[1] ];
-    }
+  = left:Add right:(_ @CmpOp _ @Add)?
+    { return self::buildOp( $left, $right, 'compare' ); }
 
 CmpOp "comparison operator"
   = "==" / "!=" / "<=" / ">=" / "<" / ">"
@@ -170,7 +174,7 @@ CmpOp "comparison operator"
 
 Add
   = first:Mul rest:(_ @("+" / "-") _ @Mul)*
-    { return $this->foldLeft( $first, $rest, 'binop' ); }
+    { return self::foldLeftOp( $first, $rest, 'binop' ); }
 
 /* ================================================================== */
 /*  Multiplicative  * / %   left-associative                           */
@@ -179,12 +183,10 @@ Add
 
 Mul
   = first:Postfix rest:(_ @MulOp _ @Postfix)*
-    { return $this->foldLeft( $first, $rest, 'binop' ); }
+    { return self::foldLeftOp( $first, $rest, 'binop' ); }
 
 MulOp "multiplicative operator"
-  = "*"
-  / "%"
-  / @"/" !"/"
+  = "*" / "%" / @"/" !"/"
 
 /* ================================================================== */
 /*  Postfix operations   highest-precedence, left-associative          */
@@ -197,11 +199,11 @@ MulOp "multiplicative operator"
 /* ================================================================== */
 
 Postfix
-  = expr:Term suffixes:Suffix*
+  = expr:Term suffixes:(_ @Suffix)*
     {
         $node = $expr;
         foreach ( $suffixes as $s ) {
-            $node = $this->applyPostfix( $node, $s );
+            $node = self::applyPostfix( $node, $s );
         }
         return $node;
     }
@@ -209,20 +211,23 @@ Postfix
 Suffix
   = "?"
     { return [ 'type' => 'try', 'catch' => null ]; }
-  /* Bracket suffixes allow optional leading whitespace (like jq's lexer between tokens) */
-  / _ "."? "[" _ "]" opt:"?"?
-    { return [ 'type' => 'iter', 'opt' => $opt !== null ]; }
-  / _ "."? "[" _ from:SliceBound ":" _ to:SliceBound "]" opt:"?"?
-    { return [ 'type' => 'slice', 'from' => $from, 'to' => $to, 'opt' => $opt !== null ]; }
-  / _ "."? "[" _ key:Query _ "]" opt:"?"?
-    { return [ 'type' => 'index', 'key' => $key, 'opt' => $opt !== null ]; }
-  / "."? name:FieldName opt:"?"?
-    { return [ 'type' => 'field', 'name' => $name, 'opt' => $opt !== null ]; }
-  / "."? name:String opt:"?"?
-    { return [ 'type' => 'index', 'key' => $name, 'opt' => $opt !== null ]; }
+  / "."? _ "[" _ "]" opt:OptQ
+    { return [ 'type' => 'iter', 'opt' => $opt ]; }
+  / "."? _ "[" _ from:SliceBound _ ":" _ to:SliceBound _ "]" opt:OptQ
+    { return [ 'type' => 'slice', 'from' => $from, 'to' => $to, 'opt' => $opt ]; }
+  / "."? _ "[" _ key:Query _ "]" opt:OptQ
+    { return [ 'type' => 'index', 'key' => $key, 'opt' => $opt ]; }
+  /* jq lexer handles ".\w+" as a single FIELD token, no space between */
+  / "." name:FieldName opt:OptQ
+    { return [ 'type' => 'field', 'name' => $name, 'opt' => $opt ]; }
+  / "." _ name:String opt:OptQ
+    { return [ 'type' => 'index', 'key' => $name, 'opt' => $opt ]; }
 
 /* An optional expression used as a slice bound; null if absent. */
 SliceBound = @Alt?
+
+/* Optional question mark (which suppresses match errors) */
+OptQ = _ "?" { return true; } / "" { return false; }
 
 /* ================================================================== */
 /*  Atomic terms                                                        */
@@ -234,10 +239,16 @@ Term
     { return [ 'type' => 'recurse' ]; }
 
   /* Field access on identity: .name or .name? */
-  / "." name:FieldName opt:"?"?
+  /* jq lexer handles ".\w+" as a single FIELD token, no space between */
+  / "." name:FieldName opt:OptQ
     { return [ 'type' => 'field',
                'expr' => [ 'type' => 'identity' ],
-               'name' => $name, 'opt' => $opt !== null ]; }
+               'name' => $name, 'opt' => $opt ]; }
+
+  /* Quoted-string field access on identity: ."foo" or ."foo"? */
+  / "." _ name:String opt:OptQ
+    { return [ 'type' => 'index', 'key' => $name,
+               'expr' => [ 'type' => 'identity' ], 'opt' => $opt ]; }
 
   /* Bare identity: . but not if followed by a digit (that would be a .NNN number) */
   / "." ![0-9]
@@ -372,7 +383,7 @@ DictKey
 
 DictExpr
   = left:Expr right:(_ "|" _ @DictExpr)?
-  { return $right===null ? $left : [ 'type' => 'pipe', 'left' => $left, 'right' => $right ]; }
+  { return self::build( $left, $right, 'pipe' ); }
 
 /* ================================================================== */
 /*  Function definition helpers                                         */
@@ -380,7 +391,7 @@ DictExpr
 
 FuncParams
   = "(" _ first:FuncParam rest:(_ ";" _ @FuncParam)* _ ")"
-    { return array_merge( [ $first ], $rest ); }
+    { return [ $first, ...$rest ]; }
   / "" { return []; }
 
 FuncParam
@@ -389,7 +400,7 @@ FuncParam
 
 FuncArgs
   = first:FuncArg rest:(_ ";" _ @FuncArg)*
-    { return array_merge( [ $first ], $rest ); }
+    { return [ $first, ...$rest ]; }
   / "" { return []; }
 
 FuncArg = Pipe
@@ -401,8 +412,7 @@ ImportAlias
 
 /* Optional metadata object after import/include path */
 ImportMeta
-  = _ meta:( "{" _ @DictPairs _ "}" ) { return $meta; }
-  / "" { return null; }
+  = "{" _ @DictPairs _ "}"
 
 /* A function name: any identifier not reserved as a structural keyword. */
 FuncName "function name"
@@ -422,19 +432,19 @@ FuncName "function name"
 Patterns
   = first:Pattern rest:(_ "?//" _ @Pattern)*
     {
-        if ( count( $rest ) === 0 ) {
+        if ( !$rest ) {
             return $first;
         }
-        return [ 'type' => 'alt_pattern', 'patterns' => array_merge( [ $first ], $rest ) ];
+        return [ 'type' => 'alt_pattern', 'patterns' => [ $first, ...$rest ] ];
     }
 
 Pattern
   = "$" name:Name
     { return [ 'type' => 'var_pattern', 'name' => $name ]; }
   / "[" _ first:Pattern rest:(_ "," _ @Pattern)* _ "]"
-    { return [ 'type' => 'array_pattern', 'elems' => array_merge( [ $first ], $rest ) ]; }
+    { return [ 'type' => 'array_pattern', 'elems' => [ $first, ...$rest ] ]; }
   / "{" _ first:ObjPat rest:(_ "," _ @ObjPat)* _ "}"
-    { return [ 'type' => 'obj_pattern', 'fields' => array_merge( [ $first ], $rest ) ]; }
+    { return [ 'type' => 'obj_pattern', 'fields' => [ $first, ...$rest ] ]; }
 
 ObjPat
   /* {$var: pattern} — key is the variable's name as a literal string */
@@ -488,10 +498,10 @@ SingleChar
 /* ================================================================== */
 
 Number "number"
-  = n:$( ( [0-9]+ ("." [0-9]*)? / "." [0-9]+ ) ([eE] [+-]? [0-9]+)? )
-    { return [ 'type' => 'literal', 'value' => strpos( $n, '.' ) !== false
-                 || strpos( $n, 'e' ) !== false || strpos( $n, 'E' ) !== false
-               ? (float)$n : (int)$n ]; }
+  = n:$[0-9]+ ![eE] !"."
+    { return [ 'type' => 'literal', 'value' => (int)$n ]; }
+  / n:$( ( [0-9]+ ("." [0-9]*)? / "." [0-9]+ ) ([eE] [+-]? [0-9]+)? )
+    { return [ 'type' => 'literal', 'value' => (float)$n ]; }
 
 /* ================================================================== */
 /*  Lexical rules                                                        */
@@ -507,5 +517,10 @@ FieldName "field name"
 /* A character valid inside an identifier */
 IdentChar = [a-zA-Z0-9_]
 
+LineComment = $("#" (EscapedNewline / [^\n])* )
+
+/* A newline preceded by an odd number of slashes does not end a LineComment */
+EscapedNewline = slashes:$("\\"+) "\n" &{ return (strlen($slashes)%2)===1; } @""
+
 /* Optional whitespace and line comments */
-_ = ( [ \t\n\r]+ / "#" [^\n]* )*
+_ = ( [ \t\n\r]+ / LineComment )*
