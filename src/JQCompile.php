@@ -1,5 +1,5 @@
 <?php
-// @phan-file-suppress PhanUnusedClosureParameter
+// @phan-file-suppress PhanUnusedClosureParameter, PhanEmptyYieldFrom
 declare( strict_types = 1 );
 
 namespace Wikimedia\Zest;
@@ -64,6 +64,8 @@ class JQCompile {
 			'identity' => $this->evalIdentity(),
 			'literal'  => $this->evalLiteral( $node ),
 			'pipe'     => $this->evalPipe( $node ),
+			'label'    => $this->evalLabel( $node ),
+			'break'    => $this->evalBreak( $node ),
 			default    => throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] ),
 		};
 	}
@@ -109,6 +111,50 @@ class JQCompile {
 		$value = $node['value'];
 		return static function ( mixed $input, JQEnv $env ) use ( $value ): \Generator {
 			yield $value;
+		};
+	}
+
+	/**
+	 * Compile a label node (label $out | body).
+	 * Evaluates the body, catching any JQBreak whose label matches $out
+	 * and silently terminating the stream. A break for a different label
+	 * is re-thrown so it can be caught by the appropriate outer label.
+	 *
+	 * @param array $node  Node with 'name' and 'body' keys
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalLabel( array $node ): \Closure {
+		$name   = $node['name'];
+		$bodyFn = $this->evalNode( $node['body'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn ): \Generator {
+			try {
+				yield from $bodyFn( $input, $env );
+			} catch ( JQBreak $e ) {
+				if ( $e->label !== $name ) {
+					throw $e;
+				}
+				// Matching break: stop the stream, yield nothing further.
+			}
+		};
+	}
+
+	/**
+	 * Compile a break node (break $label).
+	 * Throws JQBreak when the generator is iterated, terminating the
+	 * nearest enclosing label node with a matching name.
+	 *
+	 * yield from [] before the throw makes this a generator function
+	 * (so calling it returns a Generator rather than throwing immediately)
+	 * without introducing unreachable code.
+	 *
+	 * @param array $node  Node with 'name' key
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalBreak( array $node ): \Closure {
+		$name = $node['name'];
+		return static function ( mixed $input, JQEnv $env ) use ( $name ): \Generator {
+			yield from [];
+			throw new JQBreak( $name );
 		};
 	}
 
