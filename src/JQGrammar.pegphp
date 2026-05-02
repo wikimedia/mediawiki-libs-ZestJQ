@@ -97,15 +97,16 @@ Alt
     { return $right===null ? $left : [ 'type' => 'alternative', 'left' => $left, 'right' => $right ]; }
 
 /* ================================================================== */
-/*  Assignments  = |= += -= *= /= %= //=                              */
-/*  Stub: selectors are read-only, no assignment needed.               */
-/*  TODO: add if write-path / update semantics are ever required.      */
+/*  Assignments  = |= += -= *= /= %= //=   non-associative            */
 /* ================================================================== */
 
 Assign
-  = first:Or rest:(_ "=" _ @Or)+
-    { return $this->foldLeftBool( $first, $rest, '=' ); }
+  = left:Or _ op:AssignOp _ right:Or
+    { return [ 'type' => 'assign', 'op' => $op, 'left' => $left, 'right' => $right ]; }
   / Or
+
+AssignOp "assignment operator"
+  = "//=" / "|=" / "+=" / "-=" / "*=" / "/=" / "%=" / "="
 
 /* ================================================================== */
 /*  Boolean  or / and   left-associative                               */
