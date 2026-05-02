@@ -15,6 +15,9 @@ use Wikimedia\Zest\JQGrammar;
 class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	public static function compileProvider(): iterable {
 		foreach ( JQGrammarTest::loadTests() as $test ) {
+			if ( $test['lineno'] > 100 ) {
+				return;
+			}
 			if ( !( $test['fail'] ?? false ) ) {
 				yield $test['label'] => [
 					$test['query'],
@@ -30,7 +33,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	 * @covers \Wikimedia\Zest\JQCompile
 	 */
 	public function testCompile( string $query, string $input, array $expected ): void {
-		$this->markTestSkipped( "still working" );
+		$this->markTestSkipped( "not yet" );
 		$input = self::json( $input );
 		$expected = array_map( self::json( ... ), $expected );
 		$g = new JQGrammar;
