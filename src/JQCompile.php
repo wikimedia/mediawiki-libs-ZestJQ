@@ -66,6 +66,8 @@ class JQCompile {
 			'pipe'     => $this->evalPipe( $node ),
 			'label'    => $this->evalLabel( $node ),
 			'break'    => $this->evalBreak( $node ),
+			'field'    => $this->evalField( $node ),
+			'index'    => $this->evalIndex( $node ),
 			default    => throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] ),
 		};
 	}
@@ -155,6 +157,111 @@ class JQCompile {
 		return static function ( mixed $input, JQEnv $env ) use ( $name ): \Generator {
 			yield from [];
 			throw new JQBreak( $name );
+		};
+	}
+
+	/**
+	 * Return the JQ type name of a PHP value, used in error messages.
+	 */
+	private static function typeName( mixed $v ): string {
+		if ( $v === null ) {
+			return 'null';
+		}
+		if ( is_bool( $v ) ) {
+			return 'boolean';
+		}
+		if ( is_int( $v ) || is_float( $v ) ) {
+			return 'number';
+		}
+		if ( is_string( $v ) ) {
+			return 'string';
+		}
+		if ( is_array( $v ) ) {
+			return array_is_list( $v ) ? 'array' : 'object';
+		}
+		return 'unknown';
+	}
+
+	/**
+	 * Compile a field-access node (expr.name or expr.name?).
+	 * null input yields null; object input yields the field value (or null if
+	 * absent); any other type throws JQError (suppressed to empty if opt).
+	 *
+	 * @param array $node  Node with 'expr', 'name', and 'opt' keys
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalField( array $node ): \Closure {
+		$exprFn = $this->evalNode( $node['expr'] );
+		$name   = $node['name'];
+		$opt    = $node['opt'];
+		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $name, $opt ): \Generator {
+			foreach ( $exprFn( $input, $env ) as $base ) {
+				try {
+					if ( $base === null ) {
+						yield null;
+					} elseif ( is_array( $base ) && !array_is_list( $base ) ) {
+						yield $base[$name] ?? null;
+					} else {
+						throw new JQError(
+							'Cannot index ' . self::typeName( $base ) . ' with string "' . $name . '"'
+						);
+					}
+				} catch ( JQError $e ) {
+					if ( !$opt ) {
+						throw $e;
+					}
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile an index node (expr[key] or expr[key]?).
+	 * The key expression is evaluated against the original input (not the base).
+	 * Supports object indexing by string and array indexing by integer
+	 * (with negative indices counting from the end). null input yields null.
+	 *
+	 * @param array $node  Node with 'expr', 'key', and 'opt' keys
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalIndex( array $node ): \Closure {
+		$exprFn = $this->evalNode( $node['expr'] );
+		$keyFn  = $this->evalNode( $node['key'] );
+		$opt    = $node['opt'];
+		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $keyFn, $opt ): \Generator {
+			foreach ( $exprFn( $input, $env ) as $base ) {
+				foreach ( $keyFn( $input, $env ) as $key ) {
+					try {
+						if ( $base === null ) {
+							yield null;
+						} elseif ( is_array( $base ) && !array_is_list( $base ) ) {
+							if ( !is_string( $key ) ) {
+								throw new JQError(
+									'Cannot index object with ' . self::typeName( $key )
+								);
+							}
+							yield $base[$key] ?? null;
+						} elseif ( is_array( $base ) ) {
+							if ( !is_int( $key ) ) {
+								throw new JQError(
+									'Cannot index array with ' . self::typeName( $key )
+								);
+							}
+							$idx = $key < 0 ? $key + count( $base ) : $key;
+							yield $base[$idx] ?? null;
+						} else {
+							throw new JQError(
+								'Cannot index ' . self::typeName( $base ) .
+								' with ' . self::typeName( $key )
+							);
+						}
+					} catch ( JQError $e ) {
+						if ( !$opt ) {
+							throw $e;
+						}
+					}
+				}
+			}
 		};
 	}
 
