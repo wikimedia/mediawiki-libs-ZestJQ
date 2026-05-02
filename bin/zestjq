@@ -1,0 +1,110 @@
+#!/usr/bin/env php
+<?php
+declare( strict_types = 1 );
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Wikimedia\WikiPEG\SyntaxError;
+use Wikimedia\Zest\IOContext;
+use Wikimedia\Zest\JQCompile;
+use Wikimedia\Zest\JQError;
+use Wikimedia\Zest\JQGrammar;
+use Wikimedia\Zest\JQLazyEnv;
+
+// Parse flags and positional args (minimal jq-compatible subset)
+$nullInput = false;
+$rawOutput = false;
+$args = [];
+for ( $i = 1; $i < $argc; $i++ ) {
+	$arg = $argv[$i];
+	if ( $arg === '--' ) {
+		$args = array_merge( $args, array_slice( $argv, $i + 1 ) );
+		break;
+	} elseif ( $arg === '-n' || $arg === '--null-input' ) {
+		$nullInput = true;
+	} elseif ( $arg === '-r' || $arg === '--raw-output' ) {
+		$rawOutput = true;
+	} elseif ( $arg[0] === '-' ) {
+		fwrite( STDERR, "zestjq: unknown option: $arg\n" );
+		exit( 2 );
+	} else {
+		$args[] = $arg;
+	}
+}
+
+if ( count( $args ) < 1 ) {
+	fwrite( STDERR, "Usage: zestjq [-n] [-r] <filter> [file...]\n" );
+	exit( 2 );
+}
+
+$filterExpr = $args[0];
+$files      = array_slice( $args, 1 );
+
+// Compile the filter once
+$g = new JQGrammar;
+try {
+	$ast = $g->parse( $filterExpr );
+} catch ( SyntaxError $e ) {
+	fwrite( STDERR, "zestjq: syntax error in filter: " . $e->getMessage() . "\n" );
+	exit( 3 );
+}
+
+$io  = new IOContext;
+$env = new JQLazyEnv( $io );
+$filter = JQCompile::compile( $ast, $env );
+
+function encodeOutput( mixed $val, bool $rawOutput ): string {
+	if ( $rawOutput && is_string( $val ) ) {
+		return $val;
+	}
+	return json_encode( $val, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+}
+
+function runFilter( Closure $filter, mixed $input ): int {
+	global $rawOutput;
+	try {
+		foreach ( $filter( $input ) as $output ) {
+			echo encodeOutput( $output, $rawOutput ) . "\n";
+		}
+	} catch ( JQError $e ) {
+		fwrite( STDERR, "zestjq: " . $e->getMessage() . "\n" );
+		return 5;
+	}
+	return 0;
+}
+
+$exitCode = 0;
+
+if ( $nullInput ) {
+	$exitCode = runFilter( $filter, null );
+} elseif ( count( $files ) > 0 ) {
+	foreach ( $files as $file ) {
+		$raw = file_get_contents( $file );
+		if ( $raw === false ) {
+			fwrite( STDERR, "zestjq: cannot read file: $file\n" );
+			$exitCode = 2;
+			continue;
+		}
+		$input = json_decode( $raw, false );
+		if ( $input === null && trim( $raw ) !== 'null' ) {
+			fwrite( STDERR, "zestjq: invalid JSON in file: $file\n" );
+			$exitCode = 2;
+			continue;
+		}
+		$exitCode = max( $exitCode, runFilter( $filter, $input ) );
+	}
+} else {
+	$raw = stream_get_contents( STDIN );
+	if ( $raw === false || trim( $raw ) === '' ) {
+		fwrite( STDERR, "zestjq: no input\n" );
+		exit( 2 );
+	}
+	$input = json_decode( $raw, false );
+	if ( $input === null && trim( $raw ) !== 'null' ) {
+		fwrite( STDERR, "zestjq: invalid JSON in stdin\n" );
+		exit( 2 );
+	}
+	$exitCode = runFilter( $filter, $input );
+}
+
+exit( $exitCode );
