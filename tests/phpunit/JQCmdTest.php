@@ -214,4 +214,118 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 		$this->assertSame( "fatal\n", $err );
 	}
 
+	// -----------------------------------------------------------------------
+	// setAtPath negative indices
+	// -----------------------------------------------------------------------
+
+	public static function setAtPathNegativeIndicesProvider(): array {
+		return [
+			'out-of-bounds negative on array' => [
+				'.[-4] |= . + 1', '[1,2,3]', 5, null, "zestjq: Out of bounds negative array index\n",
+			],
+			'negative on null' => [
+				'.[-1] |= . + 1', 'null', 5, null, "zestjq: Out of bounds negative array index\n",
+			],
+			'negative on object' => [
+				'.[-1] |= . + 1', '{}', 5, null, "zestjq: setAtPath requires an array input, got object\n",
+			],
+			'negative on string' => [
+				'.[-1] |= . + 1', '"hello"', 5, null, "zestjq: setAtPath requires an array input, got string\n",
+			],
+			// Floats are truncated toward zero, matching jq's (int) cast
+			'float truncated toward zero (negative)' => [
+				'.[-1.9] |= . + 10', '[1,2,3]', 0, '[1,2,13]', '',
+			],
+		];
+	}
+
+	// -----------------------------------------------------------------------
+	// setAtPath null container promotion
+	// -----------------------------------------------------------------------
+
+	public static function setAtPathNullContainerProvider(): array {
+		return [
+			'int index promotes null to array'         => [ '.[0] = "val"', 'null', 0, '["val"]', '' ],
+			'int index pads gaps with null'            => [ '.[3] = "val"', 'null', 0, '[null,null,null,"val"]', '' ],
+			'string key promotes null to object'       => [ '.foo = "val"', 'null', 0, '{"foo":"val"}', '' ],
+			'nested string path cascades null objects' => [ '.a.b = "val"', 'null', 0, '{"a":{"b":"val"}}', '' ],
+			'int then string cascades null'            => [ '.[0].foo = "val"', 'null', 0, '[{"foo":"val"}]', '' ],
+			'string then int cascades null'            => [ '.foo[0] = "val"', 'null', 0, '{"foo":["val"]}', '' ],
+			'update-assign promotes null array'        => [ '.[0] |= . + 1', 'null', 0, '[1]', '' ],
+			'update-assign promotes null object'       => [ '.foo |= . + 1', 'null', 0, '{"foo":1}', '' ],
+			// Float indices are truncated toward zero (1.9 → 1), not rounded
+			'float index truncated toward zero'        => [ '.[1.9] = "val"', 'null', 0, '[null,"val"]', '' ],
+		];
+	}
+
+	/**
+	 * @dataProvider setAtPathNullContainerProvider
+	 */
+	public function testSetAtPathNullContainer(
+		string $filter, string $jsonInput,
+		int $expectedCode, ?string $expectedJsonOut, string $expectedErr
+	): void {
+		[ $code, $out, $err ] = $this->runWithJson( [ $filter ], $jsonInput );
+		$this->assertSame( $expectedCode, $code );
+		$this->assertSame( $expectedErr, $err );
+		if ( $expectedJsonOut !== null ) {
+			$this->assertEquals( json_decode( $expectedJsonOut ), json_decode( trim( $out ) ) );
+		}
+	}
+
+	// -----------------------------------------------------------------------
+	// deleteAtPath array splicing (via |= empty)
+	// -----------------------------------------------------------------------
+
+	public static function deleteAtPathArrayProvider(): array {
+		// jq's del/|= empty always splices the element out (shifts remaining
+		// elements left, reducing length by 1); it never sets a slot to null.
+		// Out-of-bounds indices (positive or negative) are silently ignored.
+		// Float indices are truncated toward zero before resolving.
+		return [
+			'delete middle element'             => [ '.[2]  |= empty', '[1,2,3,4,5]', '[1,2,4,5]' ],
+			'delete last element (positive)'    => [ '.[4]  |= empty', '[1,2,3,4,5]', '[1,2,3,4]' ],
+			'delete last element (negative)'    => [ '.[-1] |= empty', '[1,2,3,4,5]', '[1,2,3,4]' ],
+			'delete middle element (negative)'  => [ '.[-3] |= empty', '[1,2,3,4,5]', '[1,2,4,5]' ],
+			'delete first element'              => [ '.[0]  |= empty', '[1,2,3,4,5]', '[2,3,4,5]' ],
+			'delete negative that resolves to middle' => [ '.[-4] |= empty', '[1,2,3,4,5]', '[1,3,4,5]' ],
+			'out-of-bounds positive is no-op'   => [ '.[10] |= empty', '[1,2,3]', '[1,2,3]' ],
+			'out-of-bounds negative is no-op'   => [ '.[-4] |= empty', '[1,2,3]', '[1,2,3]' ],
+			'float index truncated toward zero' => [ '.[1.9] |= empty', '[1,2,3]', '[1,3]' ],
+			'negative float truncated toward zero' => [ '.[-1.9] |= empty', '[1,2,3]', '[1,2]' ],
+			// null containers: all deletions are no-ops, returning null
+			'null with int index'      => [ '.[0]  |= empty', 'null', 'null' ],
+			'null with string key'     => [ '.foo  |= empty', 'null', 'null' ],
+			'null with negative index' => [ '.[-1] |= empty', 'null', 'null' ],
+			'null with large index'    => [ '.[5]  |= empty', 'null', 'null' ],
+		];
+	}
+
+	/**
+	 * @dataProvider deleteAtPathArrayProvider
+	 */
+	public function testDeleteAtPathArray(
+		string $filter, string $jsonInput, string $expectedJsonOut
+	): void {
+		[ $code, $out, $err ] = $this->runWithJson( [ $filter ], $jsonInput );
+		$this->assertSame( 0, $code );
+		$this->assertSame( '', $err );
+		$this->assertEquals( json_decode( $expectedJsonOut ), json_decode( trim( $out ) ) );
+	}
+
+	/**
+	 * @dataProvider setAtPathNegativeIndicesProvider
+	 */
+	public function testSetAtPathNegativeIndices(
+		string $filter, string $jsonInput,
+		int $expectedCode, ?string $expectedJsonOut, string $expectedErr
+	): void {
+		[ $code, $out, $err ] = $this->runWithJson( [ $filter ], $jsonInput );
+		$this->assertSame( $expectedCode, $code );
+		$this->assertSame( $expectedErr, $err );
+		if ( $expectedJsonOut !== null ) {
+			$this->assertEquals( json_decode( $expectedJsonOut ), json_decode( trim( $out ) ) );
+		}
+	}
+
 }

@@ -40,6 +40,9 @@ use stdClass;
  */
 class JQCompile {
 
+	/** Maximum array index; prevents accidental huge allocations. */
+	private const MAX_ARRAY_INDEX = 1024 * 1024;
+
 	/**
 	 * Compile a JQ AST into a reusable filter.
 	 *
@@ -494,7 +497,7 @@ class JQCompile {
 	 *
 	 * @param stdClass $val
 	 * @param JQEnv $env
-	 * @param array<array{Closure,Closure}> $fields
+	 * @param list<array{Closure,Closure}> $fields
 	 * @param int $idx
 	 */
 	private static function matchObjFields(
@@ -536,9 +539,7 @@ class JQCompile {
 		} elseif ( $pat['type'] === 'array_pattern' ) {
 			$elemFns = array_map( fn ( $p ) => $this->compilePattern( $p ), $pat['elems'] );
 			return static function ( mixed $val, JQEnv $env ) use ( $elemFns ): Generator {
-				if ( !is_array( $val ) || !array_is_list( $val ) ) {
-					throw new JQError( 'Cannot destructure ' . JQUtils::typeName( $val ) . ' as array' );
-				}
+				$val = JQUtils::checkArray( 'array_pattern', $val );
 				$currentEnv = $env;
 				foreach ( $elemFns as $i => $elemFn ) {
 					$nextEnv = null;
@@ -685,25 +686,14 @@ class JQCompile {
 		$opt    = $node['opt'];
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $name, $opt ): Generator {
 			foreach ( $exprFn( $input, $env ) as $base ) {
-				try {
-					if ( $base === null ) {
-						yield null;
-					} elseif ( is_object( $base ) ) {
-						// Absent key on object always yields null; ? only suppresses type errors.
-						yield property_exists( $base, $name ) ? $base->$name : null;
-					} elseif ( is_array( $base ) && !array_is_list( $base ) ) {
-						// Associative PHP array (defensive; normally objects are stdClass)
-						yield array_key_exists( $name, $base ) ? $base[$name] : null;
-					} else {
-						throw new JQError(
-							'Cannot index ' . JQUtils::typeName( $base ) . ' with string "' . $name . '"'
-						);
-					}
-				} catch ( JQError $e ) {
-					if ( !$opt ) {
-						throw $e;
-					}
+				if ( $base === null ) {
+					yield null;
+					continue;
+				} elseif ( $opt && !is_object( $base ) ) {
+					continue;
 				}
+				$base = JQUtils::checkObject( 'field', $base );
+				yield $base->$name ?? null;
 			}
 		};
 	}
@@ -728,46 +718,26 @@ class JQCompile {
 				// e.g. in .a[.b], .b is evaluated against the outer input,
 				// not against the result of .a.
 				foreach ( $keyFn( $input, $env ) as $key ) {
-					try {
-						if ( $base === null ) {
-							yield null;
-						} elseif ( is_object( $base ) ) {
-							if ( !( is_string( $key ) || JQUtils::isNumber( $key ) ) ) {
-								throw new JQError(
-									'Cannot index object with ' . JQUtils::typeName( $key )
-								);
-							}
-							$key = (string)$key;
-							if ( property_exists( $base, $key ) ) {
-								yield $base->$key;
-							} elseif ( !$opt ) {
-								yield null;
-							}
-						} elseif ( is_array( $base ) && is_int( $key ) ) {
-							$idx = $key < 0 ? $key + count( $base ) : $key;
-							yield $base[$idx] ?? null;
-						} elseif ( is_array( $base ) ) {
-							// Associative PHP array (defensive; normally objects are stdClass)
-							if ( !is_string( $key ) ) {
-								throw new JQError(
-									'Cannot index object with ' . JQUtils::typeName( $key )
-								);
-							}
-							if ( array_key_exists( $key, $base ) ) {
-								yield $base[$key];
-							} elseif ( !$opt ) {
-								yield null;
-							}
-						} else {
-							throw new JQError(
-								'Cannot index ' . JQUtils::typeName( $base ) .
+					if ( $base === null ) {
+						yield null;
+					} elseif ( is_object( $base ) ) {
+						if ( $opt && !is_string( $key ) ) {
+							continue;
+						}
+						$key = JQUtils::checkString( 'index', $key );
+						yield $base->$key ?? null;
+					} elseif ( is_array( $base ) ) {
+						JQUtils::assertIsList( 'index', $base );
+						if ( $opt && !JQUtils::isNumber( $key ) ) {
+							continue;
+						}
+						$index = JQUtils::adjustIndex( 'index', $key, $base );
+						yield ( $index === null ) ? null : $base[$index];
+					} elseif ( !$opt ) {
+						throw new JQError(
+							'Cannot index ' . JQUtils::typeName( $base ) .
 								' with ' . JQUtils::typeName( $key )
-							);
-						}
-					} catch ( JQError $e ) {
-						if ( !$opt ) {
-							throw $e;
-						}
+						);
 					}
 				}
 			}
@@ -1029,7 +999,7 @@ class JQCompile {
 		$lhsNode = $node['left'];
 
 		if ( $op === '=' ) {
-			$setter = $this->compileSetter( $lhsNode );
+			$setter = $this->compilePathSetter( $lhsNode );
 			$rhsFn  = $this->compileNode( $node['right'] );
 			return static function ( mixed $input, JQEnv $env ) use ( $setter, $rhsFn ): Generator {
 				foreach ( $rhsFn( $input, $env ) as $newVal ) {
@@ -1104,7 +1074,8 @@ class JQCompile {
 						break;
 					}
 					foreach ( $innerPathFn( $input, $env ) as $prefix ) {
-						if ( is_array( $container ) && array_is_list( $container ) ) {
+						if ( is_array( $container ) ) {
+							JQUtils::assertIsList( 'path', $container );
 							for ( $i = 0; $i < count( $container ); $i++ ) {
 								yield [ ...$prefix, $i ];
 							}
@@ -1132,11 +1103,11 @@ class JQCompile {
 	 * @param array $pathNode AST path node
 	 * @return Closure(mixed,mixed,JQEnv):mixed
 	 */
-	private function compileSetter( array $pathNode ): Closure {
+	private function compilePathSetter( array $pathNode ): Closure {
 		$pathFn = $this->compilePath( $pathNode );
 		return static function ( mixed $container, mixed $newVal, JQEnv $env ) use ( $pathFn ): mixed {
 			foreach ( $pathFn( $container, $env ) as $path ) {
-				return self::setAtPath( $container, $path, $newVal );
+				return self::setAtPath( $container, $path, 0, $newVal );
 			}
 			return $container;
 		};
@@ -1157,10 +1128,10 @@ class JQCompile {
 		return static function ( mixed $input, JQEnv $env ) use ( $pathFn, $updateFn ): Generator {
 			$toDelete = [];
 			foreach ( $pathFn( $input, $env ) as $path ) {
-				$current   = self::getAtPath( $input, $path );
+				$current   = self::getAtPath( $input, $path, 0 );
 				$hasOutput = false;
 				foreach ( $updateFn( $current, $env ) as $newVal ) {
-					$input     = self::setAtPath( $input, $path, $newVal );
+					$input     = self::setAtPath( $input, $path, 0, $newVal );
 					$hasOutput = true;
 					break;
 				}
@@ -1169,7 +1140,7 @@ class JQCompile {
 				}
 			}
 			foreach ( array_reverse( $toDelete ) as $path ) {
-				$input = self::deleteAtPath( $input, $path );
+				$input = self::deleteAtPath( $input, $path, 0 );
 			}
 			yield $input;
 		};
@@ -1180,33 +1151,30 @@ class JQCompile {
 	 * null propagates (null[x] → null); out-of-bounds returns null.
 	 *
 	 * @param mixed $val
-	 * @param array<int|string> $path
+	 * @param list<int|float|string> $path
+	 * @param int $offset The current offset into $path
 	 */
-	private static function getAtPath( mixed $val, array $path ): mixed {
-		foreach ( $path as $key ) {
-			if ( $val === null ) {
+	private static function getAtPath( mixed $val, array $path, int $offset ): mixed {
+		if ( $offset >= count( $path ) ) {
+			return $val;
+		}
+		$key = $path[$offset++];
+		if ( is_string( $key ) ) {
+			if ( is_object( $val ) && property_exists( $val, $key ) ) {
+				return self::getAtPath( $val->$key, $path, $offset );
+			}
+			return null;
+		} elseif ( JQUtils::isNumber( $key ) ) {
+			if ( !is_array( $val ) ) {
 				return null;
 			}
-			if ( is_int( $key ) ) {
-				if ( !is_array( $val ) || !array_is_list( $val ) ) {
-					return null;
-				}
-				$idx = $key < 0 ? count( $val ) + $key : $key;
-				if ( $idx < 0 || $idx >= count( $val ) ) {
-					return null;
-				}
-				$val = $val[$idx];
-			} else {
-				if ( is_object( $val ) ) {
-					$val = property_exists( $val, $key ) ? $val->$key : null;
-				} elseif ( is_array( $val ) && !array_is_list( $val ) ) {
-					$val = array_key_exists( $key, $val ) ? $val[$key] : null;
-				} else {
-					return null;
-				}
+			$idx = JQUtils::adjustIndex( 'getAtPath', $key, $val );
+			if ( $idx === null ) {
+				return null;
 			}
+			return self::getAtPath( $val[$idx], $path, $offset );
 		}
-		return $val;
+		return null;
 	}
 
 	/**
@@ -1215,47 +1183,50 @@ class JQCompile {
 	 * Throws JQError for out-of-bounds negative indices and oversized indices.
 	 *
 	 * @param mixed $container
-	 * @param array<int|string> $path
-	 * @param mixed $newVal
+	 * @param list<int|float|string> $path
+	 * @param int $offset The current offset into $path
+	 * @param mixed $newVal The value we expect to set at the end of the path
 	 */
-	private static function setAtPath( mixed $container, array $path, mixed $newVal ): mixed {
-		if ( count( $path ) === 0 ) {
+	private static function setAtPath( mixed $container, array $path, int $offset, mixed $newVal ): mixed {
+		if ( $offset >= count( $path ) ) {
 			return $newVal;
 		}
-		$key  = $path[0];
-		$rest = array_slice( $path, 1 );
+		$key = $path[$offset++];
 		if ( is_string( $key ) ) {
-			$inner = ( $container !== null && is_object( $container ) )
-				? ( $container->$key ?? null )
-				: null;
-			return self::doSetObjField( $container, $key, self::setAtPath( $inner, $rest, $newVal ) );
+			// null is promoted to object.
+			$container ??= (object)[];
+			$container = JQUtils::checkObject( 'setAtPath', $container );
+			$newObj = clone $container;
+			$newObj->$key = self::setAtPath(
+				$container->$key ?? null, $path, $offset, $newVal
+			);
+			return $newObj;
 		}
-		$idx = (int)$key;
-		if ( $idx < 0 ) {
-			if ( !is_array( $container ) ) {
+		if ( JQUtils::isNumber( $key ) ) {
+			// null is promoted to array
+			$container ??= [];
+			$container = JQUtils::checkArray( 'setAtPath', $container );
+			$index = (int)$key;
+			if ( $index < 0 ) {
+				$index += count( $container );
+			}
+			if ( $index < 0 ) {
 				throw new JQError( 'Out of bounds negative array index' );
 			}
-			$idx = count( $container ) + $idx;
-			if ( $idx < 0 ) {
-				throw new JQError( 'Out of bounds negative array index' );
+			if ( $index >= self::MAX_ARRAY_INDEX ) {
+				throw new JQError( 'Array index too large' );
 			}
+			$newArr = $container;
+			// Maintain array as list by padding with nulls
+			while ( count( $newArr ) < $index ) {
+				$newArr[] = null;
+			}
+			$newArr[$index] = self::setAtPath(
+				$container[$index] ?? null, $path, $offset, $newVal
+			);
+			return $newArr;
 		}
-		if ( $idx >= self::MAX_ARRAY_INDEX ) {
-			throw new JQError( 'Array index too large' );
-		}
-		if ( $container === null ) {
-			$container = [];
-		}
-		if ( !is_array( $container ) || !array_is_list( $container ) ) {
-			throw new JQError( 'Cannot index ' . JQUtils::typeName( $container ) . ' with number' );
-		}
-		$inner = $container[$idx] ?? null;
-		$new   = $container;
-		while ( count( $new ) <= $idx ) {
-			$new[] = null;
-		}
-		$new[$idx] = self::setAtPath( $inner, $rest, $newVal );
-		return $new;
+		return $container;
 	}
 
 	/**
@@ -1264,59 +1235,47 @@ class JQCompile {
 	 * Non-existent paths are silently ignored.
 	 *
 	 * @param mixed $container
-	 * @param array<int|string> $path
+	 * @param list<int|float|string> $path
+	 * @param int $offset The current offset into $path
 	 */
-	private static function deleteAtPath( mixed $container, array $path ): mixed {
-		if ( count( $path ) === 0 ) {
+	private static function deleteAtPath( mixed $container, array $path, int $offset ): mixed {
+		if ( $offset >= count( $path ) ) {
 			return null;
 		}
-		$key  = $path[0];
-		$rest = array_slice( $path, 1 );
-		if ( count( $rest ) > 0 ) {
+		$key = $path[$offset++];
+		if ( $offset < count( $path ) ) {
 			if ( is_string( $key ) && is_object( $container ) ) {
 				$new       = clone $container;
-				$new->$key = self::deleteAtPath( $container->$key ?? null, $rest );
+				$new->$key = self::deleteAtPath( $container->$key ?? null, $path, $offset );
 				return $new;
 			}
-			if ( is_int( $key ) && is_array( $container ) && array_is_list( $container ) ) {
-				$idx = $key < 0 ? count( $container ) + $key : $key;
-				if ( $idx >= 0 && $idx < count( $container ) ) {
-					$new      = $container;
-					$new[$idx] = self::deleteAtPath( $container[$idx], $rest );
+			if ( JQUtils::isNumber( $key ) && is_array( $container ) ) {
+				$idx = JQUtils::adjustIndex( 'deleteAtPath', $key, $container );
+				if ( $idx !== null ) {
+					$new       = $container;
+					$new[$idx] = self::deleteAtPath( $container[$idx], $path, $offset );
 					return $new;
 				}
 			}
 			return $container;
 		}
 		if ( is_string( $key ) && is_object( $container ) ) {
-			$new = clone $container;
-			unset( $new->$key );
-			return $new;
+			$newObj = clone $container;
+			unset( $newObj->$key );
+			return $newObj;
 		}
-		if ( is_int( $key ) && is_array( $container ) && array_is_list( $container ) ) {
-			$idx = $key < 0 ? count( $container ) + $key : $key;
-			if ( $idx >= 0 && $idx < count( $container ) ) {
-				$new = $container;
-				array_splice( $new, $idx, 1 );
-				return $new;
+		if ( JQUtils::isNumber( $key ) && is_array( $container ) ) {
+			JQUtils::assertIsList( 'deleteAtPath', $container );
+			$index = (int)$key;
+			if ( $index < 0 ) {
+				$index += count( $container );
+			}
+			if ( $index >= 0 && $index < count( $container ) ) {
+				$newArr = $container;
+				array_splice( $newArr, $index, 1 );
+				return $newArr;
 			}
 		}
 		return $container;
 	}
-
-	/** Set a named field on an object, promoting null to stdClass. */
-	private static function doSetObjField( mixed $obj, string $name, mixed $val ): mixed {
-		if ( $obj === null ) {
-			$obj = new \stdClass();
-		}
-		if ( !is_object( $obj ) ) {
-			throw new JQError( 'Cannot index ' . JQUtils::typeName( $obj ) . ' with string "' . $name . '"' );
-		}
-		$new        = clone $obj;
-		$new->$name = $val;
-		return $new;
-	}
-
-	/** Maximum array index; prevents accidental huge allocations. */
-	private const MAX_ARRAY_INDEX = 536870912;
 }

@@ -5,6 +5,7 @@ namespace Wikimedia\Zest;
 
 use Closure;
 use LogicException;
+use stdClass;
 
 /**
  * Utility functions for dealing with JQ values.
@@ -87,9 +88,23 @@ class JQUtils {
 	}
 
 	/**
+	 * Assert that $val is an object and return it; throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. 'field').
+	 * @return stdClass
+	 */
+	public static function checkObject( string $who, mixed $val ): stdClass {
+		if ( !is_object( $val ) ) {
+			throw new JQError(
+				"{$who} requires an object input, got " . self::typeName( $val )
+			);
+		}
+		return $val;
+	}
+
+	/**
 	 * Assert that $val is an array and return it; throw JQError otherwise.
 	 * $who names the operation for the error message (e.g. 'implode').
-	 * @return array<mixed>
+	 * @return list<mixed>
 	 */
 	public static function checkArray( string $who, mixed $val ): array {
 		if ( !is_array( $val ) ) {
@@ -97,20 +112,24 @@ class JQUtils {
 				"{$who} requires an array input, got " . self::typeName( $val )
 			);
 		}
+		self::assertIsList( $who, $val );
 		return $val;
 	}
 
 	/**
-	 * Assert that $val is a list array (sequential integer keys) and return it;
-	 * throw JQError otherwise.
-	 * $who names the operation for the error message (e.g. '@csv').
+	 * Assert that $val is a PHP list array (satisfies array_is_list).
+	 *
+	 * Throws LogicException, since a non-list array is an internal
+	 * invariant violation, since JQ arrays are always represented as
+	 * PHP list arrays.
+	 *
+	 * @param string $who Caller, for error reporting.
+	 * @param array<mixed> $val
 	 * @return list<mixed>
 	 */
-	public static function checkList( string $who, mixed $val ): array {
-		if ( !is_array( $val ) || !array_is_list( $val ) ) {
-			throw new JQError(
-				"{$who} requires an array input, got " . self::typeName( $val )
-			);
+	public static function assertIsList( string $who, array $val ): array {
+		if ( !array_is_list( $val ) ) {
+			throw new LogicException( "All jq arrays should be lists ({$who})" );
 		}
 		return $val;
 	}
@@ -126,6 +145,16 @@ class JQUtils {
 			);
 		}
 		return $val;
+	}
+
+	public static function adjustIndex( string $who, mixed $index, array $container ): ?int {
+		$container = self::assertIsList( $who, $container );
+		$index = (int)self::checkNumber( $who, $index );
+		$length = count( $container );
+		if ( $index < 0 ) {
+			$index += $length;
+		}
+		return ( $index >= 0 && $index < $length ) ? $index : null;
 	}
 
 	/**
@@ -497,7 +526,7 @@ class JQUtils {
 	 * with internal double-quotes doubled; values are comma-separated.
 	 */
 	private static function formatCsv( mixed $val ): string {
-		$val = self::checkList( '@csv', $val );
+		$val = self::checkArray( '@csv', $val );
 		$cols = [];
 		foreach ( $val as $item ) {
 			if ( self::isNumber( $item ) ) {
@@ -522,7 +551,7 @@ class JQUtils {
 	 * carriage-return, and backslash in strings are backslash-escaped.
 	 */
 	private static function formatTsv( mixed $val ): string {
-		$val = self::checkList( '@tsv', $val );
+		$val = self::checkArray( '@tsv', $val );
 		$cols = [];
 		foreach ( $val as $item ) {
 			if ( self::isNumber( $item ) ) {

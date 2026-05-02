@@ -43,7 +43,7 @@ class JQTopLevelEnv extends JQEnv {
 		$defs['length/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield match ( true ) {
 				$input === null => 0,
-				is_array( $input ) => count( $input ),
+				is_array( $input ) => count( JQUtils::assertIsList( 'length', $input ) ),
 				is_object( $input ) => count( get_object_vars( $input ) ),
 				is_string( $input ) => mb_strlen( $input ),
 				JQUtils::isNumber( $input ) => abs( $input ),
@@ -75,9 +75,8 @@ class JQTopLevelEnv extends JQEnv {
 		// keys_unsorted/0 — object keys (insertion order) or array indices
 		$defs['keys_unsorted/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( is_array( $input ) ) {
-				yield array_is_list( $input )
-					? ( count( $input ) > 0 ? range( 0, count( $input ) - 1 ) : [] )
-					: array_keys( $input );
+				$arr = JQUtils::assertIsList( 'keys_unsorted', $input );
+				yield count( $arr ) > 0 ? range( 0, count( $arr ) - 1 ) : [];
 			} elseif ( is_object( $input ) ) {
 				yield array_keys( get_object_vars( $input ) );
 			} else {
@@ -88,13 +87,8 @@ class JQTopLevelEnv extends JQEnv {
 		// keys/0 — like keys_unsorted but lexicographically sorted
 		$defs['keys/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( is_array( $input ) ) {
-				if ( array_is_list( $input ) ) {
-					yield count( $input ) > 0 ? range( 0, count( $input ) - 1 ) : [];
-				} else {
-					$keys = array_keys( $input );
-					sort( $keys );
-					yield $keys;
-				}
+				$arr = JQUtils::assertIsList( 'keys', $input );
+				yield count( $arr ) > 0 ? range( 0, count( $arr ) - 1 ) : [];
 			} elseif ( is_object( $input ) ) {
 				$keys = array_keys( get_object_vars( $input ) );
 				sort( $keys );
@@ -109,12 +103,12 @@ class JQTopLevelEnv extends JQEnv {
 			$keyFn = $argFns[0];
 			return static function ( mixed $input, JQEnv $env ) use ( $keyFn ): Generator {
 				foreach ( $keyFn( $input, $env ) as $key ) {
-					if ( is_array( $input ) && array_is_list( $input ) ) {
-						yield is_int( $key ) && $key >= 0 && $key < count( $input );
-					} elseif ( is_array( $input ) ) {
-						yield array_key_exists( $key, $input );
+					if ( is_array( $input ) ) {
+						$index = JQUtils::adjustIndex( 'has', $key, $input );
+						yield ( $index !== null );
 					} elseif ( is_object( $input ) ) {
-						yield property_exists( $input, (string)$key );
+						$key = JQUtils::checkString( 'has', $key );
+						yield property_exists( $input, $key );
 					} else {
 						throw new JQError( JQUtils::typeName( $input ) . ' is not indexable' );
 					}
@@ -295,7 +289,9 @@ class JQTopLevelEnv extends JQEnv {
 		if ( is_string( $a ) && is_string( $b ) ) {
 			return str_contains( $a, $b );
 		}
-		if ( is_array( $a ) && array_is_list( $a ) && is_array( $b ) && array_is_list( $b ) ) {
+		if ( is_array( $a ) && is_array( $b ) ) {
+			JQUtils::assertIsList( 'contains', $a );
+			JQUtils::assertIsList( 'contains', $b );
 			foreach ( $b as $bItem ) {
 				$found = false;
 				foreach ( $a as $aItem ) {
