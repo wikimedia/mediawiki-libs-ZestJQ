@@ -10,10 +10,12 @@ use Wikimedia\Zest\JQCompile;
 use Wikimedia\Zest\JQError;
 use Wikimedia\Zest\JQGrammar;
 use Wikimedia\Zest\JQLazyEnv;
+use Wikimedia\Zest\ZestJQ;
 
 // Parse flags and positional args (minimal jq-compatible subset)
 $nullInput = false;
 $rawOutput = false;
+$astOutput = false;
 $args = [];
 for ( $i = 1; $i < $argc; $i++ ) {
 	$arg = $argv[$i];
@@ -24,6 +26,8 @@ for ( $i = 1; $i < $argc; $i++ ) {
 		$nullInput = true;
 	} elseif ( $arg === '-r' || $arg === '--raw-output' ) {
 		$rawOutput = true;
+	} elseif ( $arg === '--ast' ) {
+		$astOutput = true;
 	} elseif ( $arg[0] === '-' ) {
 		fwrite( STDERR, "zestjq: unknown option: $arg\n" );
 		exit( 2 );
@@ -33,7 +37,7 @@ for ( $i = 1; $i < $argc; $i++ ) {
 }
 
 if ( count( $args ) < 1 ) {
-	fwrite( STDERR, "Usage: zestjq [-n] [-r] <filter> [file...]\n" );
+	fwrite( STDERR, "Usage: zestjq [-n] [-r] [--ast] <filter> [file...]\n" );
 	exit( 2 );
 }
 
@@ -75,7 +79,9 @@ function runFilter( Closure $filter, mixed $input ): int {
 
 $exitCode = 0;
 
-if ( $nullInput ) {
+if ( $astOutput ) {
+	echo encodeOutput( $ast, $rawOutput ) . "\n";
+} elseif ( $nullInput ) {
 	$exitCode = runFilter( $filter, null );
 } elseif ( count( $files ) > 0 ) {
 	foreach ( $files as $file ) {
