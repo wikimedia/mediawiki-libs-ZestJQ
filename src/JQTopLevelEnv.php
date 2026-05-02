@@ -248,6 +248,22 @@ class JQTopLevelEnv extends JQEnv {
 				( is_float( $input ) && is_finite( $input ) && $input != 0.0 );
 		};
 
+		// last/1 — yield the last output of expr; yield nothing if expr is empty
+		$defs['last/1'] = static function ( array $argFns ): Closure {
+			$exprFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $exprFn ): Generator {
+				$last  = null;
+				$found = false;
+				foreach ( $exprFn( $input, $env ) as $val ) {
+					$last  = $val;
+					$found = true;
+				}
+				if ( $found ) {
+					yield $last;
+				}
+			};
+		};
+
 		// halt/0, halt_error/1
 		$defs['halt/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield from [];

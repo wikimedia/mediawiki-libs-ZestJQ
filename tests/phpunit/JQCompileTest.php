@@ -16,7 +16,7 @@ use Wikimedia\Zest\JQUtils;
 class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	public static function compileProvider(): iterable {
 		foreach ( JQGrammarTest::loadTests() as $test ) {
-			if ( $test['lineno'] > 390 ) {
+			if ( $test['lineno'] > 430 ) {
 				return;
 			}
 			if ( !( $test['fail'] ?? false ) ) {
