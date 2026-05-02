@@ -47,14 +47,14 @@ class JQTopLevelEnv extends JQEnv {
 				is_array( $input ) => count( $input ),
 				is_object( $input ) => count( get_object_vars( $input ) ),
 				is_string( $input ) => mb_strlen( $input ),
-				JQCompile::isNumber( $input ) => abs( $input ),
-				default => throw new JQError( JQCompile::typeName( $input ) . ' has no length' ),
+				JQUtils::isNumber( $input ) => abs( $input ),
+				default => throw new JQError( JQUtils::typeName( $input ) . ' has no length' ),
 			};
 		};
 
 		// type/0 — "null", "boolean", "number", "string", "array", "object"
 		$defs['type/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield JQCompile::typeName( $input );
+			yield JQUtils::typeName( $input );
 		};
 
 		// not/0 — JQ truthiness: null and false are falsy, everything else truthy
@@ -83,7 +83,7 @@ class JQTopLevelEnv extends JQEnv {
 			} elseif ( is_object( $input ) ) {
 				yield array_keys( get_object_vars( $input ) );
 			} else {
-				throw new JQError( JQCompile::typeName( $input ) . ' has no keys' );
+				throw new JQError( JQUtils::typeName( $input ) . ' has no keys' );
 			}
 		};
 
@@ -102,7 +102,7 @@ class JQTopLevelEnv extends JQEnv {
 				sort( $keys );
 				yield $keys;
 			} else {
-				throw new JQError( JQCompile::typeName( $input ) . ' has no keys' );
+				throw new JQError( JQUtils::typeName( $input ) . ' has no keys' );
 			}
 		};
 
@@ -118,7 +118,7 @@ class JQTopLevelEnv extends JQEnv {
 					} elseif ( is_object( $input ) ) {
 						yield property_exists( $input, (string)$key );
 					} else {
-						throw new JQError( JQCompile::typeName( $input ) . ' is not indexable' );
+						throw new JQError( JQUtils::typeName( $input ) . ' is not indexable' );
 					}
 				}
 			};
@@ -154,10 +154,10 @@ class JQTopLevelEnv extends JQEnv {
 		// fromjson/0 — parse a JSON string
 		$defs['fromjson/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( !is_string( $input ) ) {
-				throw new JQError( 'fromjson requires a string, got ' . JQCompile::typeName( $input ) );
+				throw new JQError( 'fromjson requires a string, got ' . JQUtils::typeName( $input ) );
 			}
 			try {
-				$decoded = ZestJQ::jsonDecode( $input );
+				$decoded = JQUtils::jsonDecode( $input );
 			} catch ( JsonException ) {
 				throw new JQError( 'Invalid JSON: ' . $input );
 			}
@@ -166,20 +166,20 @@ class JQTopLevelEnv extends JQEnv {
 
 		// tonumber/0 — numbers pass through; strings are parsed
 		$defs['tonumber/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			if ( JQCompile::isNumber( $input ) ) {
+			if ( JQUtils::isNumber( $input ) ) {
 				yield $input;
 			} elseif ( is_string( $input ) && is_numeric( $input ) ) {
 				// @phan-suppress-next-line PhanTypeMismatchReturn
 				yield $input + 0;
 			} else {
-				throw new JQError( JQCompile::typeName( $input ) . ' is not a number' );
+				throw new JQError( JQUtils::typeName( $input ) . ' is not a number' );
 			}
 		};
 
 		// explode/0 — string → array of Unicode codepoints
 		$defs['explode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( !is_string( $input ) ) {
-				throw new JQError( 'explode requires a string, got ' . JQCompile::typeName( $input ) );
+				throw new JQError( 'explode requires a string, got ' . JQUtils::typeName( $input ) );
 			}
 			$codes = [];
 			for ( $i = 0, $n = mb_strlen( $input ); $i < $n; $i++ ) {
@@ -191,7 +191,7 @@ class JQTopLevelEnv extends JQEnv {
 		// implode/0 — array of Unicode codepoints → string
 		$defs['implode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( !is_array( $input ) ) {
-				throw new JQError( 'implode requires an array, got ' . JQCompile::typeName( $input ) );
+				throw new JQError( 'implode requires an array, got ' . JQUtils::typeName( $input ) );
 			}
 			$str = '';
 			foreach ( $input as $code ) {
@@ -224,7 +224,7 @@ class JQTopLevelEnv extends JQEnv {
 			return static function ( mixed $input, JQEnv $env ) use ( $sepFn ): Generator {
 				foreach ( $sepFn( $input, $env ) as $sep ) {
 					if ( !is_string( $input ) ) {
-						throw new JQError( 'split requires a string input, got ' . JQCompile::typeName( $input ) );
+						throw new JQError( 'split requires a string input, got ' . JQUtils::typeName( $input ) );
 					}
 					yield $sep === '' ? mb_str_split( $input ) : explode( (string)$sep, $input );
 				}
@@ -342,8 +342,8 @@ class JQTopLevelEnv extends JQEnv {
 			}
 			return true;
 		}
-		if ( JQCompile::isNumber( $a ) ) {
-			return ( JQCompile::isNumber( $b ) ) && $a == $b;
+		if ( JQUtils::isNumber( $a ) ) {
+			return ( JQUtils::isNumber( $b ) ) && $a == $b;
 		}
 		return $a === $b;
 	}
