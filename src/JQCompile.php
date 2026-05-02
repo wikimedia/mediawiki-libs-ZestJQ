@@ -645,9 +645,7 @@ class JQCompile {
 		$exprFn = $this->compileNode( $node['expr'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn ): Generator {
 			foreach ( $exprFn( $input, $env ) as $v ) {
-				if ( !JQUtils::isNumber( $v ) ) {
-					throw new JQError( 'Cannot negate ' . JQUtils::typeName( $v ) );
-				}
+				$v = JQUtils::checkNumber( 'negation', $v );
 				yield -$v;
 			}
 		};

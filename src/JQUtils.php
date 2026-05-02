@@ -34,6 +34,101 @@ class JQUtils {
 	}
 
 	/**
+	 * Coerce a JQ value to a number.
+	 * Numbers pass through unchanged; numeric strings are parsed.
+	 * All other types throw JQError.
+	 */
+	public static function toNumber( mixed $val ): int|float {
+		if ( self::isNumber( $val ) ) {
+			return $val;
+		}
+		if ( is_string( $val ) && is_numeric( $val ) ) {
+			// @phan-suppress-next-line PhanTypeInvalidLeftOperandOfAdd
+			return $val + 0;
+		}
+		throw new JQError( self::typeName( $val ) . ' is not a number' );
+	}
+
+	/**
+	 * Convert a JQ value to string with tostring semantics:
+	 * strings pass through unchanged; everything else is JSON-encoded.
+	 */
+	public static function toString( mixed $val ): string {
+		return is_string( $val ) ? $val : self::jsonEncode( $val );
+	}
+
+	/**
+	 * Assert that $val is a string and return it; throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. 'explode').
+	 */
+	public static function checkString( string $who, mixed $val ): string {
+		if ( !is_string( $val ) ) {
+			throw new JQError(
+				"{$who} requires string inputs, got " . self::typeName( $val )
+			);
+		}
+		return $val;
+	}
+
+	/**
+	 * Assert that $vals are all strings and returns them; throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. 'explode').
+	 * @return list<string>
+	 */
+	public static function checkStrings( string $who, mixed ...$vals ): array {
+		foreach ( $vals as $val ) {
+			if ( !is_string( $val ) ) {
+				throw new JQError(
+					"{$who} requires string inputs, got " . self::typeName( $val )
+				);
+			}
+		}
+		return $vals;
+	}
+
+	/**
+	 * Assert that $val is an array and return it; throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. 'implode').
+	 * @return array<mixed>
+	 */
+	public static function checkArray( string $who, mixed $val ): array {
+		if ( !is_array( $val ) ) {
+			throw new JQError(
+				"{$who} requires an array input, got " . self::typeName( $val )
+			);
+		}
+		return $val;
+	}
+
+	/**
+	 * Assert that $val is a list array (sequential integer keys) and return it;
+	 * throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. '@csv').
+	 * @return list<mixed>
+	 */
+	public static function checkList( string $who, mixed $val ): array {
+		if ( !is_array( $val ) || !array_is_list( $val ) ) {
+			throw new JQError(
+				"{$who} requires an array input, got " . self::typeName( $val )
+			);
+		}
+		return $val;
+	}
+
+	/**
+	 * Assert that $val is a number (int or float) and return it; throw JQError otherwise.
+	 * $who names the operation for the error message (e.g. 'floor').
+	 */
+	public static function checkNumber( string $who, mixed $val ): int|float {
+		if ( !self::isNumber( $val ) ) {
+			throw new JQError(
+				"{$who} requires a number input, got " . self::typeName( $val )
+			);
+		}
+		return $val;
+	}
+
+	/**
 	 * Return the JQ type name of a PHP value, used in error messages.
 	 */
 	public static function typeName( mixed $v ): string {
@@ -337,14 +432,6 @@ class JQUtils {
 	// -----------------------------------------------------------------------
 
 	/**
-	 * Convert a JQ value to string with tostring semantics:
-	 * strings pass through unchanged; everything else is JSON-encoded.
-	 */
-	public static function toString( mixed $val ): string {
-		return is_string( $val ) ? $val : self::jsonEncode( $val );
-	}
-
-	/**
 	 * Return a formatter Closure for the named JQ format string.
 	 *
 	 * The returned Closure accepts any JQ value and returns a formatted string.
@@ -410,9 +497,7 @@ class JQUtils {
 	 * with internal double-quotes doubled; values are comma-separated.
 	 */
 	private static function formatCsv( mixed $val ): string {
-		if ( !is_array( $val ) || !array_is_list( $val ) ) {
-			throw new JQError( '@csv input must be an array, got ' . self::typeName( $val ) );
-		}
+		$val = self::checkList( '@csv', $val );
 		$cols = [];
 		foreach ( $val as $item ) {
 			if ( self::isNumber( $item ) ) {
@@ -437,9 +522,7 @@ class JQUtils {
 	 * carriage-return, and backslash in strings are backslash-escaped.
 	 */
 	private static function formatTsv( mixed $val ): string {
-		if ( !is_array( $val ) || !array_is_list( $val ) ) {
-			throw new JQError( '@tsv input must be an array, got ' . self::typeName( $val ) );
-		}
+		$val = self::checkList( '@tsv', $val );
 		$cols = [];
 		foreach ( $val as $item ) {
 			if ( self::isNumber( $item ) ) {

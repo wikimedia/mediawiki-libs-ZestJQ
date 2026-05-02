@@ -69,8 +69,7 @@ class JQTopLevelEnv extends JQEnv {
 		// error/0 — throw the input value as a JQError; jqValue carries original
 		$defs['error/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield from [];
-			$msg = is_string( $input ) ? $input : ( json_encode( $input ) ?: 'null' );
-			throw new JQError( $msg, $input );
+			throw new JQError( JQUtils::toString( $input ), $input );
 		};
 
 		// keys_unsorted/0 — object keys (insertion order) or array indices
@@ -140,58 +139,40 @@ class JQTopLevelEnv extends JQEnv {
 
 		// tostring/0 — strings pass through; everything else is JSON-encoded
 		$defs['tostring/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield is_string( $input )
-				? $input
-				: ( json_encode( $input, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ?: 'null' );
+			yield JQUtils::toString( $input );
 		};
 
 		// tojson/0 — always JSON-encode (including strings)
 		$defs['tojson/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield json_encode( $input, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ?: 'null';
+			yield JQUtils::jsonEncode( $input );
 		};
 
 		// fromjson/0 — parse a JSON string
 		$defs['fromjson/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			if ( !is_string( $input ) ) {
-				throw new JQError( 'fromjson requires a string, got ' . JQUtils::typeName( $input ) );
-			}
-			yield JQUtils::jsonDecode( $input );
+			$json = JQUtils::checkString( 'fromjson', $input );
+			yield JQUtils::jsonDecode( $json );
 		};
 
 		// tonumber/0 — numbers pass through; strings are parsed
 		$defs['tonumber/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			if ( JQUtils::isNumber( $input ) ) {
-				yield $input;
-			} elseif ( is_string( $input ) && is_numeric( $input ) ) {
-				// @phan-suppress-next-line PhanTypeMismatchReturn
-				yield $input + 0;
-			} else {
-				throw new JQError( JQUtils::typeName( $input ) . ' is not a number' );
-			}
+			yield JQUtils::toNumber( $input );
 		};
 
 		// explode/0 — string → array of Unicode codepoints
 		$defs['explode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			if ( !is_string( $input ) ) {
-				throw new JQError( 'explode requires a string, got ' . JQUtils::typeName( $input ) );
-			}
-			$codes = [];
-			for ( $i = 0, $n = mb_strlen( $input ); $i < $n; $i++ ) {
-				$codes[] = mb_ord( mb_substr( $input, $i, 1 ) );
-			}
-			yield $codes;
+			$str = JQUtils::checkString( 'explode', $input );
+			$chars = mb_str_split( $str );
+			yield array_map( static fn ( $c )=>mb_ord( $c ), $chars );
 		};
 
 		// implode/0 — array of Unicode codepoints → string
 		$defs['implode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			if ( !is_array( $input ) ) {
-				throw new JQError( 'implode requires an array, got ' . JQUtils::typeName( $input ) );
-			}
-			$str = '';
-			foreach ( $input as $code ) {
-				$str .= mb_chr( (int)$code );
-			}
-			yield $str;
+			$input = JQUtils::checkArray( 'implode', $input );
+			$chars = array_map(
+				static fn ( $code ) => mb_chr( (int)JQUtils::checkNumber( 'implode', $code ) ),
+				$input
+			);
+			yield implode( '', $chars );
 		};
 
 		// startswith/1, endswith/1
@@ -199,7 +180,8 @@ class JQTopLevelEnv extends JQEnv {
 			$prefixFn = $argFns[0];
 			return static function ( mixed $input, JQEnv $env ) use ( $prefixFn ): Generator {
 				foreach ( $prefixFn( $input, $env ) as $prefix ) {
-					yield str_starts_with( (string)$input, (string)$prefix );
+					[ $input, $prefix ] = JQUtils::checkStrings( 'startswith', $input, $prefix );
+					yield str_starts_with( $input, $prefix );
 				}
 			};
 		};
@@ -207,7 +189,8 @@ class JQTopLevelEnv extends JQEnv {
 			$suffixFn = $argFns[0];
 			return static function ( mixed $input, JQEnv $env ) use ( $suffixFn ): Generator {
 				foreach ( $suffixFn( $input, $env ) as $suffix ) {
-					yield str_ends_with( (string)$input, (string)$suffix );
+					[ $input, $suffix ] = JQUtils::checkStrings( 'endswith', $input, $suffix );
+					yield str_ends_with( $input, $suffix );
 				}
 			};
 		};
@@ -217,10 +200,8 @@ class JQTopLevelEnv extends JQEnv {
 			$sepFn = $argFns[0];
 			return static function ( mixed $input, JQEnv $env ) use ( $sepFn ): Generator {
 				foreach ( $sepFn( $input, $env ) as $sep ) {
-					if ( !is_string( $input ) ) {
-						throw new JQError( 'split requires a string input, got ' . JQUtils::typeName( $input ) );
-					}
-					yield $sep === '' ? mb_str_split( $input ) : explode( (string)$sep, $input );
+					[ $input, $sep ] = JQUtils::checkStrings( 'split', $input, $sep );
+					yield $sep === '' ? mb_str_split( $input ) : explode( $sep, $input );
 				}
 			};
 		};
@@ -237,19 +218,19 @@ class JQTopLevelEnv extends JQEnv {
 
 		// Math builtins
 		$defs['floor/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield (int)floor( (float)$input );
+			yield (int)floor( JQUtils::checkNumber( 'floor', $input ) );
 		};
 		$defs['ceil/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield (int)ceil( (float)$input );
+			yield (int)ceil( JQUtils::checkNumber( 'ceil', $input ) );
 		};
 		$defs['round/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield (int)round( (float)$input );
+			yield (int)round( JQUtils::checkNumber( 'round', $input ) );
 		};
 		$defs['sqrt/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield sqrt( (float)$input );
+			yield sqrt( JQUtils::checkNumber( 'sqrt', $input ) );
 		};
 		$defs['fabs/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield abs( (float)$input );
+			yield abs( JQUtils::checkNumber( 'fabs', $input ) );
 		};
 
 		// Special float values and predicates
@@ -266,8 +247,11 @@ class JQTopLevelEnv extends JQEnv {
 			yield is_float( $input ) && is_nan( $input );
 		};
 		$defs['isnormal/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			// PHP has no is_normal(); approximate: finite and nonzero
-			yield is_float( $input ) && is_finite( $input ) && $input != 0.0;
+			// PHP has no is_normal(); approximate: finite and nonzero;
+			// this misses only those "subnormal" small numbers very close
+			// to zero.
+			yield is_int( $input ) ||
+				( is_float( $input ) && is_finite( $input ) && $input != 0.0 );
 		};
 
 		// halt/0, halt_error/1

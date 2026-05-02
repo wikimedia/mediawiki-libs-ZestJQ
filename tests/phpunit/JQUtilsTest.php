@@ -14,6 +14,43 @@ use Wikimedia\Zest\JQUtils;
 class JQUtilsTest extends \PHPUnit\Framework\TestCase {
 
 	// -----------------------------------------------------------------------
+	// toNumber
+	// -----------------------------------------------------------------------
+
+	public function testToNumberPassesThrough(): void {
+		$this->assertSame( 42, JQUtils::toNumber( 42 ) );
+		$this->assertSame( 3.14, JQUtils::toNumber( 3.14 ) );
+		$this->assertSame( 0, JQUtils::toNumber( 0 ) );
+	}
+
+	public function testToNumberParsesIntString(): void {
+		$this->assertSame( 42, JQUtils::toNumber( '42' ) );
+	}
+
+	public function testToNumberParsesFloatString(): void {
+		$this->assertSame( 3.14, JQUtils::toNumber( '3.14' ) );
+	}
+
+	public function testToNumberParsesScientificNotation(): void {
+		$this->assertSame( 1.0e5, JQUtils::toNumber( '1e5' ) );
+	}
+
+	public function testToNumberThrowsOnNull(): void {
+		$this->expectException( JQError::class );
+		JQUtils::toNumber( null );
+	}
+
+	public function testToNumberThrowsOnNonNumericString(): void {
+		$this->expectException( JQError::class );
+		JQUtils::toNumber( 'hello' );
+	}
+
+	public function testToNumberThrowsOnArray(): void {
+		$this->expectException( JQError::class );
+		JQUtils::toNumber( [] );
+	}
+
+	// -----------------------------------------------------------------------
 	// toString
 	// -----------------------------------------------------------------------
 
