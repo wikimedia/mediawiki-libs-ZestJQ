@@ -62,6 +62,7 @@ class JQCompile {
 	private function evalNode( array $node ): \Closure {
 		return match ( $node['type'] ) {
 			'identity' => $this->evalIdentity(),
+			'literal'  => $this->evalLiteral( $node ),
 			default    => throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] ),
 		};
 	}
@@ -75,6 +76,20 @@ class JQCompile {
 	private function evalIdentity(): \Closure {
 		return static function ( mixed $input, JQEnv $env ): \Generator {
 			yield $input;
+		};
+	}
+
+	/**
+	 * Compile a literal node (null, true, false, number, plain string).
+	 * Yields the literal value, ignoring the input.
+	 *
+	 * @param array $node  Node with 'value' key
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalLiteral( array $node ): \Closure {
+		$value = $node['value'];
+		return static function ( mixed $input, JQEnv $env ) use ( $value ): \Generator {
+			yield $value;
 		};
 	}
 
