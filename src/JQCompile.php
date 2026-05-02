@@ -940,12 +940,12 @@ class JQCompile {
 						$acc = $newAcc;
 						break;
 					}
+					if ( $extractFn !== null ) {
+						yield from $extractFn( $acc, $boundEnv );
+					} else {
+						yield $acc;
+					}
 					break;
-				}
-				if ( $extractFn !== null ) {
-					yield from $extractFn( $acc, $env );
-				} else {
-					yield $acc;
 				}
 			}
 		};
