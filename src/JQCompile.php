@@ -7,6 +7,7 @@ namespace Wikimedia\Zest;
 use Closure;
 use Generator;
 use LogicException;
+use stdClass;
 
 /**
  * Compiler for JQ filter expressions.
@@ -481,6 +482,35 @@ class JQCompile {
 	}
 
 	/**
+	 * Recursive helper for obj_pattern matching.
+	 *
+	 * For each value yielded by the field's key function, validates it is a
+	 * string, looks up that field in $val, runs the field's pattern matcher,
+	 * then recurses into the remaining fields.  Produces one output environment
+	 * per combination of key values, matching jq's multi-output semantics.
+	 *
+	 * @param stdClass $val
+	 * @param JQEnv $env
+	 * @param array<array{Closure,Closure}> $fields
+	 * @param int $idx
+	 */
+	private static function matchObjFields(
+		stdClass $val, JQEnv $env, array $fields, int $idx
+	): Generator {
+		if ( $idx >= count( $fields ) ) {
+			yield $env;
+			return;
+		}
+		[ $keyFn, $fieldFn ] = $fields[$idx];
+		foreach ( $keyFn( $val, $env ) as $k ) {
+			$fieldName = JQUtils::checkString( 'object index', $k );
+			foreach ( $fieldFn( $val->$fieldName ?? null, $env ) as $nextEnv ) {
+				yield from self::matchObjFields( $val, $nextEnv, $fields, $idx + 1 );
+			}
+		}
+	}
+
+	/**
 	 * Compile a pattern into a Matcher closure.
 	 *
 	 * The pattern AST is traversed once here at compile time; sub-patterns
@@ -532,27 +562,7 @@ class JQCompile {
 				if ( !is_object( $val ) ) {
 					throw new JQError( 'Cannot destructure ' . JQUtils::typeName( $val ) . ' as object' );
 				}
-				$currentEnv = $env;
-				foreach ( $fields as [ $keyFn, $fieldFn ] ) {
-					$fieldName = null;
-					foreach ( $keyFn( $val, $currentEnv ) as $k ) {
-						$fieldName = JQUtils::checkString( 'object index', $k );
-						break;
-					}
-					if ( $fieldName === null ) {
-						return;
-					}
-					$nextEnv = null;
-					foreach ( $fieldFn( $val->$fieldName ?? null, $currentEnv ) as $e ) {
-						$nextEnv = $e;
-						break;
-					}
-					if ( $nextEnv === null ) {
-						return;
-					}
-					$currentEnv = $nextEnv;
-				}
-				yield $currentEnv;
+				yield from self::matchObjFields( $val, $env, $fields, 0 );
 			};
 		} elseif ( $pat['type'] === 'alt_pattern' ) {
 			$altFns = array_map( fn ( $p ) => $this->compilePattern( $p ), $pat['patterns'] );
