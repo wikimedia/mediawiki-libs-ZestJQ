@@ -99,20 +99,32 @@ class JQEnv {
 		} catch ( \Wikimedia\WikiPEG\SyntaxError $e ) {
 			throw new \RuntimeException( 'Failed to parse JQ source for evalForEnv: ' . json_encode( $e ) );
 		}
+		return self::runAstForEnv( $ast, $baseEnv );
+	}
+
+	/** Compile a pre-parsed AST and run it to capture the yielded JQEnv. */
+	private static function runAstForEnv( array $ast, JQEnv $baseEnv ): JQEnv {
 		$f = JQCompile::compile( $ast, $baseEnv );
 		foreach ( $f( null ) as $val ) {
 			if ( $val instanceof JQEnv ) {
 				return $val;
 			}
 		}
-		throw new \RuntimeException( 'evalForEnv: $__env__ was not yielded' );
+		throw new \RuntimeException( 'runAstForEnv: $__env__ was not yielded' );
 	}
 
 	private static function buildStandardEnv(): JQEnv {
+		$baseEnv = new JQEnv( null, new IOContext );
+		$astFile = __DIR__ . '/BuiltinJQAst.php';
+		if ( is_file( $astFile ) ) {
+			// Fast path: load the pre-parsed AST; skip the grammar parse step.
+			return self::runAstForEnv( require $astFile, $baseEnv );
+		}
+		// Slow fallback: parse builtin.jq from source.
 		$src = file_get_contents( __DIR__ . '/builtin.jq' );
 		if ( $src === false ) {
 			throw new \RuntimeException( 'Could not read builtin.jq' );
 		}
-		return self::evalForEnv( $src );
+		return self::evalForEnv( $src, $baseEnv );
 	}
 }
