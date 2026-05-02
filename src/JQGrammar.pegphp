@@ -23,9 +23,16 @@ namespace Wikimedia\Zest;
      *   call (name, args[]), def (name, params[], body, rest)
      *   if (cond, then, else), reduce (src, pattern, init, update)
      *   foreach (src, pattern, init, update, extract)
-     *   label (name, body), break (name), loc
+     *   label (name, body), break (name),
      *   string (parts[])  -- interpolated strings
      */
+
+    /** Filename used in `$__loc__` reporting. */
+    private string $filename = '';
+
+    protected function initialize() {
+         $this->filename = $this->options['filename'] ?? '<top-level>';
+    }
 
     private static function build( array $left, ?array $right, string $type ): array {
         if ($right === null) {
@@ -283,7 +290,11 @@ Term
   / "false" !IdentChar { return [ 'type' => 'literal', 'value' => false ]; }
 
   /* $__loc__ — source location object */
-  / "$__loc__" !IdentChar { return [ 'type' => 'loc' ]; }
+  / "$__loc__" !IdentChar {
+    return [ 'type' => 'literal', 'value' => (object)[
+        'file' => $this->filename, 'line' => $this->location()->start->line,
+    ] ];
+  }
 
   /* Format strings: @base64, @uri, @html, @csv, @tsv, @json, @text, @sh */
   / "@" fmt:Name

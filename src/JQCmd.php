@@ -61,7 +61,7 @@ class JQCmd {
 		// Compile the filter once
 		$g = new JQGrammar;
 		try {
-			$ast = $g->parse( $filterExpr );
+			$ast = $g->parse( $filterExpr, [ 'filename' => '<top-level>' ] );
 		} catch ( SyntaxError $e ) {
 			self::err( "zestjq: syntax error in filter: " . $e->getMessage() . "\n" );
 			return 3;

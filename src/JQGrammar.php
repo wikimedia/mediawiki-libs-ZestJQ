@@ -24,7 +24,7 @@ class JQGrammar extends \Wikimedia\WikiPEG\PEGParserBase {
      * Module/import/include and pattern matching beyond $var are stubbed.
      *
      * AST node arrays have a 'type' key; important types:
-     *   identity, recurse, literal (value), variable (name), format (fmt)
+     *   identity, literal (value), variable (name), format (fmt)
      *   pipe (left, right), comma (left, right), alternative (left, right)
      *   or (left, right), and (left, right), compare (op, left, right)
      *   neg (expr), binop (op, left, right)
@@ -35,9 +35,16 @@ class JQGrammar extends \Wikimedia\WikiPEG\PEGParserBase {
      *   call (name, args[]), def (name, params[], body, rest)
      *   if (cond, then, else), reduce (src, pattern, init, update)
      *   foreach (src, pattern, init, update, extract)
-     *   label (name, body), break (name), loc
+     *   label (name, body), break (name),
      *   string (parts[])  -- interpolated strings
      */
+
+    /** Filename used in `$__loc__` reporting. */
+    private string $filename = '';
+
+    protected function initialize() {
+         $this->filename = $this->options['filename'] ?? '<top-level>';
+    }
 
     private static function build( array $left, ?array $right, string $type ): array {
         if ($right === null) {
@@ -349,7 +356,11 @@ private function a49() {
  return [ 'type' => 'literal', 'value' => false ]; 
 }
 private function a50() {
- return [ 'type' => 'loc' ]; 
+
+    return [ 'type' => 'literal', 'value' => (object)[
+        'file' => $this->filename, 'line' => $this->location()->start->line,
+    ] ];
+  
 }
 private function a51($fmt) {
  return [ 'type' => 'format', 'fmt' => $fmt ]; 
