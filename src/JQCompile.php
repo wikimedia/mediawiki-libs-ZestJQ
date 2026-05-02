@@ -230,6 +230,9 @@ class JQCompile {
 		$opt    = $node['opt'];
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $keyFn, $opt ): \Generator {
 			foreach ( $exprFn( $input, $env ) as $base ) {
+				// The key expression sees the original $input, not $base.
+				// e.g. in .a[.b], .b is evaluated against the outer input,
+				// not against the result of .a.
 				foreach ( $keyFn( $input, $env ) as $key ) {
 					try {
 						if ( $base === null ) {
