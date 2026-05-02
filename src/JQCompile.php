@@ -197,14 +197,6 @@ class JQCompile {
 	 */
 	private function compileVariable( array $node ): Closure {
 		$key = '$' . $node['name'];
-		if ( $key === '$__env__' ) {
-			// Built-in: yield the current JQEnv so callers can capture it.
-			// Used by bootstrapping code (evalForEnv) to extract the env after
-			// a sequence of def statements has been evaluated.
-			return static function ( mixed $input, JQEnv $env ): Generator {
-				yield $env;
-			};
-		}
 		return static function ( mixed $input, JQEnv $env ) use ( $key ): Generator {
 			$fn = $env->lookup( $key, 0 );
 			if ( $fn === null ) {

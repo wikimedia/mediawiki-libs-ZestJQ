@@ -31,6 +31,15 @@ class JQTopLevelEnv extends JQEnv {
 	private static function buildNativeBuiltins(): array {
 		$defs = [];
 
+		// $__env__/0 is a hack which yield the current JQEnv so callers
+		// can capture it.
+		// Used by bootstrapping code (JQEnv::buildStandardEnv) to extract
+		// the startup env after a sequence of def statements has been
+		// evaluated.
+		$defs['$__env__/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			yield $env;
+		};
+
 		// length/0 — null→0, array/object→count, string→mb_strlen, number→abs
 		$defs['length/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield match ( true ) {
