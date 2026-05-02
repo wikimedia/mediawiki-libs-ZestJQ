@@ -79,6 +79,8 @@ class JQCompile {
 			'label'    => $this->compileLabel( $node ),
 			'break'    => $this->compileBreak( $node ),
 			'variable' => $this->compileVariable( $node ),
+			'def'      => $this->compileDef( $node ),
+			'call'     => $this->compileCall( $node ),
 			'bind'     => $this->compileBind( $node ),
 			'field'    => $this->compileField( $node ),
 			'index'    => $this->compileIndex( $node ),
@@ -184,12 +186,131 @@ class JQCompile {
 	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
 	private function compileVariable( array $node ): Closure {
-		$name = $node['name'];
-		return static function ( mixed $input, JQEnv $env ) use ( $name ): Generator {
-			$fn = $env->lookup( $name, 0 );
+		$key = '$' . $node['name'];
+		return static function ( mixed $input, JQEnv $env ) use ( $key ): Generator {
+			$fn = $env->lookup( $key, 0 );
 			if ( $fn === null ) {
-				throw new JQError( '$' . $name . ' is not defined' );
+				throw new JQError( $key . ' is not defined' );
 			}
+			yield from $fn( $input, $env );
+		};
+	}
+
+	/**
+	 * Compile a def node (def name(params): body; rest).
+	 *
+	 * Value parameters ($x) are desugared at compile time:
+	 *   def f($x): body  →  def f(x): x as $x | body
+	 * so that only filter parameters remain at runtime.
+	 *
+	 * Lexical scoping is achieved via a forward reference ($defEnvRef):
+	 * the binding closure captures $defEnvRef by reference, which is filled
+	 * in just before rest is evaluated. This also enables recursion, because
+	 * any recursive call in body or rest will find the function already bound.
+	 *
+	 * For 0-arity defs, the stored value is a plain Filter.
+	 * For n-arity defs, the stored value is a FunctionFactory:
+	 *   Closure(Closure[] $argFns): Filter
+	 * The factory injects the arg closures as 0-arity filter-param bindings
+	 * into the lexical env, then returns the body filter. Filter args are
+	 * always evaluated in the call-site env, not the def-body env.
+	 *
+	 * @param array $node  Node with 'name', 'params', 'body', and 'rest' keys
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
+	 */
+	private function compileDef( array $node ): Closure {
+		$name   = $node['name'];
+		$params = $node['params'];
+		$arity  = count( $params );
+
+		// Desugar value params: wrap body (in reverse param order so the first
+		// param binds outermost): def f($x;$y): body → def f(x;y): x as $x | y as $y | body
+		$bodyAst = $node['body'];
+		foreach ( array_reverse( $params ) as $param ) {
+			if ( $param['kind'] === 'value' ) {
+				$bodyAst = [
+					'type'    => 'bind',
+					'expr'    => [ 'type' => 'call', 'name' => $param['name'], 'args' => [] ],
+					'pattern' => [ 'type' => 'var_pattern', 'name' => $param['name'] ],
+					'body'    => $bodyAst,
+				];
+			}
+		}
+
+		$bodyFn = $this->compileNode( $bodyAst );
+		$restFn = $this->compileNode( $node['rest'] );
+
+		if ( $arity === 0 ) {
+			return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn, $restFn ): Generator {
+				$defEnvRef = $env;  // placeholder; overwritten below before first use
+				$binding = static function ( mixed $in, JQEnv $e ) use ( $bodyFn, &$defEnvRef ): Generator {
+					yield from $bodyFn( $in, $defEnvRef );
+				};
+				$newEnv = $env->bind( $name, 0, $binding );
+				$defEnvRef = $newEnv;
+				yield from $restFn( $input, $newEnv );
+			};
+		}
+
+		// n-arity: store a FunctionFactory in the env
+		$filterNames = array_column( $params, 'name' );
+		return static function ( mixed $input, JQEnv $env ) use ( $name, $arity, $filterNames, $bodyFn, $restFn ): Generator {
+			$defEnvRef = $env;  // placeholder; overwritten below before first use
+			$factory = static function ( array $argFns ) use ( $filterNames, $bodyFn, &$defEnvRef ): Closure {
+				return static function ( mixed $in, JQEnv $callEnv ) use ( $filterNames, $argFns, $bodyFn, &$defEnvRef ): Generator {
+					// Start from the lexical env where the def was created.
+					$bodyEnv = $defEnvRef;
+					// Inject each filter param so it evaluates in the call-site env.
+					foreach ( $filterNames as $i => $pName ) {
+						$argFn = $argFns[$i];
+						$bodyEnv = $bodyEnv->bind( $pName, 0,
+							static function ( mixed $argIn, JQEnv $ignored ) use ( $argFn, $callEnv ): Generator {
+								yield from $argFn( $argIn, $callEnv );
+							}
+						);
+					}
+					yield from $bodyFn( $in, $bodyEnv );
+				};
+			};
+			$newEnv = $env->bind( $name, $arity, $factory );
+			$defEnvRef = $newEnv;
+			yield from $restFn( $input, $newEnv );
+		};
+	}
+
+	/**
+	 * Compile a call node (name or name(arg; ...)).
+	 *
+	 * Arg filters are compiled once here at compile time and captured in the
+	 * returned closure. At runtime:
+	 *  - 0-arity: the stored value is a plain Filter; call it directly.
+	 *  - n-arity: the stored value is a FunctionFactory; pass the compiled arg
+	 *    closures to get a Filter, then run the Filter with the call-site env.
+	 *
+	 * @param array $node  Node with 'name' and 'args' keys
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
+	 */
+	private function compileCall( array $node ): Closure {
+		$name   = $node['name'];
+		$arity  = count( $node['args'] );
+		$argFns = array_map( fn( $arg ) => $this->compileNode( $arg ), $node['args'] );
+
+		if ( $arity === 0 ) {
+			return static function ( mixed $input, JQEnv $env ) use ( $name ): Generator {
+				$fn = $env->lookup( $name, 0 );
+				if ( $fn === null ) {
+					throw new JQError( $name . '/0 is not defined' );
+				}
+				yield from $fn( $input, $env );
+			};
+		}
+
+		return static function ( mixed $input, JQEnv $env ) use ( $name, $arity, $argFns ): Generator {
+			$factory = $env->lookup( $name, $arity );
+			if ( $factory === null ) {
+				throw new JQError( $name . '/' . $arity . ' is not defined' );
+			}
+			$fn = ( $factory )( $argFns );
 			yield from $fn( $input, $env );
 		};
 	}
@@ -233,9 +354,9 @@ class JQCompile {
 	 */
 	private function compilePattern( array $pat ): Closure {
 		if ( $pat['type'] === 'var_pattern' ) {
-			$name = $pat['name'];
-			return static function ( mixed $val, JQEnv $env ) use ( $name ): Generator {
-				yield $env->bind( $name, 0,
+			$key = '$' . $pat['name'];
+			return static function ( mixed $val, JQEnv $env ) use ( $key ): Generator {
+				yield $env->bind( $key, 0,
 					static function ( mixed $input, JQEnv $e ) use ( $val ): Generator {
 						yield $val;
 					}
