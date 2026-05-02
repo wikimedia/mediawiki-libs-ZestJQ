@@ -313,7 +313,7 @@ private function a38($expr, $suffixes) {
     
 }
 private function a39() {
- return [ 'type' => 'recurse' ]; 
+ return [ 'type' => 'call', 'name' => 'recurse', 'args' => [] ]; 
 }
 private function a40($name, $opt) {
  return [ 'type' => 'field',

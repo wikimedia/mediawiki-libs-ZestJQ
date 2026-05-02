@@ -98,7 +98,6 @@ class JQCompile {
 			'try'      => $this->compileTryCatch( $node ),
 			'reduce'   => $this->compileReduce( $node ),
 			'foreach'  => $this->compileForeach( $node ),
-			'recurse'  => $this->compileCall( [ 'name' => 'recurse', 'args' => [] ] ),
 			'slice'    => $this->compileSlice( $node ),
 			default    => static function ( mixed $input, JQEnv $env ) use ( $node ): Generator {
 				yield from [];

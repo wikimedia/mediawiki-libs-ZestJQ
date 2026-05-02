@@ -12,7 +12,7 @@ namespace Wikimedia\Zest;
      * Module/import/include and pattern matching beyond $var are stubbed.
      *
      * AST node arrays have a 'type' key; important types:
-     *   identity, recurse, literal (value), variable (name), format (fmt)
+     *   identity, literal (value), variable (name), format (fmt)
      *   pipe (left, right), comma (left, right), alternative (left, right)
      *   or (left, right), and (left, right), compare (op, left, right)
      *   neg (expr), binop (op, left, right)
@@ -236,7 +236,7 @@ OptQ = _ "?" { return true; } / "" { return false; }
 Term
   /* Recursive descent (..) */
   = ".."
-    { return [ 'type' => 'recurse' ]; }
+    { return [ 'type' => 'call', 'name' => 'recurse', 'args' => [] ]; }
 
   /* Field access on identity: .name or .name? */
   /* jq lexer handles ".\w+" as a single FIELD token, no space between */
