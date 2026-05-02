@@ -179,11 +179,12 @@ Postfix
 Suffix
   = "?"
     { return [ 'type' => 'try', 'catch' => null ]; }
-  / "."? "[" _ "]" opt:"?"?
+  /* Bracket suffixes allow optional leading whitespace (like jq's lexer between tokens) */
+  / _ "."? "[" _ "]" opt:"?"?
     { return [ 'type' => 'iter', 'opt' => $opt !== null ]; }
-  / "."? "[" _ from:SliceBound ":" _ to:SliceBound "]" opt:"?"?
+  / _ "."? "[" _ from:SliceBound ":" _ to:SliceBound "]" opt:"?"?
     { return [ 'type' => 'slice', 'from' => $from, 'to' => $to, 'opt' => $opt !== null ]; }
-  / "."? "[" _ key:Query _ "]" opt:"?"?
+  / _ "."? "[" _ key:Query _ "]" opt:"?"?
     { return [ 'type' => 'index', 'key' => $key, 'opt' => $opt !== null ]; }
   / "."? name:FieldName opt:"?"?
     { return [ 'type' => 'field', 'name' => $name, 'opt' => $opt !== null ]; }

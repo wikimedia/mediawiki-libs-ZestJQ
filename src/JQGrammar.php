@@ -3518,7 +3518,7 @@ private function parsePostfix($silence) {
     // start seq_3
     $p8 = $this->currPos;
     $r9 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"'.?-\\[_a-z]/A", $r9)) {
+    if (preg_match("/[\\x09-\\x0a\\x0d \"-#'.?-\\[_a-z]/A", $r9)) {
       $r9 = false;
       $this->currPos = $p8;
     } else {
@@ -5085,6 +5085,7 @@ private function parseSuffix($silence) {
   $p2 = $this->currPos;
   // start seq_1
   $p3 = $this->currPos;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ".") {
     $r4 = true;
     $this->currPos++;
@@ -5136,6 +5137,7 @@ private function parseSuffix($silence) {
   $p2 = $this->currPos;
   // start seq_2
   $p3 = $this->currPos;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ".") {
     $r6 = true;
     $this->currPos++;
@@ -5202,6 +5204,7 @@ private function parseSuffix($silence) {
   $p2 = $this->currPos;
   // start seq_3
   $p3 = $this->currPos;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ".") {
     $r10 = true;
     $this->currPos++;
