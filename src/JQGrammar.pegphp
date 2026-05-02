@@ -207,8 +207,8 @@ Term
                'expr' => [ 'type' => 'identity' ],
                'name' => $name, 'opt' => $opt !== null ]; }
 
-  /* Bare identity: . (followed by [ is fine; Postfix handles the bracket) */
-  / "."
+  /* Bare identity: . but not if followed by a digit (that would be a .NNN number) */
+  / "." ![0-9]
     { return [ 'type' => 'identity' ]; }
 
   /* Unary negation */
@@ -428,7 +428,7 @@ SingleChar
 /* ================================================================== */
 
 Number "number"
-  = n:$( [0-9]+ ("." [0-9]*)? ([eE] [+-]? [0-9]+)? )
+  = n:$( ( [0-9]+ ("." [0-9]*)? / "." [0-9]+ ) ([eE] [+-]? [0-9]+)? )
     { return [ 'type' => 'literal', 'value' => strpos( $n, '.' ) !== false
                  || strpos( $n, 'e' ) !== false || strpos( $n, 'E' ) !== false
                ? (float)$n : (int)$n ]; }
