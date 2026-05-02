@@ -22,10 +22,12 @@ use stdClass;
  *   foreach ( $filter( $input ) as $output ) { ... }
  *
  * Error handling:
- *   JQError  — thrown by error/0, error/1, and type mismatches; caught by
- *              try-catch nodes and the ? suffix operator.
- *   JQBreak  — thrown by break/$label; propagates through try-catch nodes
- *              and is only caught by the matching label/$label node.
+ *   JQError        — thrown by error/0, error/1, and type mismatches; caught by
+ *                    try-catch nodes and the ? suffix operator.
+ *   JQBreak        — thrown by break/$label; propagates through try-catch nodes
+ *                    and is only caught by the matching label/$label node.
+ *   JQHaltException — thrown by halt/0 and halt_error/1; propagates through
+ *                    everything (not caught by try-catch nodes).
  *
  * Closure types used throughout this file:
  *   Filter  = Closure(mixed $input, JQEnv $env): Generator

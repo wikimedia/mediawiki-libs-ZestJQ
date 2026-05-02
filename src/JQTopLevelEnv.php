@@ -257,19 +257,19 @@ class JQTopLevelEnv extends JQEnv {
 		// halt/0, halt_error/1
 		$defs['halt/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield from [];
-			exit( 0 );
+			throw new JQHaltException( 0 );
 		};
 		$defs['halt_error/1'] = static function ( array $argFns ): Closure {
 			$codeFn = $argFns[0];
 			return static function ( mixed $input, JQEnv $env ) use ( $codeFn ): Generator {
 				yield from [];
 				foreach ( $codeFn( $input, $env ) as $code ) {
-					if ( is_string( $input ) ) {
-						fwrite( STDERR, $input );
-					}
-					exit( is_int( $code ) ? $code : 5 );
+					throw new JQHaltException(
+						(int)JQUtils::checkNumber( 'halt_error', $code ),
+						$input !== null ? JQUtils::toString( $input ) : ''
+					);
 				}
-				exit( 0 );
+				throw new JQHaltException( 0 );
 			};
 		};
 
