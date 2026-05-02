@@ -79,7 +79,7 @@ class JQEnv {
 	}
 
 	private static function buildStandardEnv(): JQEnv {
-		$baseEnv = new JQEnv( null, new IOContext );
+		$baseEnv = new JQTopLevelEnv( new IOContext );
 		$ast = JQBuiltin::getAst();
 		$f = JQCompile::compile( $ast, $baseEnv );
 		foreach ( $f( null ) as $val ) {

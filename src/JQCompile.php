@@ -449,7 +449,7 @@ class JQCompile {
 	/**
 	 * Return the JQ type name of a PHP value, used in error messages.
 	 */
-	private static function typeName( mixed $v ): string {
+	public static function typeName( mixed $v ): string {
 		if ( $v === null ) {
 			return 'null';
 		}
