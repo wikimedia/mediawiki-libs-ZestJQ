@@ -117,7 +117,7 @@ class JQEnv {
 		$baseEnv = new JQEnv( null, new IOContext );
 		// Fast path: use the pre-parsed AST constant (available after composer build-stdenv).
 		if ( class_exists( JQBuiltin::class ) ) {
-			return self::runAstForEnv( JQBuiltin::AST, $baseEnv );
+			return self::runAstForEnv( JQBuiltin::getAst(), $baseEnv );
 		}
 		// Slow fallback: parse builtin.jq from source if JQBuiltin.php hasn't been generated.
 		$src = file_get_contents( __DIR__ . '/builtin.jq' );

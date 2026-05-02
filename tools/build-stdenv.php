@@ -24,7 +24,7 @@ try {
 	exit( 1 );
 }
 
-$exported = var_export( $ast, true );
+$serialized = var_export( serialize( $ast ), true );
 $content = <<<PHP
 <?php
 declare( strict_types = 1 );
@@ -39,7 +39,12 @@ namespace Wikimedia\Zest;
  * @internal
  */
 class JQBuiltin {
-	public const AST = {$exported};
+	// phpcs:ignore Generic.Files.LineLength.MaxExceeded
+	public const AST = {$serialized};
+
+	public static function getAst(): array {
+		return unserialize( self::AST );
+	}
 }
 PHP;
 
