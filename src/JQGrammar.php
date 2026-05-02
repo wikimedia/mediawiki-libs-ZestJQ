@@ -69,81 +69,80 @@ class JQGrammar extends \Wikimedia\WikiPEG\PEGParserBase {
 	// expectations
 	protected $expectations = [
 		0 => ["type" => "end", "description" => "end of input"],
-1 => ["type" => "class", "value" => "[ \\t\\n\\r]", "description" => "[ \\t\\n\\r]"],
-2 => ["type" => "other", "description" => "Pipe"],
-3 => ["type" => "literal", "value" => "def", "description" => "\"def\""],
-4 => ["type" => "other", "description" => "FuncName"],
-5 => ["type" => "literal", "value" => ":", "description" => "\":\""],
-6 => ["type" => "literal", "value" => ";", "description" => "\";\""],
-7 => ["type" => "other", "description" => "Alt"],
-8 => ["type" => "literal", "value" => "as", "description" => "\"as\""],
-9 => ["type" => "other", "description" => "Pattern"],
-10 => ["type" => "literal", "value" => "|", "description" => "\"|\""],
-11 => ["type" => "literal", "value" => "label", "description" => "\"label\""],
-12 => ["type" => "literal", "value" => "\$", "description" => "\"\$\""],
-13 => ["type" => "other", "description" => "Name"],
-14 => ["type" => "other", "description" => "Comma"],
-15 => ["type" => "other", "description" => "function name"],
-16 => ["type" => "literal", "value" => "(", "description" => "\"(\""],
-17 => ["type" => "other", "description" => "FuncParam"],
-18 => ["type" => "literal", "value" => ")", "description" => "\")\""],
-19 => ["type" => "other", "description" => "Assign"],
-20 => ["type" => "literal", "value" => "//", "description" => "\"//\""],
-21 => ["type" => "literal", "value" => "[", "description" => "\"[\""],
-22 => ["type" => "literal", "value" => ",", "description" => "\",\""],
-23 => ["type" => "literal", "value" => "]", "description" => "\"]\""],
-24 => ["type" => "literal", "value" => "{", "description" => "\"{\""],
-25 => ["type" => "other", "description" => "ObjPat"],
-26 => ["type" => "literal", "value" => "}", "description" => "\"}\""],
-27 => ["type" => "other", "description" => "name"],
-28 => ["type" => "other", "description" => "Or"],
-29 => ["type" => "literal", "value" => "=", "description" => "\"=\""],
-30 => ["type" => "other", "description" => "ObjPatKey"],
-31 => ["type" => "other", "description" => "And"],
-32 => ["type" => "literal", "value" => "or", "description" => "\"or\""],
-33 => ["type" => "other", "description" => "String"],
-34 => ["type" => "other", "description" => "Cmp"],
-35 => ["type" => "literal", "value" => "and", "description" => "\"and\""],
-36 => ["type" => "other", "description" => "string"],
-37 => ["type" => "other", "description" => "Add"],
-38 => ["type" => "other", "description" => "CmpOp"],
-39 => ["type" => "other", "description" => "Mul"],
-40 => ["type" => "class", "value" => "\"+\" or \"-\"", "description" => "\"+\" or \"-\""],
-41 => ["type" => "other", "description" => "comparison operator"],
-42 => ["type" => "other", "description" => "Postfix"],
-43 => ["type" => "other", "description" => "MulOp"],
-44 => ["type" => "other", "description" => "Term"],
-45 => ["type" => "other", "description" => "Suffix"],
-46 => ["type" => "other", "description" => "multiplicative operator"],
-47 => ["type" => "literal", "value" => "..", "description" => "\"..\""],
-48 => ["type" => "literal", "value" => ".", "description" => "\".\""],
-49 => ["type" => "other", "description" => "FieldName"],
-50 => ["type" => "literal", "value" => "?", "description" => "\"?\""],
-51 => ["type" => "literal", "value" => "-", "description" => "\"-\""],
-52 => ["type" => "other", "description" => "Number"],
-53 => ["type" => "literal", "value" => "null", "description" => "\"null\""],
-54 => ["type" => "literal", "value" => "true", "description" => "\"true\""],
-55 => ["type" => "literal", "value" => "false", "description" => "\"false\""],
-56 => ["type" => "literal", "value" => "\$__loc__", "description" => "\"\$__loc__\""],
-57 => ["type" => "literal", "value" => "@", "description" => "\"@\""],
-58 => ["type" => "literal", "value" => "if", "description" => "\"if\""],
-59 => ["type" => "literal", "value" => "then", "description" => "\"then\""],
-60 => ["type" => "other", "description" => "ElseBody"],
-61 => ["type" => "literal", "value" => "try", "description" => "\"try\""],
-62 => ["type" => "other", "description" => "TryCatch"],
-63 => ["type" => "literal", "value" => "reduce", "description" => "\"reduce\""],
-64 => ["type" => "literal", "value" => "foreach", "description" => "\"foreach\""],
-65 => ["type" => "other", "description" => "ForeachExtract"],
-66 => ["type" => "literal", "value" => "break", "description" => "\"break\""],
-67 => ["type" => "other", "description" => "field name"],
-68 => ["type" => "other", "description" => "DictPair"],
-69 => ["type" => "other", "description" => "number"],
-70 => ["type" => "literal", "value" => "elif", "description" => "\"elif\""],
-71 => ["type" => "literal", "value" => "else", "description" => "\"else\""],
-72 => ["type" => "literal", "value" => "end", "description" => "\"end\""],
-73 => ["type" => "literal", "value" => "catch", "description" => "\"catch\""],
-74 => ["type" => "other", "description" => "DictKey"],
-75 => ["type" => "other", "description" => "DictExpr"],
+1 => ["type" => "other", "description" => "Pipe"],
+2 => ["type" => "literal", "value" => "def", "description" => "\"def\""],
+3 => ["type" => "other", "description" => "FuncName"],
+4 => ["type" => "literal", "value" => ":", "description" => "\":\""],
+5 => ["type" => "literal", "value" => ";", "description" => "\";\""],
+6 => ["type" => "other", "description" => "Alt"],
+7 => ["type" => "literal", "value" => "as", "description" => "\"as\""],
+8 => ["type" => "other", "description" => "Pattern"],
+9 => ["type" => "literal", "value" => "|", "description" => "\"|\""],
+10 => ["type" => "literal", "value" => "label", "description" => "\"label\""],
+11 => ["type" => "literal", "value" => "\$", "description" => "\"\$\""],
+12 => ["type" => "other", "description" => "Name"],
+13 => ["type" => "other", "description" => "Comma"],
+14 => ["type" => "other", "description" => "function name"],
+15 => ["type" => "literal", "value" => "(", "description" => "\"(\""],
+16 => ["type" => "other", "description" => "FuncParam"],
+17 => ["type" => "literal", "value" => ")", "description" => "\")\""],
+18 => ["type" => "other", "description" => "Assign"],
+19 => ["type" => "literal", "value" => "//", "description" => "\"//\""],
+20 => ["type" => "literal", "value" => "[", "description" => "\"[\""],
+21 => ["type" => "literal", "value" => ",", "description" => "\",\""],
+22 => ["type" => "literal", "value" => "]", "description" => "\"]\""],
+23 => ["type" => "literal", "value" => "{", "description" => "\"{\""],
+24 => ["type" => "other", "description" => "ObjPat"],
+25 => ["type" => "literal", "value" => "}", "description" => "\"}\""],
+26 => ["type" => "other", "description" => "name"],
+27 => ["type" => "other", "description" => "Or"],
+28 => ["type" => "literal", "value" => "=", "description" => "\"=\""],
+29 => ["type" => "other", "description" => "ObjPatKey"],
+30 => ["type" => "other", "description" => "And"],
+31 => ["type" => "literal", "value" => "or", "description" => "\"or\""],
+32 => ["type" => "other", "description" => "String"],
+33 => ["type" => "other", "description" => "Cmp"],
+34 => ["type" => "literal", "value" => "and", "description" => "\"and\""],
+35 => ["type" => "other", "description" => "string"],
+36 => ["type" => "other", "description" => "Add"],
+37 => ["type" => "other", "description" => "CmpOp"],
+38 => ["type" => "other", "description" => "Mul"],
+39 => ["type" => "class", "value" => "\"+\" or \"-\"", "description" => "\"+\" or \"-\""],
+40 => ["type" => "other", "description" => "comparison operator"],
+41 => ["type" => "other", "description" => "Postfix"],
+42 => ["type" => "other", "description" => "MulOp"],
+43 => ["type" => "other", "description" => "Term"],
+44 => ["type" => "other", "description" => "Suffix"],
+45 => ["type" => "other", "description" => "multiplicative operator"],
+46 => ["type" => "literal", "value" => "..", "description" => "\"..\""],
+47 => ["type" => "literal", "value" => ".", "description" => "\".\""],
+48 => ["type" => "other", "description" => "FieldName"],
+49 => ["type" => "literal", "value" => "?", "description" => "\"?\""],
+50 => ["type" => "literal", "value" => "-", "description" => "\"-\""],
+51 => ["type" => "other", "description" => "Number"],
+52 => ["type" => "literal", "value" => "null", "description" => "\"null\""],
+53 => ["type" => "literal", "value" => "true", "description" => "\"true\""],
+54 => ["type" => "literal", "value" => "false", "description" => "\"false\""],
+55 => ["type" => "literal", "value" => "\$__loc__", "description" => "\"\$__loc__\""],
+56 => ["type" => "literal", "value" => "@", "description" => "\"@\""],
+57 => ["type" => "literal", "value" => "if", "description" => "\"if\""],
+58 => ["type" => "literal", "value" => "then", "description" => "\"then\""],
+59 => ["type" => "other", "description" => "ElseBody"],
+60 => ["type" => "literal", "value" => "try", "description" => "\"try\""],
+61 => ["type" => "other", "description" => "TryCatch"],
+62 => ["type" => "literal", "value" => "reduce", "description" => "\"reduce\""],
+63 => ["type" => "literal", "value" => "foreach", "description" => "\"foreach\""],
+64 => ["type" => "other", "description" => "ForeachExtract"],
+65 => ["type" => "literal", "value" => "break", "description" => "\"break\""],
+66 => ["type" => "other", "description" => "field name"],
+67 => ["type" => "other", "description" => "DictPair"],
+68 => ["type" => "other", "description" => "number"],
+69 => ["type" => "literal", "value" => "elif", "description" => "\"elif\""],
+70 => ["type" => "literal", "value" => "else", "description" => "\"else\""],
+71 => ["type" => "literal", "value" => "end", "description" => "\"end\""],
+72 => ["type" => "literal", "value" => "catch", "description" => "\"catch\""],
+73 => ["type" => "other", "description" => "DictKey"],
+74 => ["type" => "other", "description" => "DictExpr"],
 	];
 
 	// actions
@@ -372,23 +371,22 @@ private function a62($left, $right) {
 	private function parsestart($silence) {
   // start seq_1
   $p2 = $this->currPos;
-  $r3 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r3;
+  $this->discard_();
   // start seq_2
-  $p4 = $this->currPos;
-  $r5 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r5)) {
-    $r5 = false;
-    $this->currPos = $p4;
+  $p3 = $this->currPos;
+  $r4 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r4)) {
+    $r4 = false;
+    $this->currPos = $p3;
   } else {
-    $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    $r4 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
     $r1 = self::$FAILED;
     goto seq_2;
   }
   $r1 = $this->parsePipe($silence);
   if ($r1===self::$FAILED) {
-    $this->currPos = $p4;
+    $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_2;
   }
@@ -398,12 +396,47 @@ private function a62($left, $right) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p4
-  $r6 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r6;
+  // free $p3
+  $this->discard_();
   seq_1:
-  // free $r5
+  // free $r4
   // free $p2
+  return $r1;
+}
+private function discard_() {
+  for (;;) {
+    // start choice_1
+    $r2 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
+    if ($r2 > 0) {
+      $this->currPos += $r2;
+      goto choice_1;
+    } else {
+      $r2 = self::$FAILED;
+    }
+    // start seq_1
+    $p3 = $this->currPos;
+    if (($this->input[$this->currPos] ?? null) === "#") {
+      $r4 = true;
+      $this->currPos++;
+    } else {
+      $r4 = self::$FAILED;
+      $r2 = self::$FAILED;
+      goto seq_1;
+    }
+    $r5 = strcspn($this->input, "\x0a", $this->currPos);
+    $this->currPos += $r5;
+    $r2 = true;
+    seq_1:
+    // free $r4,$r5
+    // free $p3
+    choice_1:
+    if ($r2===self::$FAILED) {
+      break;
+    }
+  }
+  // free $r2
+  $r1 = true;
+  // free $r1
   return $r1;
 }
 private function parsePipe($silence) {
@@ -415,7 +448,7 @@ private function parsePipe($silence) {
     $r4 = true;
     $this->currPos += 3;
   } else {
-    if (!$silence) { $this->fail(3); }
+    if (!$silence) { $this->fail(2); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -435,41 +468,76 @@ private function parsePipe($silence) {
     goto seq_1;
   }
   // free $p6
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  $this->discard_();
   // start seq_2
   $p6 = $this->currPos;
-  $r9 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r9)) {
-    $r9 = false;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r8)) {
+    $r8 = false;
     $this->currPos = $p6;
   } else {
-    $r9 = self::$FAILED;
-    if (!$silence) { $this->fail(4); }
     $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(3); }
+    $r7 = self::$FAILED;
     goto seq_2;
   }
-  $r8 = $this->parseFuncName($silence);
-  if ($r8===self::$FAILED) {
+  $r7 = $this->parseFuncName($silence);
+  if ($r7===self::$FAILED) {
     $this->currPos = $p6;
-    $r8 = self::$FAILED;
+    $r7 = self::$FAILED;
     goto seq_2;
   }
   seq_2:
-  // name <- $r8
-  if ($r8===self::$FAILED) {
+  // name <- $r7
+  if ($r7===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
   // free $p6
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
-  $r11 = $this->parseFuncParams($silence);
-  // params <- $r11
-  $r12 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r12;
+  $this->discard_();
+  $r9 = $this->parseFuncParams($silence);
+  // params <- $r9
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ":") {
+    $r10 = true;
+    $this->currPos++;
+  } else {
+    if (!$silence) { $this->fail(4); }
+    $r10 = self::$FAILED;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_1;
+  }
+  $this->discard_();
+  // start seq_3
+  $p6 = $this->currPos;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+    $r12 = false;
+    $this->currPos = $p6;
+  } else {
+    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r11 = self::$FAILED;
+    goto seq_3;
+  }
+  $r11 = $this->parsePipe($silence);
+  if ($r11===self::$FAILED) {
+    $this->currPos = $p6;
+    $r11 = self::$FAILED;
+    goto seq_3;
+  }
+  seq_3:
+  // body <- $r11
+  if ($r11===self::$FAILED) {
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_1;
+  }
+  // free $p6
+  $this->discard_();
+  if (($this->input[$this->currPos] ?? null) === ";") {
     $r13 = true;
     $this->currPos++;
   } else {
@@ -479,69 +547,28 @@ private function parsePipe($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r14 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r14;
-  // start seq_3
-  $p6 = $this->currPos;
-  $r16 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r16)) {
-    $r16 = false;
-    $this->currPos = $p6;
-  } else {
-    $r16 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r15 = self::$FAILED;
-    goto seq_3;
-  }
-  $r15 = $this->parsePipe($silence);
-  if ($r15===self::$FAILED) {
-    $this->currPos = $p6;
-    $r15 = self::$FAILED;
-    goto seq_3;
-  }
-  seq_3:
-  // body <- $r15
-  if ($r15===self::$FAILED) {
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  // free $p6
-  $r17 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r17;
-  if (($this->input[$this->currPos] ?? null) === ";") {
-    $r18 = true;
-    $this->currPos++;
-  } else {
-    if (!$silence) { $this->fail(6); }
-    $r18 = self::$FAILED;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  $r19 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r19;
+  $this->discard_();
   // start seq_4
   $p6 = $this->currPos;
-  $r21 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r21)) {
-    $r21 = false;
+  $r15 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r15)) {
+    $r15 = false;
     $this->currPos = $p6;
   } else {
-    $r21 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r20 = self::$FAILED;
+    $r15 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r14 = self::$FAILED;
     goto seq_4;
   }
-  $r20 = $this->parsePipe($silence);
-  if ($r20===self::$FAILED) {
+  $r14 = $this->parsePipe($silence);
+  if ($r14===self::$FAILED) {
     $this->currPos = $p6;
-    $r20 = self::$FAILED;
+    $r14 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  // rest <- $r20
-  if ($r20===self::$FAILED) {
+  // rest <- $r14
+  if ($r14===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -551,128 +578,124 @@ private function parsePipe($silence) {
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a0($r8, $r11, $r15, $r20);
+    $r1 = $this->a0($r7, $r9, $r11, $r14);
     goto choice_1;
   }
-  // free $r4,$r5,$r7,$r9,$r10,$r12,$r13,$r14,$r16,$r17,$r18,$r19,$r21
+  // free $r4,$r5,$r8,$r10,$r12,$r13,$r15
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_5
   $p3 = $this->currPos;
   // start seq_6
-  $r19 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r19)) {
-    $r19 = false;
+  $r13 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r13)) {
+    $r13 = false;
     $this->currPos = $p3;
   } else {
-    $r19 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
-    $r21 = self::$FAILED;
+    $r13 = self::$FAILED;
+    if (!$silence) { $this->fail(6); }
+    $r15 = self::$FAILED;
     goto seq_6;
   }
-  $r21 = $this->parseAlt($silence);
-  if ($r21===self::$FAILED) {
+  $r15 = $this->parseAlt($silence);
+  if ($r15===self::$FAILED) {
     $this->currPos = $p3;
-    $r21 = self::$FAILED;
+    $r15 = self::$FAILED;
     goto seq_6;
   }
   seq_6:
-  // src <- $r21
-  if ($r21===self::$FAILED) {
+  // src <- $r15
+  if ($r15===self::$FAILED) {
     $r1 = self::$FAILED;
     goto seq_5;
   }
-  $r18 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r18;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "as", $this->currPos, 2, false) === 0) {
-    $r17 = true;
+    $r12 = true;
     $this->currPos += 2;
   } else {
-    if (!$silence) { $this->fail(8); }
-    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(7); }
+    $r12 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
   }
   $p6 = $this->currPos;
-  $r16 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r16))) {
-    $r16 = self::$FAILED;
+  $r10 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r10))) {
+    $r10 = self::$FAILED;
   }
-  if ($r16 === self::$FAILED) {
-    $r16 = false;
+  if ($r10 === self::$FAILED) {
+    $r10 = false;
   } else {
-    $r16 = self::$FAILED;
+    $r10 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
   }
   // free $p6
-  $r14 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r14;
+  $this->discard_();
   // start seq_7
   $p6 = $this->currPos;
   if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-    $r12 = true;
-    $r12 = false;
+    $r5 = true;
+    $r5 = false;
     $this->currPos = $p6;
   } else {
-    $r12 = self::$FAILED;
-    if (!$silence) { $this->fail(9); }
-    $r13 = self::$FAILED;
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(8); }
+    $r8 = self::$FAILED;
     goto seq_7;
   }
-  $r13 = $this->parsePattern($silence);
-  if ($r13===self::$FAILED) {
+  $r8 = $this->parsePattern($silence);
+  if ($r8===self::$FAILED) {
     $this->currPos = $p6;
-    $r13 = self::$FAILED;
+    $r8 = self::$FAILED;
     goto seq_7;
   }
   seq_7:
-  // pat <- $r13
-  if ($r13===self::$FAILED) {
+  // pat <- $r8
+  if ($r8===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
   }
   // free $p6
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "|") {
-    $r9 = true;
+    $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(10); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(9); }
+    $r4 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
   }
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  $this->discard_();
   // start seq_8
   $p6 = $this->currPos;
-  $r4 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r4)) {
-    $r4 = false;
+  $r17 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r17)) {
+    $r17 = false;
     $this->currPos = $p6;
   } else {
-    $r4 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r5 = self::$FAILED;
+    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r16 = self::$FAILED;
     goto seq_8;
   }
-  $r5 = $this->parsePipe($silence);
-  if ($r5===self::$FAILED) {
+  $r16 = $this->parsePipe($silence);
+  if ($r16===self::$FAILED) {
     $this->currPos = $p6;
-    $r5 = self::$FAILED;
+    $r16 = self::$FAILED;
     goto seq_8;
   }
   seq_8:
-  // body <- $r5
-  if ($r5===self::$FAILED) {
+  // body <- $r16
+  if ($r16===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
@@ -682,112 +705,109 @@ private function parsePipe($silence) {
   seq_5:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a1($r21, $r13, $r5);
+    $r1 = $this->a1($r15, $r8, $r16);
     goto choice_1;
   }
-  // free $r19,$r18,$r17,$r16,$r14,$r12,$r10,$r9,$r7,$r4
+  // free $r13,$r12,$r10,$r5,$r4,$r17
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_9
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "label", $this->currPos, 5, false) === 0) {
-    $r4 = true;
+    $r17 = true;
     $this->currPos += 5;
   } else {
-    if (!$silence) { $this->fail(11); }
-    $r4 = self::$FAILED;
+    if (!$silence) { $this->fail(10); }
+    $r17 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_9;
   }
   $p6 = $this->currPos;
-  $r7 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r7))) {
-    $r7 = self::$FAILED;
+  $r4 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r4))) {
+    $r4 = self::$FAILED;
   }
-  if ($r7 === self::$FAILED) {
-    $r7 = false;
+  if ($r4 === self::$FAILED) {
+    $r4 = false;
   } else {
-    $r7 = self::$FAILED;
+    $r4 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_9;
   }
   // free $p6
-  $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r9;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "\$") {
-    $r10 = true;
+    $r5 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
-    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(11); }
+    $r5 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_9;
   }
   // start seq_10
   $p6 = $this->currPos;
-  $r14 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r14)) {
-    $r14 = false;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r12)) {
+    $r12 = false;
     $this->currPos = $p6;
   } else {
-    $r14 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
     $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r10 = self::$FAILED;
     goto seq_10;
   }
-  $r12 = $this->parseName($silence);
-  if ($r12===self::$FAILED) {
+  $r10 = $this->parseName($silence);
+  if ($r10===self::$FAILED) {
     $this->currPos = $p6;
-    $r12 = self::$FAILED;
+    $r10 = self::$FAILED;
     goto seq_10;
   }
   seq_10:
-  // name <- $r12
-  if ($r12===self::$FAILED) {
+  // name <- $r10
+  if ($r10===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_9;
   }
   // free $p6
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "|") {
-    $r17 = true;
+    $r13 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(10); }
-    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(9); }
+    $r13 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_9;
   }
-  $r18 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r18;
+  $this->discard_();
   // start seq_11
   $p6 = $this->currPos;
-  $r22 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r22)) {
-    $r22 = false;
+  $r19 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r19)) {
+    $r19 = false;
     $this->currPos = $p6;
   } else {
-    $r22 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
     $r19 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r18 = self::$FAILED;
     goto seq_11;
   }
-  $r19 = $this->parsePipe($silence);
-  if ($r19===self::$FAILED) {
+  $r18 = $this->parsePipe($silence);
+  if ($r18===self::$FAILED) {
     $this->currPos = $p6;
-    $r19 = self::$FAILED;
+    $r18 = self::$FAILED;
     goto seq_11;
   }
   seq_11:
-  // body <- $r19
-  if ($r19===self::$FAILED) {
+  // body <- $r18
+  if ($r18===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_9;
@@ -797,93 +817,91 @@ private function parsePipe($silence) {
   seq_9:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a2($r12, $r19);
+    $r1 = $this->a2($r10, $r18);
     goto choice_1;
   }
-  // free $r4,$r7,$r9,$r10,$r14,$r16,$r17,$r18,$r22
+  // free $r17,$r4,$r5,$r12,$r13,$r19
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_12
   $p3 = $this->currPos;
   // start seq_13
-  $r18 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r18)) {
-    $r18 = false;
+  $r13 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r13)) {
+    $r13 = false;
     $this->currPos = $p3;
   } else {
-    $r18 = self::$FAILED;
-    if (!$silence) { $this->fail(14); }
-    $r22 = self::$FAILED;
+    $r13 = self::$FAILED;
+    if (!$silence) { $this->fail(13); }
+    $r19 = self::$FAILED;
     goto seq_13;
   }
-  $r22 = $this->parseComma($silence);
-  if ($r22===self::$FAILED) {
+  $r19 = $this->parseComma($silence);
+  if ($r19===self::$FAILED) {
     $this->currPos = $p3;
-    $r22 = self::$FAILED;
+    $r19 = self::$FAILED;
     goto seq_13;
   }
   seq_13:
-  // head <- $r22
-  if ($r22===self::$FAILED) {
+  // head <- $r19
+  if ($r19===self::$FAILED) {
     $r1 = self::$FAILED;
     goto seq_12;
   }
   // start seq_14
   $p6 = $this->currPos;
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "|") {
-    $r14 = true;
+    $r5 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(10); }
-    $r14 = self::$FAILED;
+    if (!$silence) { $this->fail(9); }
+    $r5 = self::$FAILED;
     $this->currPos = $p6;
-    $r17 = self::$FAILED;
+    $r12 = self::$FAILED;
     goto seq_14;
   }
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   // start seq_15
-  $p23 = $this->currPos;
-  $r9 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r9)) {
-    $r9 = false;
-    $this->currPos = $p23;
+  $p20 = $this->currPos;
+  $r4 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r4)) {
+    $r4 = false;
+    $this->currPos = $p20;
   } else {
-    $r9 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r17 = self::$FAILED;
+    $r4 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r12 = self::$FAILED;
     goto seq_15;
   }
-  $r17 = $this->parsePipe($silence);
-  if ($r17===self::$FAILED) {
-    $this->currPos = $p23;
-    $r17 = self::$FAILED;
+  $r12 = $this->parsePipe($silence);
+  if ($r12===self::$FAILED) {
+    $this->currPos = $p20;
+    $r12 = self::$FAILED;
     goto seq_15;
   }
   seq_15:
-  if ($r17===self::$FAILED) {
+  if ($r12===self::$FAILED) {
     $this->currPos = $p6;
-    $r17 = self::$FAILED;
+    $r12 = self::$FAILED;
     goto seq_14;
   }
-  // free $p23
+  // free $p20
   seq_14:
-  if ($r17===self::$FAILED) {
-    $r17 = null;
+  if ($r12===self::$FAILED) {
+    $r12 = null;
   }
-  // free $r9
+  // free $r4
   // free $p6
-  // tail <- $r17
+  // tail <- $r12
   $r1 = true;
   seq_12:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a3($r22, $r17);
+    $r1 = $this->a3($r19, $r12);
   }
-  // free $r18,$r16,$r14,$r10
+  // free $r13,$r5
   // free $p3
   // free $p2
   choice_1:
@@ -1076,7 +1094,7 @@ private function parseFuncName($silence) {
   // free $p6
   seq_1:
   if ($r1===self::$FAILED) {
-    if (!$silence) { $this->fail(15); }
+    if (!$silence) { $this->fail(14); }
   }
   // free $r5
   // free $p2
@@ -1091,102 +1109,98 @@ private function parseFuncParams($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
+    if (!$silence) { $this->fail(15); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r5 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r5;
+  $this->discard_();
   // start seq_2
-  $p7 = $this->currPos;
-  $r8 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\$A-Z_a-z]/A", $r8)) {
-    $r8 = false;
-    $this->currPos = $p7;
+  $p6 = $this->currPos;
+  $r7 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\$A-Z_a-z]/A", $r7)) {
+    $r7 = false;
+    $this->currPos = $p6;
   } else {
-    $r8 = self::$FAILED;
-    if (!$silence) { $this->fail(17); }
-    $r6 = self::$FAILED;
+    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(16); }
+    $r5 = self::$FAILED;
     goto seq_2;
   }
-  $r6 = $this->parseFuncParam($silence);
-  if ($r6===self::$FAILED) {
-    $this->currPos = $p7;
-    $r6 = self::$FAILED;
+  $r5 = $this->parseFuncParam($silence);
+  if ($r5===self::$FAILED) {
+    $this->currPos = $p6;
+    $r5 = self::$FAILED;
     goto seq_2;
   }
   seq_2:
-  // first <- $r6
-  if ($r6===self::$FAILED) {
+  // first <- $r5
+  if ($r5===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p7
-  $r9 = [];
+  // free $p6
+  $r8 = [];
   for (;;) {
     // start seq_3
-    $p7 = $this->currPos;
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $p6 = $this->currPos;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === ";") {
-      $r12 = true;
+      $r10 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(6); }
-      $r12 = self::$FAILED;
-      $this->currPos = $p7;
+      if (!$silence) { $this->fail(5); }
       $r10 = self::$FAILED;
+      $this->currPos = $p6;
+      $r9 = self::$FAILED;
       goto seq_3;
     }
-    $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r13;
+    $this->discard_();
     // start seq_4
-    $p14 = $this->currPos;
-    $r15 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\$A-Z_a-z]/A", $r15)) {
-      $r15 = false;
-      $this->currPos = $p14;
+    $p11 = $this->currPos;
+    $r12 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\$A-Z_a-z]/A", $r12)) {
+      $r12 = false;
+      $this->currPos = $p11;
     } else {
-      $r15 = self::$FAILED;
-      if (!$silence) { $this->fail(17); }
-      $r10 = self::$FAILED;
+      $r12 = self::$FAILED;
+      if (!$silence) { $this->fail(16); }
+      $r9 = self::$FAILED;
       goto seq_4;
     }
-    $r10 = $this->parseFuncParam($silence);
-    if ($r10===self::$FAILED) {
-      $this->currPos = $p14;
-      $r10 = self::$FAILED;
+    $r9 = $this->parseFuncParam($silence);
+    if ($r9===self::$FAILED) {
+      $this->currPos = $p11;
+      $r9 = self::$FAILED;
       goto seq_4;
     }
     seq_4:
-    if ($r10===self::$FAILED) {
-      $this->currPos = $p7;
-      $r10 = self::$FAILED;
+    if ($r9===self::$FAILED) {
+      $this->currPos = $p6;
+      $r9 = self::$FAILED;
       goto seq_3;
     }
-    // free $p14
+    // free $p11
     seq_3:
-    if ($r10!==self::$FAILED) {
-      $r9[] = $r10;
+    if ($r9!==self::$FAILED) {
+      $r8[] = $r9;
     } else {
       break;
     }
-    // free $r15
-    // free $p7
+    // free $r12
+    // free $p6
   }
-  // rest <- $r9
+  // rest <- $r8
+  // free $r9
   // free $r10
-  // free $r11,$r12,$r13
-  $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r13;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r12 = true;
+    $r10 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r10 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -1195,10 +1209,10 @@ private function parseFuncParams($silence) {
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a4($r6, $r9);
+    $r1 = $this->a4($r5, $r8);
     goto choice_1;
   }
-  // free $r4,$r5,$r8,$r13,$r12
+  // free $r4,$r7,$r10
   // free $p3
   // free $p2
   $p2 = $this->currPos;
@@ -1220,7 +1234,7 @@ private function parseAlt($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(19); }
+    if (!$silence) { $this->fail(18); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -1238,35 +1252,33 @@ private function parseAlt($silence) {
   }
   // start seq_3
   $p7 = $this->currPos;
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "//", $this->currPos, 2, false) === 0) {
-    $r9 = true;
+    $r8 = true;
     $this->currPos += 2;
   } else {
-    if (!$silence) { $this->fail(20); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(19); }
+    $r8 = self::$FAILED;
     $this->currPos = $p7;
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   // start seq_4
-  $p11 = $this->currPos;
-  $r12 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
-    $r12 = false;
-    $this->currPos = $p11;
+  $p9 = $this->currPos;
+  $r10 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r10)) {
+    $r10 = false;
+    $this->currPos = $p9;
   } else {
-    $r12 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
+    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(6); }
     $r6 = self::$FAILED;
     goto seq_4;
   }
   $r6 = $this->parseAlt($silence);
   if ($r6===self::$FAILED) {
-    $this->currPos = $p11;
+    $this->currPos = $p9;
     $r6 = self::$FAILED;
     goto seq_4;
   }
@@ -1276,12 +1288,12 @@ private function parseAlt($silence) {
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  // free $p11
+  // free $p9
   seq_3:
   if ($r6===self::$FAILED) {
     $r6 = null;
   }
-  // free $r12
+  // free $r10
   // free $p7
   // right <- $r6
   $r1 = true;
@@ -1290,7 +1302,7 @@ private function parseAlt($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a6($r4, $r6);
   }
-  // free $r5,$r8,$r9,$r10
+  // free $r5,$r8
   // free $p3
   // free $p2
   return $r1;
@@ -1304,7 +1316,7 @@ private function parsePattern($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
+    if (!$silence) { $this->fail(11); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -1317,7 +1329,7 @@ private function parsePattern($silence) {
     $this->currPos = $p6;
   } else {
     $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
+    if (!$silence) { $this->fail(12); }
     $r5 = self::$FAILED;
     goto seq_2;
   }
@@ -1352,102 +1364,98 @@ private function parsePattern($silence) {
     $r7 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
+    if (!$silence) { $this->fail(20); }
     $r7 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_3;
   }
-  $r4 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r4;
+  $this->discard_();
   // start seq_4
   $p6 = $this->currPos;
   if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-    $r9 = true;
-    $r9 = false;
+    $r8 = true;
+    $r8 = false;
     $this->currPos = $p6;
   } else {
-    $r9 = self::$FAILED;
-    if (!$silence) { $this->fail(9); }
     $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(8); }
+    $r4 = self::$FAILED;
     goto seq_4;
   }
-  $r8 = $this->parsePattern($silence);
-  if ($r8===self::$FAILED) {
+  $r4 = $this->parsePattern($silence);
+  if ($r4===self::$FAILED) {
     $this->currPos = $p6;
-    $r8 = self::$FAILED;
+    $r4 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  // first <- $r8
-  if ($r8===self::$FAILED) {
+  // first <- $r4
+  if ($r4===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_3;
   }
   // free $p6
-  $r10 = [];
+  $r9 = [];
   for (;;) {
     // start seq_5
     $p6 = $this->currPos;
-    $r12 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r12;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === ",") {
-      $r13 = true;
+      $r11 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(22); }
-      $r13 = self::$FAILED;
-      $this->currPos = $p6;
+      if (!$silence) { $this->fail(21); }
       $r11 = self::$FAILED;
+      $this->currPos = $p6;
+      $r10 = self::$FAILED;
       goto seq_5;
     }
-    $r14 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r14;
+    $this->discard_();
     // start seq_6
-    $p15 = $this->currPos;
+    $p12 = $this->currPos;
     if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-      $r16 = true;
-      $r16 = false;
-      $this->currPos = $p15;
+      $r13 = true;
+      $r13 = false;
+      $this->currPos = $p12;
     } else {
-      $r16 = self::$FAILED;
-      if (!$silence) { $this->fail(9); }
-      $r11 = self::$FAILED;
+      $r13 = self::$FAILED;
+      if (!$silence) { $this->fail(8); }
+      $r10 = self::$FAILED;
       goto seq_6;
     }
-    $r11 = $this->parsePattern($silence);
-    if ($r11===self::$FAILED) {
-      $this->currPos = $p15;
-      $r11 = self::$FAILED;
+    $r10 = $this->parsePattern($silence);
+    if ($r10===self::$FAILED) {
+      $this->currPos = $p12;
+      $r10 = self::$FAILED;
       goto seq_6;
     }
     seq_6:
-    if ($r11===self::$FAILED) {
+    if ($r10===self::$FAILED) {
       $this->currPos = $p6;
-      $r11 = self::$FAILED;
+      $r10 = self::$FAILED;
       goto seq_5;
     }
-    // free $p15
+    // free $p12
     seq_5:
-    if ($r11!==self::$FAILED) {
-      $r10[] = $r11;
+    if ($r10!==self::$FAILED) {
+      $r9[] = $r10;
     } else {
       break;
     }
-    // free $r16
+    // free $r13
     // free $p6
   }
-  // rest <- $r10
+  // rest <- $r9
+  // free $r10
   // free $r11
-  // free $r12,$r13,$r14
-  $r14 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r14;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r13 = true;
+    $r11 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r13 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r11 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_3;
@@ -1456,115 +1464,111 @@ private function parsePattern($silence) {
   seq_3:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a8($r8, $r10);
+    $r1 = $this->a8($r4, $r9);
     goto choice_1;
   }
-  // free $r7,$r4,$r9,$r14,$r13
+  // free $r7,$r8,$r11
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_7
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "{") {
-    $r13 = true;
+    $r11 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(24); }
-    $r13 = self::$FAILED;
+    if (!$silence) { $this->fail(23); }
+    $r11 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_7;
   }
-  $r14 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r14;
+  $this->discard_();
   // start seq_8
   $p6 = $this->currPos;
-  $r4 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r4)) {
-    $r4 = false;
+  $r7 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r7)) {
+    $r7 = false;
     $this->currPos = $p6;
   } else {
-    $r4 = self::$FAILED;
-    if (!$silence) { $this->fail(25); }
-    $r9 = self::$FAILED;
+    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(24); }
+    $r8 = self::$FAILED;
     goto seq_8;
   }
-  $r9 = $this->parseObjPat($silence);
-  if ($r9===self::$FAILED) {
+  $r8 = $this->parseObjPat($silence);
+  if ($r8===self::$FAILED) {
     $this->currPos = $p6;
-    $r9 = self::$FAILED;
+    $r8 = self::$FAILED;
     goto seq_8;
   }
   seq_8:
-  // first <- $r9
-  if ($r9===self::$FAILED) {
+  // first <- $r8
+  if ($r8===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_7;
   }
   // free $p6
-  $r7 = [];
+  $r10 = [];
   for (;;) {
     // start seq_9
     $p6 = $this->currPos;
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === ",") {
-      $r16 = true;
+      $r14 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(22); }
-      $r16 = self::$FAILED;
+      if (!$silence) { $this->fail(21); }
+      $r14 = self::$FAILED;
       $this->currPos = $p6;
-      $r12 = self::$FAILED;
+      $r13 = self::$FAILED;
       goto seq_9;
     }
-    $r17 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r17;
+    $this->discard_();
     // start seq_10
-    $p15 = $this->currPos;
-    $r18 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r18)) {
-      $r18 = false;
-      $this->currPos = $p15;
+    $p12 = $this->currPos;
+    $r15 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r15)) {
+      $r15 = false;
+      $this->currPos = $p12;
     } else {
-      $r18 = self::$FAILED;
-      if (!$silence) { $this->fail(25); }
-      $r12 = self::$FAILED;
+      $r15 = self::$FAILED;
+      if (!$silence) { $this->fail(24); }
+      $r13 = self::$FAILED;
       goto seq_10;
     }
-    $r12 = $this->parseObjPat($silence);
-    if ($r12===self::$FAILED) {
-      $this->currPos = $p15;
-      $r12 = self::$FAILED;
+    $r13 = $this->parseObjPat($silence);
+    if ($r13===self::$FAILED) {
+      $this->currPos = $p12;
+      $r13 = self::$FAILED;
       goto seq_10;
     }
     seq_10:
-    if ($r12===self::$FAILED) {
+    if ($r13===self::$FAILED) {
       $this->currPos = $p6;
-      $r12 = self::$FAILED;
+      $r13 = self::$FAILED;
       goto seq_9;
     }
-    // free $p15
+    // free $p12
     seq_9:
-    if ($r12!==self::$FAILED) {
-      $r7[] = $r12;
+    if ($r13!==self::$FAILED) {
+      $r10[] = $r13;
     } else {
       break;
     }
-    // free $r18
+    // free $r15
     // free $p6
   }
-  // rest <- $r7
-  // free $r12
-  // free $r11,$r16,$r17
-  $r17 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r17;
+  // rest <- $r10
+  // free $r13
+  // free $r14
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "}") {
-    $r16 = true;
+    $r14 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(26); }
-    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(25); }
+    $r14 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_7;
@@ -1573,9 +1577,9 @@ private function parsePattern($silence) {
   seq_7:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a9($r9, $r7);
+    $r1 = $this->a9($r8, $r10);
   }
-  // free $r13,$r14,$r4,$r17,$r16
+  // free $r11,$r7,$r14
   // free $p3
   // free $p2
   choice_1:
@@ -1606,7 +1610,7 @@ private function parseName($silence) {
     $r2 = substr($this->input, $p1, $this->currPos - $p1);
   } else {
     $r2 = self::$FAILED;
-    if (!$silence) { $this->fail(27); }
+    if (!$silence) { $this->fail(26); }
   }
   // free $r4,$r5
   // free $p3
@@ -1624,7 +1628,7 @@ private function parseComma($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
+    if (!$silence) { $this->fail(6); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -1642,35 +1646,33 @@ private function parseComma($silence) {
   }
   // start seq_3
   $p7 = $this->currPos;
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ",") {
-    $r9 = true;
+    $r8 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(22); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(21); }
+    $r8 = self::$FAILED;
     $this->currPos = $p7;
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   // start seq_4
-  $p11 = $this->currPos;
-  $r12 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
-    $r12 = false;
-    $this->currPos = $p11;
+  $p9 = $this->currPos;
+  $r10 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r10)) {
+    $r10 = false;
+    $this->currPos = $p9;
   } else {
-    $r12 = self::$FAILED;
-    if (!$silence) { $this->fail(14); }
+    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(13); }
     $r6 = self::$FAILED;
     goto seq_4;
   }
   $r6 = $this->parseComma($silence);
   if ($r6===self::$FAILED) {
-    $this->currPos = $p11;
+    $this->currPos = $p9;
     $r6 = self::$FAILED;
     goto seq_4;
   }
@@ -1680,12 +1682,12 @@ private function parseComma($silence) {
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  // free $p11
+  // free $p9
   seq_3:
   if ($r6===self::$FAILED) {
     $r6 = null;
   }
-  // free $r12
+  // free $r10
   // free $p7
   // right <- $r6
   $r1 = true;
@@ -1694,7 +1696,7 @@ private function parseComma($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a10($r4, $r6);
   }
-  // free $r5,$r8,$r9,$r10
+  // free $r5,$r8
   // free $p3
   // free $p2
   return $r1;
@@ -1708,7 +1710,7 @@ private function parseFuncParam($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
+    if (!$silence) { $this->fail(11); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -1721,7 +1723,7 @@ private function parseFuncParam($silence) {
     $this->currPos = $p6;
   } else {
     $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
+    if (!$silence) { $this->fail(12); }
     $r5 = self::$FAILED;
     goto seq_2;
   }
@@ -1758,7 +1760,7 @@ private function parseFuncParam($silence) {
     $this->currPos = $p3;
   } else {
     $r4 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
+    if (!$silence) { $this->fail(12); }
     $r7 = self::$FAILED;
     goto seq_3;
   }
@@ -1793,7 +1795,7 @@ private function parseAssign($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(28); }
+    if (!$silence) { $this->fail(27); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -1813,35 +1815,33 @@ private function parseAssign($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === "=") {
-      $r10 = true;
+      $r9 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(29); }
-      $r10 = self::$FAILED;
+      if (!$silence) { $this->fail(28); }
+      $r9 = self::$FAILED;
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $this->discard_();
     // start seq_4
-    $p12 = $this->currPos;
-    $r13 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r13)) {
-      $r13 = false;
-      $this->currPos = $p12;
+    $p10 = $this->currPos;
+    $r11 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r11)) {
+      $r11 = false;
+      $this->currPos = $p10;
     } else {
-      $r13 = self::$FAILED;
-      if (!$silence) { $this->fail(28); }
+      $r11 = self::$FAILED;
+      if (!$silence) { $this->fail(27); }
       $r7 = self::$FAILED;
       goto seq_4;
     }
     $r7 = $this->parseOr($silence);
     if ($r7===self::$FAILED) {
-      $this->currPos = $p12;
+      $this->currPos = $p10;
       $r7 = self::$FAILED;
       goto seq_4;
     }
@@ -1851,14 +1851,14 @@ private function parseAssign($silence) {
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p12
+    // free $p10
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r13
+    // free $r11
     // free $p8
   }
   if (count($r6) === 0) {
@@ -1889,7 +1889,7 @@ private function parseAssign($silence) {
     $this->currPos = $p2;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(28); }
+    if (!$silence) { $this->fail(27); }
     $r1 = self::$FAILED;
     goto seq_5;
   }
@@ -1916,7 +1916,7 @@ private function parseObjPat($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(30); }
+    if (!$silence) { $this->fail(29); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -1932,101 +1932,99 @@ private function parseObjPat($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r6 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r6;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ":") {
-    $r7 = true;
+    $r6 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(5); }
-    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(4); }
+    $r6 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   // start seq_3
-  $p10 = $this->currPos;
+  $p8 = $this->currPos;
   if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-    $r11 = true;
-    $r11 = false;
-    $this->currPos = $p10;
+    $r9 = true;
+    $r9 = false;
+    $this->currPos = $p8;
   } else {
-    $r11 = self::$FAILED;
-    if (!$silence) { $this->fail(9); }
     $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(8); }
+    $r7 = self::$FAILED;
     goto seq_3;
   }
-  $r9 = $this->parsePattern($silence);
-  if ($r9===self::$FAILED) {
-    $this->currPos = $p10;
-    $r9 = self::$FAILED;
+  $r7 = $this->parsePattern($silence);
+  if ($r7===self::$FAILED) {
+    $this->currPos = $p8;
+    $r7 = self::$FAILED;
     goto seq_3;
   }
   seq_3:
-  // pat <- $r9
-  if ($r9===self::$FAILED) {
+  // pat <- $r7
+  if ($r7===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p10
+  // free $p8
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a14($r4, $r9);
+    $r1 = $this->a14($r4, $r7);
     goto choice_1;
   }
-  // free $r5,$r6,$r7,$r8,$r11
+  // free $r5,$r6,$r9
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_4
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "\$") {
-    $r11 = true;
+    $r9 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
-    $r11 = self::$FAILED;
+    if (!$silence) { $this->fail(11); }
+    $r9 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_4;
   }
   // start seq_5
-  $p10 = $this->currPos;
-  $r7 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r7)) {
-    $r7 = false;
-    $this->currPos = $p10;
+  $p8 = $this->currPos;
+  $r5 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r5)) {
+    $r5 = false;
+    $this->currPos = $p8;
   } else {
-    $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r8 = self::$FAILED;
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r6 = self::$FAILED;
     goto seq_5;
   }
-  $r8 = $this->parseName($silence);
-  if ($r8===self::$FAILED) {
-    $this->currPos = $p10;
-    $r8 = self::$FAILED;
+  $r6 = $this->parseName($silence);
+  if ($r6===self::$FAILED) {
+    $this->currPos = $p8;
+    $r6 = self::$FAILED;
     goto seq_5;
   }
   seq_5:
-  // name <- $r8
-  if ($r8===self::$FAILED) {
+  // name <- $r6
+  if ($r6===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_4;
   }
-  // free $p10
+  // free $p8
   $r1 = true;
   seq_4:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a15($r8);
+    $r1 = $this->a15($r6);
   }
-  // free $r11,$r7
+  // free $r9,$r5
   // free $p3
   // free $p2
   choice_1:
@@ -2043,7 +2041,7 @@ private function parseOr($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(31); }
+    if (!$silence) { $this->fail(30); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -2063,50 +2061,48 @@ private function parseOr($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "or", $this->currPos, 2, false) === 0) {
-      $r10 = true;
+      $r9 = true;
       $this->currPos += 2;
     } else {
-      if (!$silence) { $this->fail(32); }
-      $r10 = self::$FAILED;
-      $this->currPos = $p8;
-      $r7 = self::$FAILED;
-      goto seq_3;
-    }
-    $p12 = $this->currPos;
-    $r11 = $this->input[$this->currPos] ?? '';
-    if (!(preg_match("/[0-9A-Z_a-z]/A", $r11))) {
-      $r11 = self::$FAILED;
-    }
-    if ($r11 === self::$FAILED) {
-      $r11 = false;
-    } else {
-      $r11 = self::$FAILED;
-      $this->currPos = $p12;
-      $this->currPos = $p8;
-      $r7 = self::$FAILED;
-      goto seq_3;
-    }
-    // free $p12
-    $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r13;
-    // start seq_4
-    $p12 = $this->currPos;
-    $r14 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r14)) {
-      $r14 = false;
-      $this->currPos = $p12;
-    } else {
-      $r14 = self::$FAILED;
       if (!$silence) { $this->fail(31); }
+      $r9 = self::$FAILED;
+      $this->currPos = $p8;
+      $r7 = self::$FAILED;
+      goto seq_3;
+    }
+    $p11 = $this->currPos;
+    $r10 = $this->input[$this->currPos] ?? '';
+    if (!(preg_match("/[0-9A-Z_a-z]/A", $r10))) {
+      $r10 = self::$FAILED;
+    }
+    if ($r10 === self::$FAILED) {
+      $r10 = false;
+    } else {
+      $r10 = self::$FAILED;
+      $this->currPos = $p11;
+      $this->currPos = $p8;
+      $r7 = self::$FAILED;
+      goto seq_3;
+    }
+    // free $p11
+    $this->discard_();
+    // start seq_4
+    $p11 = $this->currPos;
+    $r12 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+      $r12 = false;
+      $this->currPos = $p11;
+    } else {
+      $r12 = self::$FAILED;
+      if (!$silence) { $this->fail(30); }
       $r7 = self::$FAILED;
       goto seq_4;
     }
     $r7 = $this->parseAnd($silence);
     if ($r7===self::$FAILED) {
-      $this->currPos = $p12;
+      $this->currPos = $p11;
       $r7 = self::$FAILED;
       goto seq_4;
     }
@@ -2116,19 +2112,19 @@ private function parseOr($silence) {
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p12
+    // free $p11
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r14
+    // free $r12
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r10,$r11,$r13
+  // free $r9,$r10
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -2150,7 +2146,7 @@ private function parseObjPatKey($silence) {
     $this->currPos = $p2;
   } else {
     $r3 = self::$FAILED;
-    if (!$silence) { $this->fail(33); }
+    if (!$silence) { $this->fail(32); }
     $r1 = self::$FAILED;
     goto seq_1;
   }
@@ -2171,28 +2167,27 @@ private function parseObjPatKey($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
+    if (!$silence) { $this->fail(15); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_2;
   }
-  $r5 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r5;
+  $this->discard_();
   // start seq_3
-  $p6 = $this->currPos;
-  $r7 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r7)) {
-    $r7 = false;
-    $this->currPos = $p6;
+  $p5 = $this->currPos;
+  $r6 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r6)) {
+    $r6 = false;
+    $this->currPos = $p5;
   } else {
-    $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    $r6 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
     $r1 = self::$FAILED;
     goto seq_3;
   }
   $r1 = $this->parsePipe($silence);
   if ($r1===self::$FAILED) {
-    $this->currPos = $p6;
+    $this->currPos = $p5;
     $r1 = self::$FAILED;
     goto seq_3;
   }
@@ -2202,15 +2197,14 @@ private function parseObjPatKey($silence) {
     $r1 = self::$FAILED;
     goto seq_2;
   }
-  // free $p6
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  // free $p5
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r9 = true;
+    $r7 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r7 = self::$FAILED;
     $this->currPos = $p2;
     $r1 = self::$FAILED;
     goto seq_2;
@@ -2219,36 +2213,36 @@ private function parseObjPatKey($silence) {
   if ($r1!==self::$FAILED) {
     goto choice_1;
   }
-  // free $r7
+  // free $r6
   // free $p2
   $p2 = $this->currPos;
   // start seq_4
-  $p6 = $this->currPos;
-  $r10 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r10)) {
-    $r10 = false;
-    $this->currPos = $p6;
+  $p5 = $this->currPos;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r8)) {
+    $r8 = false;
+    $this->currPos = $p5;
   } else {
-    $r10 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r7 = self::$FAILED;
+    $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r6 = self::$FAILED;
     goto seq_4;
   }
-  $r7 = $this->parseName($silence);
-  if ($r7===self::$FAILED) {
-    $this->currPos = $p6;
-    $r7 = self::$FAILED;
+  $r6 = $this->parseName($silence);
+  if ($r6===self::$FAILED) {
+    $this->currPos = $p5;
+    $r6 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  // name <- $r7
-  // free $p6
-  $r1 = $r7;
+  // name <- $r6
+  // free $p5
+  $r1 = $r6;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a17($r7);
+    $r1 = $this->a17($r6);
   }
-  // free $r10
+  // free $r8
   // free $p2
   choice_1:
   return $r1;
@@ -2264,7 +2258,7 @@ private function parseAnd($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(34); }
+    if (!$silence) { $this->fail(33); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -2284,50 +2278,48 @@ private function parseAnd($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "and", $this->currPos, 3, false) === 0) {
-      $r10 = true;
+      $r9 = true;
       $this->currPos += 3;
     } else {
-      if (!$silence) { $this->fail(35); }
-      $r10 = self::$FAILED;
-      $this->currPos = $p8;
-      $r7 = self::$FAILED;
-      goto seq_3;
-    }
-    $p12 = $this->currPos;
-    $r11 = $this->input[$this->currPos] ?? '';
-    if (!(preg_match("/[0-9A-Z_a-z]/A", $r11))) {
-      $r11 = self::$FAILED;
-    }
-    if ($r11 === self::$FAILED) {
-      $r11 = false;
-    } else {
-      $r11 = self::$FAILED;
-      $this->currPos = $p12;
-      $this->currPos = $p8;
-      $r7 = self::$FAILED;
-      goto seq_3;
-    }
-    // free $p12
-    $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r13;
-    // start seq_4
-    $p12 = $this->currPos;
-    $r14 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r14)) {
-      $r14 = false;
-      $this->currPos = $p12;
-    } else {
-      $r14 = self::$FAILED;
       if (!$silence) { $this->fail(34); }
+      $r9 = self::$FAILED;
+      $this->currPos = $p8;
+      $r7 = self::$FAILED;
+      goto seq_3;
+    }
+    $p11 = $this->currPos;
+    $r10 = $this->input[$this->currPos] ?? '';
+    if (!(preg_match("/[0-9A-Z_a-z]/A", $r10))) {
+      $r10 = self::$FAILED;
+    }
+    if ($r10 === self::$FAILED) {
+      $r10 = false;
+    } else {
+      $r10 = self::$FAILED;
+      $this->currPos = $p11;
+      $this->currPos = $p8;
+      $r7 = self::$FAILED;
+      goto seq_3;
+    }
+    // free $p11
+    $this->discard_();
+    // start seq_4
+    $p11 = $this->currPos;
+    $r12 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+      $r12 = false;
+      $this->currPos = $p11;
+    } else {
+      $r12 = self::$FAILED;
+      if (!$silence) { $this->fail(33); }
       $r7 = self::$FAILED;
       goto seq_4;
     }
     $r7 = $this->parseCmp($silence);
     if ($r7===self::$FAILED) {
-      $this->currPos = $p12;
+      $this->currPos = $p11;
       $r7 = self::$FAILED;
       goto seq_4;
     }
@@ -2337,19 +2329,19 @@ private function parseAnd($silence) {
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p12
+    // free $p11
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r14
+    // free $r12
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r10,$r11,$r13
+  // free $r9,$r10
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -2399,8 +2391,7 @@ private function parseString($silence) {
     goto seq_2;
   }
   // free $p6
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   seq_2:
   if ($r4===self::$FAILED) {
     $r4 = null;
@@ -2416,22 +2407,22 @@ private function parseString($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r9 = [];
+  $r8 = [];
   for (;;) {
-    $r10 = $this->parseQQPart();
-    if ($r10!==self::$FAILED) {
-      $r9[] = $r10;
+    $r9 = $this->parseQQPart();
+    if ($r9!==self::$FAILED) {
+      $r8[] = $r9;
     } else {
       break;
     }
   }
-  // parts <- $r9
-  // free $r10
+  // parts <- $r8
+  // free $r9
   if (($this->input[$this->currPos] ?? null) === "\"") {
-    $r10 = true;
+    $r9 = true;
     $this->currPos++;
   } else {
-    $r10 = self::$FAILED;
+    $r9 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -2440,20 +2431,20 @@ private function parseString($silence) {
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a19($r4, $r9);
+    $r1 = $this->a19($r4, $r8);
     goto choice_1;
   }
-  // free $r5,$r8,$r7,$r10
+  // free $r5,$r7,$r9
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_4
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "'") {
-    $r10 = true;
+    $r9 = true;
     $this->currPos++;
   } else {
-    $r10 = self::$FAILED;
+    $r9 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_4;
   }
@@ -2462,40 +2453,40 @@ private function parseString($silence) {
     // start seq_5
     $p6 = $this->currPos;
     if (($this->input[$this->currPos] ?? null) === "'") {
-      $r5 = true;
+      $r10 = true;
     } else {
-      $r5 = self::$FAILED;
+      $r10 = self::$FAILED;
     }
-    if ($r5 === self::$FAILED) {
-      $r5 = false;
+    if ($r10 === self::$FAILED) {
+      $r10 = false;
     } else {
-      $r5 = self::$FAILED;
+      $r10 = self::$FAILED;
       $this->currPos = $p6;
-      $r8 = self::$FAILED;
+      $r5 = self::$FAILED;
       goto seq_5;
     }
-    $r8 = $this->parseSingleChar();
-    if ($r8===self::$FAILED) {
+    $r5 = $this->parseSingleChar();
+    if ($r5===self::$FAILED) {
       $this->currPos = $p6;
-      $r8 = self::$FAILED;
+      $r5 = self::$FAILED;
       goto seq_5;
     }
     seq_5:
-    if ($r8!==self::$FAILED) {
-      $r7[] = $r8;
+    if ($r5!==self::$FAILED) {
+      $r7[] = $r5;
     } else {
       break;
     }
     // free $p6
   }
   // chars <- $r7
-  // free $r8
   // free $r5
+  // free $r10
   if (($this->input[$this->currPos] ?? null) === "'") {
-    $r5 = true;
+    $r10 = true;
     $this->currPos++;
   } else {
-    $r5 = self::$FAILED;
+    $r10 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_4;
@@ -2506,12 +2497,12 @@ private function parseString($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a20($r7);
   }
-  // free $r10,$r5
+  // free $r9,$r10
   // free $p3
   // free $p2
   choice_1:
   if ($r1===self::$FAILED) {
-    if (!$silence) { $this->fail(36); }
+    if (!$silence) { $this->fail(35); }
   }
   return $r1;
 }
@@ -2526,7 +2517,7 @@ private function parseCmp($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(37); }
+    if (!$silence) { $this->fail(36); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -2544,66 +2535,64 @@ private function parseCmp($silence) {
   }
   // start seq_3
   $p7 = $this->currPos;
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   // start seq_4
-  $p10 = $this->currPos;
+  $p9 = $this->currPos;
   if (strspn($this->input, "!<=>", $this->currPos, 1) !== 0) {
-    $r11 = true;
-    $r11 = false;
-    $this->currPos = $p10;
+    $r10 = true;
+    $r10 = false;
+    $this->currPos = $p9;
   } else {
-    $r11 = self::$FAILED;
-    if (!$silence) { $this->fail(38); }
-    $r9 = self::$FAILED;
+    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(37); }
+    $r8 = self::$FAILED;
     goto seq_4;
   }
-  $r9 = $this->parseCmpOp($silence);
-  if ($r9===self::$FAILED) {
-    $this->currPos = $p10;
-    $r9 = self::$FAILED;
+  $r8 = $this->parseCmpOp($silence);
+  if ($r8===self::$FAILED) {
+    $this->currPos = $p9;
+    $r8 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  if ($r9===self::$FAILED) {
+  if ($r8===self::$FAILED) {
     $this->currPos = $p7;
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  // free $p10
-  $r12 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r12;
+  // free $p9
+  $this->discard_();
   // start seq_5
-  $p10 = $this->currPos;
-  $r14 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r14)) {
-    $r14 = false;
-    $this->currPos = $p10;
+  $p9 = $this->currPos;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+    $r12 = false;
+    $this->currPos = $p9;
   } else {
-    $r14 = self::$FAILED;
-    if (!$silence) { $this->fail(37); }
-    $r13 = self::$FAILED;
+    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(36); }
+    $r11 = self::$FAILED;
     goto seq_5;
   }
-  $r13 = $this->parseAdd($silence);
-  if ($r13===self::$FAILED) {
-    $this->currPos = $p10;
-    $r13 = self::$FAILED;
+  $r11 = $this->parseAdd($silence);
+  if ($r11===self::$FAILED) {
+    $this->currPos = $p9;
+    $r11 = self::$FAILED;
     goto seq_5;
   }
   seq_5:
-  if ($r13===self::$FAILED) {
+  if ($r11===self::$FAILED) {
     $this->currPos = $p7;
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  // free $p10
-  $r6 = [$r9,$r13];
+  // free $p9
+  $r6 = [$r8,$r11];
   seq_3:
   if ($r6===self::$FAILED) {
     $r6 = null;
   }
-  // free $r9,$r11,$r13,$r14
+  // free $r8,$r10,$r11,$r12
   // free $p7
   // rest <- $r6
   $r1 = true;
@@ -2612,7 +2601,7 @@ private function parseCmp($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a21($r4, $r6);
   }
-  // free $r5,$r8,$r12
+  // free $r5
   // free $p3
   // free $p2
   return $r1;
@@ -2630,40 +2619,38 @@ private function parseQQPart() {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r5 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r5;
+  $this->discard_();
   // start seq_2
-  $p7 = $this->currPos;
-  $r8 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r8)) {
-    $r8 = false;
-    $this->currPos = $p7;
+  $p6 = $this->currPos;
+  $r7 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r7)) {
+    $r7 = false;
+    $this->currPos = $p6;
   } else {
-    $r8 = self::$FAILED;
-    $r6 = self::$FAILED;
+    $r7 = self::$FAILED;
+    $r5 = self::$FAILED;
     goto seq_2;
   }
-  $r6 = $this->parsePipe(true);
-  if ($r6===self::$FAILED) {
-    $this->currPos = $p7;
-    $r6 = self::$FAILED;
+  $r5 = $this->parsePipe(true);
+  if ($r5===self::$FAILED) {
+    $this->currPos = $p6;
+    $r5 = self::$FAILED;
     goto seq_2;
   }
   seq_2:
-  // expr <- $r6
-  if ($r6===self::$FAILED) {
+  // expr <- $r5
+  if ($r5===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p7
-  $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r9;
+  // free $p6
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r10 = true;
+    $r8 = true;
     $this->currPos++;
   } else {
-    $r10 = self::$FAILED;
+    $r8 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -2672,73 +2659,73 @@ private function parseQQPart() {
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a22($r6);
+    $r1 = $this->a22($r5);
     goto choice_1;
   }
-  // free $r4,$r5,$r8,$r9,$r10
+  // free $r4,$r7,$r8
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   $p3 = $this->currPos;
-  $r10 = self::$FAILED;
+  $r8 = self::$FAILED;
   for (;;) {
     // start seq_3
-    $p7 = $this->currPos;
+    $p6 = $this->currPos;
     if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "\\(", $this->currPos, 2, false) === 0) {
-      $r8 = true;
+      $r4 = true;
     } else {
-      $r8 = self::$FAILED;
+      $r4 = self::$FAILED;
     }
-    if ($r8 === self::$FAILED) {
-      $r8 = false;
+    if ($r4 === self::$FAILED) {
+      $r4 = false;
     } else {
-      $r8 = self::$FAILED;
-      $this->currPos = $p7;
-      $r9 = self::$FAILED;
+      $r4 = self::$FAILED;
+      $this->currPos = $p6;
+      $r7 = self::$FAILED;
       goto seq_3;
     }
-    $p11 = $this->currPos;
+    $p10 = $this->currPos;
     if (($this->input[$this->currPos] ?? null) === "\"") {
-      $r5 = true;
+      $r9 = true;
     } else {
-      $r5 = self::$FAILED;
-    }
-    if ($r5 === self::$FAILED) {
-      $r5 = false;
-    } else {
-      $r5 = self::$FAILED;
-      $this->currPos = $p11;
-      $this->currPos = $p7;
       $r9 = self::$FAILED;
+    }
+    if ($r9 === self::$FAILED) {
+      $r9 = false;
+    } else {
+      $r9 = self::$FAILED;
+      $this->currPos = $p10;
+      $this->currPos = $p6;
+      $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p11
-    $r9 = $this->discardSingleChar();
-    if ($r9===self::$FAILED) {
-      $this->currPos = $p7;
-      $r9 = self::$FAILED;
+    // free $p10
+    $r7 = $this->discardSingleChar();
+    if ($r7===self::$FAILED) {
+      $this->currPos = $p6;
+      $r7 = self::$FAILED;
       goto seq_3;
     }
     seq_3:
-    if ($r9!==self::$FAILED) {
-      $r10 = true;
+    if ($r7!==self::$FAILED) {
+      $r8 = true;
     } else {
       break;
     }
-    // free $p7
+    // free $p6
   }
-  // text <- $r10
-  if ($r10!==self::$FAILED) {
-    $r10 = substr($this->input, $p3, $this->currPos - $p3);
+  // text <- $r8
+  if ($r8!==self::$FAILED) {
+    $r8 = substr($this->input, $p3, $this->currPos - $p3);
   } else {
-    $r10 = self::$FAILED;
+    $r8 = self::$FAILED;
   }
-  // free $r9
+  // free $r7
   // free $p3
-  $r1 = $r10;
+  $r1 = $r8;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a23($r10);
+    $r1 = $this->a23($r8);
   }
   // free $p2
   choice_1:
@@ -2885,7 +2872,7 @@ private function parseAdd($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(39); }
+    if (!$silence) { $this->fail(38); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -2905,58 +2892,55 @@ private function parseAdd($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
-    $r10 = $this->input[$this->currPos] ?? '';
-    if ($r10 === "+" || $r10 === "-") {
+    $this->discard_();
+    $r9 = $this->input[$this->currPos] ?? '';
+    if ($r9 === "+" || $r9 === "-") {
       $this->currPos++;
     } else {
-      $r10 = self::$FAILED;
-      if (!$silence) { $this->fail(40); }
+      $r9 = self::$FAILED;
+      if (!$silence) { $this->fail(39); }
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $this->discard_();
     // start seq_4
-    $p13 = $this->currPos;
-    $r14 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r14)) {
-      $r14 = false;
-      $this->currPos = $p13;
+    $p11 = $this->currPos;
+    $r12 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+      $r12 = false;
+      $this->currPos = $p11;
     } else {
-      $r14 = self::$FAILED;
-      if (!$silence) { $this->fail(39); }
       $r12 = self::$FAILED;
+      if (!$silence) { $this->fail(38); }
+      $r10 = self::$FAILED;
       goto seq_4;
     }
-    $r12 = $this->parseMul($silence);
-    if ($r12===self::$FAILED) {
-      $this->currPos = $p13;
-      $r12 = self::$FAILED;
+    $r10 = $this->parseMul($silence);
+    if ($r10===self::$FAILED) {
+      $this->currPos = $p11;
+      $r10 = self::$FAILED;
       goto seq_4;
     }
     seq_4:
-    if ($r12===self::$FAILED) {
+    if ($r10===self::$FAILED) {
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p13
-    $r7 = [$r10,$r12];
+    // free $p11
+    $r7 = [$r9,$r10];
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r10,$r12,$r14
+    // free $r9,$r10,$r12
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r11
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -3013,7 +2997,7 @@ private function parseCmpOp($silence) {
   }
   choice_1:
   if ($r1===self::$FAILED) {
-    if (!$silence) { $this->fail(41); }
+    if (!$silence) { $this->fail(40); }
   }
   return $r1;
 }
@@ -3158,7 +3142,7 @@ private function parseMul($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(42); }
+    if (!$silence) { $this->fail(41); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -3178,73 +3162,70 @@ private function parseMul($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     // start seq_4
-    $p11 = $this->currPos;
+    $p10 = $this->currPos;
     if (strspn($this->input, "%*/", $this->currPos, 1) !== 0) {
-      $r12 = true;
-      $r12 = false;
-      $this->currPos = $p11;
+      $r11 = true;
+      $r11 = false;
+      $this->currPos = $p10;
     } else {
-      $r12 = self::$FAILED;
-      if (!$silence) { $this->fail(43); }
-      $r10 = self::$FAILED;
+      $r11 = self::$FAILED;
+      if (!$silence) { $this->fail(42); }
+      $r9 = self::$FAILED;
       goto seq_4;
     }
-    $r10 = $this->parseMulOp($silence);
-    if ($r10===self::$FAILED) {
-      $this->currPos = $p11;
-      $r10 = self::$FAILED;
+    $r9 = $this->parseMulOp($silence);
+    if ($r9===self::$FAILED) {
+      $this->currPos = $p10;
+      $r9 = self::$FAILED;
       goto seq_4;
     }
     seq_4:
-    if ($r10===self::$FAILED) {
+    if ($r9===self::$FAILED) {
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p11
-    $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r13;
+    // free $p10
+    $this->discard_();
     // start seq_5
-    $p11 = $this->currPos;
-    $r15 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r15)) {
-      $r15 = false;
-      $this->currPos = $p11;
+    $p10 = $this->currPos;
+    $r13 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r13)) {
+      $r13 = false;
+      $this->currPos = $p10;
     } else {
-      $r15 = self::$FAILED;
-      if (!$silence) { $this->fail(42); }
-      $r14 = self::$FAILED;
+      $r13 = self::$FAILED;
+      if (!$silence) { $this->fail(41); }
+      $r12 = self::$FAILED;
       goto seq_5;
     }
-    $r14 = $this->parsePostfix($silence);
-    if ($r14===self::$FAILED) {
-      $this->currPos = $p11;
-      $r14 = self::$FAILED;
+    $r12 = $this->parsePostfix($silence);
+    if ($r12===self::$FAILED) {
+      $this->currPos = $p10;
+      $r12 = self::$FAILED;
       goto seq_5;
     }
     seq_5:
-    if ($r14===self::$FAILED) {
+    if ($r12===self::$FAILED) {
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p11
-    $r7 = [$r10,$r14];
+    // free $p10
+    $r7 = [$r9,$r12];
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r10,$r12,$r14,$r15
+    // free $r9,$r11,$r12,$r13
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r13
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -3267,7 +3248,7 @@ private function parsePostfix($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(44); }
+    if (!$silence) { $this->fail(43); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -3293,7 +3274,7 @@ private function parsePostfix($silence) {
       $this->currPos = $p8;
     } else {
       $r9 = self::$FAILED;
-      if (!$silence) { $this->fail(45); }
+      if (!$silence) { $this->fail(44); }
       $r7 = self::$FAILED;
       goto seq_3;
     }
@@ -3371,7 +3352,7 @@ private function parseMulOp($silence) {
   // free $p2
   choice_1:
   if ($r1===self::$FAILED) {
-    if (!$silence) { $this->fail(46); }
+    if (!$silence) { $this->fail(45); }
   }
   return $r1;
 }
@@ -3385,7 +3366,7 @@ private function parseTerm($silence) {
     $r1 = $this->a28();
     goto choice_1;
   } else {
-    if (!$silence) { $this->fail(47); }
+    if (!$silence) { $this->fail(46); }
     $r1 = self::$FAILED;
   }
   // free $p2
@@ -3396,7 +3377,7 @@ private function parseTerm($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(48); }
+    if (!$silence) { $this->fail(47); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -3409,7 +3390,7 @@ private function parseTerm($silence) {
     $this->currPos = $p6;
   } else {
     $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(49); }
+    if (!$silence) { $this->fail(48); }
     $r5 = self::$FAILED;
     goto seq_2;
   }
@@ -3431,7 +3412,7 @@ private function parseTerm($silence) {
     $r8 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
+    if (!$silence) { $this->fail(49); }
     $r8 = self::$FAILED;
     $r8 = null;
   }
@@ -3453,7 +3434,7 @@ private function parseTerm($silence) {
     $r7 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(48); }
+    if (!$silence) { $this->fail(47); }
     $r7 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_3;
@@ -3491,34 +3472,33 @@ private function parseTerm($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(51); }
+    if (!$silence) { $this->fail(50); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_4;
   }
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  $this->discard_();
   // start seq_5
   $p6 = $this->currPos;
-  $r10 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r10)) {
-    $r10 = false;
+  $r9 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r9)) {
+    $r9 = false;
     $this->currPos = $p6;
   } else {
-    $r10 = self::$FAILED;
-    if (!$silence) { $this->fail(44); }
     $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(43); }
+    $r7 = self::$FAILED;
     goto seq_5;
   }
-  $r9 = $this->parseTerm($silence);
-  if ($r9===self::$FAILED) {
+  $r7 = $this->parseTerm($silence);
+  if ($r7===self::$FAILED) {
     $this->currPos = $p6;
-    $r9 = self::$FAILED;
+    $r7 = self::$FAILED;
     goto seq_5;
   }
   seq_5:
-  // t <- $r9
-  if ($r9===self::$FAILED) {
+  // t <- $r7
+  if ($r7===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_4;
@@ -3528,25 +3508,24 @@ private function parseTerm($silence) {
   seq_4:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a31($r9);
+    $r1 = $this->a31($r7);
     goto choice_1;
   }
-  // free $r4,$r7,$r10
+  // free $r4,$r9
   // free $p3
   // free $p2
   // start seq_6
   $p2 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "(") {
-    $r10 = true;
+    $r9 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
-    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(15); }
+    $r9 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_6;
   }
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  $this->discard_();
   // start seq_7
   $p3 = $this->currPos;
   $r4 = $this->input[$this->currPos] ?? '';
@@ -3555,7 +3534,7 @@ private function parseTerm($silence) {
     $this->currPos = $p3;
   } else {
     $r4 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    if (!$silence) { $this->fail(1); }
     $r1 = self::$FAILED;
     goto seq_7;
   }
@@ -3572,14 +3551,13 @@ private function parseTerm($silence) {
     goto seq_6;
   }
   // free $p3
-  $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r11;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r12 = true;
+    $r10 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r10 = self::$FAILED;
     $this->currPos = $p2;
     $r1 = self::$FAILED;
     goto seq_6;
@@ -3597,47 +3575,45 @@ private function parseTerm($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
+    if (!$silence) { $this->fail(20); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_8;
   }
-  $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r13;
+  $this->discard_();
   // start seq_9
   $p6 = $this->currPos;
-  $r15 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r15)) {
-    $r15 = false;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+    $r12 = false;
     $this->currPos = $p6;
   } else {
-    $r15 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r14 = self::$FAILED;
+    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r11 = self::$FAILED;
     goto seq_9;
   }
-  $r14 = $this->parsePipe($silence);
-  if ($r14===self::$FAILED) {
+  $r11 = $this->parsePipe($silence);
+  if ($r11===self::$FAILED) {
     $this->currPos = $p6;
-    $r14 = self::$FAILED;
+    $r11 = self::$FAILED;
     goto seq_9;
   }
   seq_9:
-  // expr <- $r14
-  if ($r14===self::$FAILED) {
+  // expr <- $r11
+  if ($r11===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_8;
   }
   // free $p6
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r17 = true;
+    $r13 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r13 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_8;
@@ -3646,32 +3622,31 @@ private function parseTerm($silence) {
   seq_8:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a32($r14);
+    $r1 = $this->a32($r11);
     goto choice_1;
   }
-  // free $r4,$r13,$r15,$r16,$r17
+  // free $r4,$r12,$r13
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_10
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "[") {
-    $r17 = true;
+    $r13 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
-    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(20); }
+    $r13 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_10;
   }
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r15 = true;
+    $r12 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r15 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r12 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_10;
@@ -3683,32 +3658,30 @@ private function parseTerm($silence) {
     $r1 = $this->a33();
     goto choice_1;
   }
-  // free $r17,$r16,$r15
+  // free $r13,$r12
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_11
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "{") {
-    $r15 = true;
+    $r12 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(24); }
-    $r15 = self::$FAILED;
+    if (!$silence) { $this->fail(23); }
+    $r12 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_11;
   }
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
-  $r17 = $this->parseDictPairs($silence);
-  // pairs <- $r17
-  $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r13;
+  $this->discard_();
+  $r13 = $this->parseDictPairs($silence);
+  // pairs <- $r13
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "}") {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(26); }
+    if (!$silence) { $this->fail(25); }
     $r4 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
@@ -3718,10 +3691,10 @@ private function parseTerm($silence) {
   seq_11:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a34($r17);
+    $r1 = $this->a34($r13);
     goto choice_1;
   }
-  // free $r15,$r16,$r13,$r4
+  // free $r12,$r4
   // free $p3
   // free $p2
   // start seq_12
@@ -3732,7 +3705,7 @@ private function parseTerm($silence) {
     $this->currPos = $p2;
   } else {
     $r4 = self::$FAILED;
-    if (!$silence) { $this->fail(33); }
+    if (!$silence) { $this->fail(32); }
     $r1 = self::$FAILED;
     goto seq_12;
   }
@@ -3750,12 +3723,12 @@ private function parseTerm($silence) {
   // start seq_13
   $p2 = $this->currPos;
   if (strspn($this->input, ".0123456789", $this->currPos, 1) !== 0) {
-    $r13 = true;
-    $r13 = false;
+    $r12 = true;
+    $r12 = false;
     $this->currPos = $p2;
   } else {
-    $r13 = self::$FAILED;
-    if (!$silence) { $this->fail(52); }
+    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(51); }
     $r1 = self::$FAILED;
     goto seq_13;
   }
@@ -3774,11 +3747,11 @@ private function parseTerm($silence) {
   // start seq_14
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "null", $this->currPos, 4, false) === 0) {
-    $r16 = true;
+    $r14 = true;
     $this->currPos += 4;
   } else {
-    if (!$silence) { $this->fail(53); }
-    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(52); }
+    $r14 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_14;
   }
@@ -3804,7 +3777,7 @@ private function parseTerm($silence) {
     $r1 = $this->a35();
     goto choice_1;
   }
-  // free $r16,$r15
+  // free $r14,$r15
   // free $p3
   // free $p2
   $p2 = $this->currPos;
@@ -3814,20 +3787,20 @@ private function parseTerm($silence) {
     $r15 = true;
     $this->currPos += 4;
   } else {
-    if (!$silence) { $this->fail(54); }
+    if (!$silence) { $this->fail(53); }
     $r15 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_15;
   }
   $p6 = $this->currPos;
-  $r16 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r16))) {
-    $r16 = self::$FAILED;
+  $r14 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r14))) {
+    $r14 = self::$FAILED;
   }
-  if ($r16 === self::$FAILED) {
-    $r16 = false;
+  if ($r14 === self::$FAILED) {
+    $r14 = false;
   } else {
-    $r16 = self::$FAILED;
+    $r14 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
@@ -3841,18 +3814,18 @@ private function parseTerm($silence) {
     $r1 = $this->a36();
     goto choice_1;
   }
-  // free $r15,$r16
+  // free $r15,$r14
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_16
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "false", $this->currPos, 5, false) === 0) {
-    $r16 = true;
+    $r14 = true;
     $this->currPos += 5;
   } else {
-    if (!$silence) { $this->fail(55); }
-    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(54); }
+    $r14 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_16;
   }
@@ -3878,7 +3851,7 @@ private function parseTerm($silence) {
     $r1 = $this->a37();
     goto choice_1;
   }
-  // free $r16,$r15
+  // free $r14,$r15
   // free $p3
   // free $p2
   $p2 = $this->currPos;
@@ -3888,20 +3861,20 @@ private function parseTerm($silence) {
     $r15 = true;
     $this->currPos += 8;
   } else {
-    if (!$silence) { $this->fail(56); }
+    if (!$silence) { $this->fail(55); }
     $r15 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_17;
   }
   $p6 = $this->currPos;
-  $r16 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r16))) {
-    $r16 = self::$FAILED;
+  $r14 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r14))) {
+    $r14 = self::$FAILED;
   }
-  if ($r16 === self::$FAILED) {
-    $r16 = false;
+  if ($r14 === self::$FAILED) {
+    $r14 = false;
   } else {
-    $r16 = self::$FAILED;
+    $r14 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
@@ -3915,30 +3888,30 @@ private function parseTerm($silence) {
     $r1 = $this->a38();
     goto choice_1;
   }
-  // free $r15,$r16
+  // free $r15,$r14
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_18
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "@") {
-    $r16 = true;
+    $r14 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(57); }
-    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(56); }
+    $r14 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_18;
   }
   // start seq_19
   $p6 = $this->currPos;
-  $r18 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r18)) {
-    $r18 = false;
+  $r16 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r16)) {
+    $r16 = false;
     $this->currPos = $p6;
   } else {
-    $r18 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
+    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
     $r15 = self::$FAILED;
     goto seq_19;
   }
@@ -3963,42 +3936,42 @@ private function parseTerm($silence) {
     $r1 = $this->a39($r15);
     goto choice_1;
   }
-  // free $r16,$r18
+  // free $r14,$r16
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_20
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "\$") {
-    $r18 = true;
+    $r16 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
-    $r18 = self::$FAILED;
+    if (!$silence) { $this->fail(11); }
+    $r16 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_20;
   }
   // start seq_21
   $p6 = $this->currPos;
-  $r19 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r19)) {
-    $r19 = false;
+  $r17 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r17)) {
+    $r17 = false;
     $this->currPos = $p6;
   } else {
-    $r19 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r16 = self::$FAILED;
+    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r14 = self::$FAILED;
     goto seq_21;
   }
-  $r16 = $this->parseName($silence);
-  if ($r16===self::$FAILED) {
+  $r14 = $this->parseName($silence);
+  if ($r14===self::$FAILED) {
     $this->currPos = $p6;
-    $r16 = self::$FAILED;
+    $r14 = self::$FAILED;
     goto seq_21;
   }
   seq_21:
-  // name <- $r16
-  if ($r16===self::$FAILED) {
+  // name <- $r14
+  if ($r14===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_20;
@@ -4008,145 +3981,141 @@ private function parseTerm($silence) {
   seq_20:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a40($r16);
+    $r1 = $this->a40($r14);
     goto choice_1;
   }
-  // free $r18,$r19
+  // free $r16,$r17
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_22
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "if", $this->currPos, 2, false) === 0) {
-    $r19 = true;
+    $r17 = true;
     $this->currPos += 2;
   } else {
-    if (!$silence) { $this->fail(58); }
-    $r19 = self::$FAILED;
+    if (!$silence) { $this->fail(57); }
+    $r17 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   $p6 = $this->currPos;
-  $r18 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r18))) {
-    $r18 = self::$FAILED;
+  $r16 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r16))) {
+    $r16 = self::$FAILED;
   }
-  if ($r18 === self::$FAILED) {
-    $r18 = false;
+  if ($r16 === self::$FAILED) {
+    $r16 = false;
   } else {
-    $r18 = self::$FAILED;
+    $r16 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   // free $p6
-  $r20 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r20;
+  $this->discard_();
   // start seq_23
   $p6 = $this->currPos;
-  $r22 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r22)) {
-    $r22 = false;
+  $r19 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r19)) {
+    $r19 = false;
     $this->currPos = $p6;
   } else {
-    $r22 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r21 = self::$FAILED;
+    $r19 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r18 = self::$FAILED;
     goto seq_23;
   }
-  $r21 = $this->parsePipe($silence);
-  if ($r21===self::$FAILED) {
+  $r18 = $this->parsePipe($silence);
+  if ($r18===self::$FAILED) {
     $this->currPos = $p6;
-    $r21 = self::$FAILED;
+    $r18 = self::$FAILED;
     goto seq_23;
   }
   seq_23:
-  // cond <- $r21
-  if ($r21===self::$FAILED) {
+  // cond <- $r18
+  if ($r18===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   // free $p6
-  $r23 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r23;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "then", $this->currPos, 4, false) === 0) {
-    $r24 = true;
+    $r20 = true;
     $this->currPos += 4;
   } else {
-    if (!$silence) { $this->fail(59); }
-    $r24 = self::$FAILED;
+    if (!$silence) { $this->fail(58); }
+    $r20 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   $p6 = $this->currPos;
-  $r25 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r25))) {
-    $r25 = self::$FAILED;
+  $r21 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r21))) {
+    $r21 = self::$FAILED;
   }
-  if ($r25 === self::$FAILED) {
-    $r25 = false;
+  if ($r21 === self::$FAILED) {
+    $r21 = false;
   } else {
-    $r25 = self::$FAILED;
+    $r21 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   // free $p6
-  $r26 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r26;
+  $this->discard_();
   // start seq_24
   $p6 = $this->currPos;
-  $r28 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r28)) {
-    $r28 = false;
+  $r23 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r23)) {
+    $r23 = false;
     $this->currPos = $p6;
   } else {
-    $r28 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r27 = self::$FAILED;
+    $r23 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r22 = self::$FAILED;
     goto seq_24;
   }
-  $r27 = $this->parsePipe($silence);
-  if ($r27===self::$FAILED) {
+  $r22 = $this->parsePipe($silence);
+  if ($r22===self::$FAILED) {
     $this->currPos = $p6;
-    $r27 = self::$FAILED;
+    $r22 = self::$FAILED;
     goto seq_24;
   }
   seq_24:
-  // then <- $r27
-  if ($r27===self::$FAILED) {
+  // then <- $r22
+  if ($r22===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
   }
   // free $p6
-  $r29 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r29;
+  $this->discard_();
   // start seq_25
   $p6 = $this->currPos;
-  $r31 = $this->input[$this->currPos] ?? '';
-  if ($r31 === "e") {
-    $r31 = false;
+  $r25 = $this->input[$this->currPos] ?? '';
+  if ($r25 === "e") {
+    $r25 = false;
     $this->currPos = $p6;
   } else {
-    $r31 = self::$FAILED;
-    if (!$silence) { $this->fail(60); }
-    $r30 = self::$FAILED;
+    $r25 = self::$FAILED;
+    if (!$silence) { $this->fail(59); }
+    $r24 = self::$FAILED;
     goto seq_25;
   }
-  $r30 = $this->parseElseBody($silence);
-  if ($r30===self::$FAILED) {
+  $r24 = $this->parseElseBody($silence);
+  if ($r24===self::$FAILED) {
     $this->currPos = $p6;
-    $r30 = self::$FAILED;
+    $r24 = self::$FAILED;
     goto seq_25;
   }
   seq_25:
-  // body <- $r30
-  if ($r30===self::$FAILED) {
+  // body <- $r24
+  if ($r24===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_22;
@@ -4156,42 +4125,130 @@ private function parseTerm($silence) {
   seq_22:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a41($r21, $r27, $r30);
+    $r1 = $this->a41($r18, $r22, $r24);
     goto choice_1;
   }
-  // free $r19,$r18,$r20,$r22,$r23,$r24,$r25,$r26,$r28,$r29,$r31
+  // free $r17,$r16,$r19,$r20,$r21,$r23,$r25
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_26
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "try", $this->currPos, 3, false) === 0) {
-    $r31 = true;
+    $r25 = true;
     $this->currPos += 3;
   } else {
-    if (!$silence) { $this->fail(61); }
-    $r31 = self::$FAILED;
+    if (!$silence) { $this->fail(60); }
+    $r25 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_26;
   }
   $p6 = $this->currPos;
-  $r29 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r29))) {
-    $r29 = self::$FAILED;
+  $r23 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r23))) {
+    $r23 = self::$FAILED;
   }
-  if ($r29 === self::$FAILED) {
-    $r29 = false;
+  if ($r23 === self::$FAILED) {
+    $r23 = false;
   } else {
-    $r29 = self::$FAILED;
+    $r23 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_26;
   }
   // free $p6
-  $r28 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r28;
+  $this->discard_();
   // start seq_27
+  $p6 = $this->currPos;
+  $r20 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r20)) {
+    $r20 = false;
+    $this->currPos = $p6;
+  } else {
+    $r20 = self::$FAILED;
+    if (!$silence) { $this->fail(41); }
+    $r21 = self::$FAILED;
+    goto seq_27;
+  }
+  $r21 = $this->parsePostfix($silence);
+  if ($r21===self::$FAILED) {
+    $this->currPos = $p6;
+    $r21 = self::$FAILED;
+    goto seq_27;
+  }
+  seq_27:
+  // body <- $r21
+  if ($r21===self::$FAILED) {
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_26;
+  }
+  // free $p6
+  $this->discard_();
+  // start seq_28
+  $p6 = $this->currPos;
+  $r16 = $this->input[$this->currPos] ?? '';
+  if ($r16 === "c") {
+    $r16 = false;
+    $this->currPos = $p6;
+  } else {
+    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(61); }
+    $r19 = self::$FAILED;
+    goto seq_28;
+  }
+  $r19 = $this->parseTryCatch($silence);
+  if ($r19===self::$FAILED) {
+    $this->currPos = $p6;
+    $r19 = self::$FAILED;
+    goto seq_28;
+  }
+  seq_28:
+  if ($r19===self::$FAILED) {
+    $r19 = null;
+  }
+  // free $p6
+  // catch_ <- $r19
+  $r1 = true;
+  seq_26:
+  if ($r1!==self::$FAILED) {
+    $this->savedPos = $p2;
+    $r1 = $this->a42($r21, $r19);
+    goto choice_1;
+  }
+  // free $r25,$r23,$r20,$r16
+  // free $p3
+  // free $p2
+  $p2 = $this->currPos;
+  // start seq_29
+  $p3 = $this->currPos;
+  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "reduce", $this->currPos, 6, false) === 0) {
+    $r16 = true;
+    $this->currPos += 6;
+  } else {
+    if (!$silence) { $this->fail(62); }
+    $r16 = self::$FAILED;
+    $r1 = self::$FAILED;
+    goto seq_29;
+  }
+  $p6 = $this->currPos;
+  $r20 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r20))) {
+    $r20 = self::$FAILED;
+  }
+  if ($r20 === self::$FAILED) {
+    $r20 = false;
+  } else {
+    $r20 = self::$FAILED;
+    $this->currPos = $p6;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_29;
+  }
+  // free $p6
+  $this->discard_();
+  // start seq_30
   $p6 = $this->currPos;
   $r25 = $this->input[$this->currPos] ?? '';
   if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r25)) {
@@ -4199,258 +4256,160 @@ private function parseTerm($silence) {
     $this->currPos = $p6;
   } else {
     $r25 = self::$FAILED;
-    if (!$silence) { $this->fail(42); }
-    $r26 = self::$FAILED;
-    goto seq_27;
-  }
-  $r26 = $this->parsePostfix($silence);
-  if ($r26===self::$FAILED) {
-    $this->currPos = $p6;
-    $r26 = self::$FAILED;
-    goto seq_27;
-  }
-  seq_27:
-  // body <- $r26
-  if ($r26===self::$FAILED) {
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_26;
-  }
-  // free $p6
-  $r24 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r24;
-  // start seq_28
-  $p6 = $this->currPos;
-  $r22 = $this->input[$this->currPos] ?? '';
-  if ($r22 === "c") {
-    $r22 = false;
-    $this->currPos = $p6;
-  } else {
-    $r22 = self::$FAILED;
-    if (!$silence) { $this->fail(62); }
+    if (!$silence) { $this->fail(41); }
     $r23 = self::$FAILED;
-    goto seq_28;
-  }
-  $r23 = $this->parseTryCatch($silence);
-  if ($r23===self::$FAILED) {
-    $this->currPos = $p6;
-    $r23 = self::$FAILED;
-    goto seq_28;
-  }
-  seq_28:
-  if ($r23===self::$FAILED) {
-    $r23 = null;
-  }
-  // free $p6
-  // catch_ <- $r23
-  $r1 = true;
-  seq_26:
-  if ($r1!==self::$FAILED) {
-    $this->savedPos = $p2;
-    $r1 = $this->a42($r26, $r23);
-    goto choice_1;
-  }
-  // free $r31,$r29,$r28,$r25,$r24,$r22
-  // free $p3
-  // free $p2
-  $p2 = $this->currPos;
-  // start seq_29
-  $p3 = $this->currPos;
-  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "reduce", $this->currPos, 6, false) === 0) {
-    $r22 = true;
-    $this->currPos += 6;
-  } else {
-    if (!$silence) { $this->fail(63); }
-    $r22 = self::$FAILED;
-    $r1 = self::$FAILED;
-    goto seq_29;
-  }
-  $p6 = $this->currPos;
-  $r24 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r24))) {
-    $r24 = self::$FAILED;
-  }
-  if ($r24 === self::$FAILED) {
-    $r24 = false;
-  } else {
-    $r24 = self::$FAILED;
-    $this->currPos = $p6;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_29;
-  }
-  // free $p6
-  $r25 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r25;
-  // start seq_30
-  $p6 = $this->currPos;
-  $r29 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r29)) {
-    $r29 = false;
-    $this->currPos = $p6;
-  } else {
-    $r29 = self::$FAILED;
-    if (!$silence) { $this->fail(42); }
-    $r28 = self::$FAILED;
     goto seq_30;
   }
-  $r28 = $this->parsePostfix($silence);
-  if ($r28===self::$FAILED) {
+  $r23 = $this->parsePostfix($silence);
+  if ($r23===self::$FAILED) {
     $this->currPos = $p6;
-    $r28 = self::$FAILED;
+    $r23 = self::$FAILED;
     goto seq_30;
   }
   seq_30:
-  // src <- $r28
-  if ($r28===self::$FAILED) {
+  // src <- $r23
+  if ($r23===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   // free $p6
-  $r31 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r31;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "as", $this->currPos, 2, false) === 0) {
-    $r20 = true;
+    $r17 = true;
     $this->currPos += 2;
   } else {
-    if (!$silence) { $this->fail(8); }
-    $r20 = self::$FAILED;
+    if (!$silence) { $this->fail(7); }
+    $r17 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   $p6 = $this->currPos;
-  $r18 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r18))) {
-    $r18 = self::$FAILED;
+  $r26 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r26))) {
+    $r26 = self::$FAILED;
   }
-  if ($r18 === self::$FAILED) {
-    $r18 = false;
+  if ($r26 === self::$FAILED) {
+    $r26 = false;
   } else {
-    $r18 = self::$FAILED;
+    $r26 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   // free $p6
-  $r19 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r19;
+  $this->discard_();
   // start seq_31
   $p6 = $this->currPos;
   if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-    $r33 = true;
-    $r33 = false;
+    $r28 = true;
+    $r28 = false;
     $this->currPos = $p6;
   } else {
-    $r33 = self::$FAILED;
-    if (!$silence) { $this->fail(9); }
-    $r32 = self::$FAILED;
+    $r28 = self::$FAILED;
+    if (!$silence) { $this->fail(8); }
+    $r27 = self::$FAILED;
     goto seq_31;
   }
-  $r32 = $this->parsePattern($silence);
-  if ($r32===self::$FAILED) {
+  $r27 = $this->parsePattern($silence);
+  if ($r27===self::$FAILED) {
     $this->currPos = $p6;
-    $r32 = self::$FAILED;
+    $r27 = self::$FAILED;
     goto seq_31;
   }
   seq_31:
-  // pat <- $r32
-  if ($r32===self::$FAILED) {
+  // pat <- $r27
+  if ($r27===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   // free $p6
-  $r34 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r34;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "(") {
-    $r35 = true;
+    $r29 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
-    $r35 = self::$FAILED;
+    if (!$silence) { $this->fail(15); }
+    $r29 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
-  $r36 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r36;
+  $this->discard_();
   // start seq_32
   $p6 = $this->currPos;
-  $r38 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r38)) {
-    $r38 = false;
+  $r31 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r31)) {
+    $r31 = false;
     $this->currPos = $p6;
   } else {
-    $r38 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r37 = self::$FAILED;
+    $r31 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r30 = self::$FAILED;
     goto seq_32;
   }
-  $r37 = $this->parsePipe($silence);
-  if ($r37===self::$FAILED) {
+  $r30 = $this->parsePipe($silence);
+  if ($r30===self::$FAILED) {
     $this->currPos = $p6;
-    $r37 = self::$FAILED;
+    $r30 = self::$FAILED;
     goto seq_32;
   }
   seq_32:
-  // init <- $r37
-  if ($r37===self::$FAILED) {
+  // init <- $r30
+  if ($r30===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   // free $p6
-  $r39 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r39;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ";") {
-    $r40 = true;
+    $r32 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(6); }
-    $r40 = self::$FAILED;
+    if (!$silence) { $this->fail(5); }
+    $r32 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
-  $r41 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r41;
+  $this->discard_();
   // start seq_33
   $p6 = $this->currPos;
-  $r43 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r43)) {
-    $r43 = false;
+  $r34 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r34)) {
+    $r34 = false;
     $this->currPos = $p6;
   } else {
-    $r43 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r42 = self::$FAILED;
+    $r34 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r33 = self::$FAILED;
     goto seq_33;
   }
-  $r42 = $this->parsePipe($silence);
-  if ($r42===self::$FAILED) {
+  $r33 = $this->parsePipe($silence);
+  if ($r33===self::$FAILED) {
     $this->currPos = $p6;
-    $r42 = self::$FAILED;
+    $r33 = self::$FAILED;
     goto seq_33;
   }
   seq_33:
-  // update <- $r42
-  if ($r42===self::$FAILED) {
+  // update <- $r33
+  if ($r33===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
   }
   // free $p6
-  $r44 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r44;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r45 = true;
+    $r35 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r45 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r35 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_29;
@@ -4459,197 +4418,190 @@ private function parseTerm($silence) {
   seq_29:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a43($r28, $r32, $r37, $r42);
+    $r1 = $this->a43($r23, $r27, $r30, $r33);
     goto choice_1;
   }
-  // free $r22,$r24,$r25,$r29,$r31,$r20,$r18,$r19,$r33,$r34,$r35,$r36,$r38,$r39,$r40,$r41,$r43,$r44,$r45
+  // free $r16,$r20,$r25,$r17,$r26,$r28,$r29,$r31,$r32,$r34,$r35
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_34
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "foreach", $this->currPos, 7, false) === 0) {
-    $r45 = true;
+    $r35 = true;
     $this->currPos += 7;
   } else {
-    if (!$silence) { $this->fail(64); }
-    $r45 = self::$FAILED;
+    if (!$silence) { $this->fail(63); }
+    $r35 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   $p6 = $this->currPos;
-  $r44 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r44))) {
-    $r44 = self::$FAILED;
+  $r34 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r34))) {
+    $r34 = self::$FAILED;
   }
-  if ($r44 === self::$FAILED) {
-    $r44 = false;
+  if ($r34 === self::$FAILED) {
+    $r34 = false;
   } else {
-    $r44 = self::$FAILED;
+    $r34 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   // free $p6
-  $r43 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r43;
+  $this->discard_();
   // start seq_35
   $p6 = $this->currPos;
-  $r40 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r40)) {
-    $r40 = false;
+  $r31 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r31)) {
+    $r31 = false;
     $this->currPos = $p6;
   } else {
-    $r40 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
-    $r41 = self::$FAILED;
+    $r31 = self::$FAILED;
+    if (!$silence) { $this->fail(6); }
+    $r32 = self::$FAILED;
     goto seq_35;
   }
-  $r41 = $this->parseAlt($silence);
-  if ($r41===self::$FAILED) {
+  $r32 = $this->parseAlt($silence);
+  if ($r32===self::$FAILED) {
     $this->currPos = $p6;
-    $r41 = self::$FAILED;
+    $r32 = self::$FAILED;
     goto seq_35;
   }
   seq_35:
-  // src <- $r41
-  if ($r41===self::$FAILED) {
+  // src <- $r32
+  if ($r32===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   // free $p6
-  $r39 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r39;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "as", $this->currPos, 2, false) === 0) {
-    $r38 = true;
+    $r29 = true;
     $this->currPos += 2;
   } else {
-    if (!$silence) { $this->fail(8); }
-    $r38 = self::$FAILED;
+    if (!$silence) { $this->fail(7); }
+    $r29 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   $p6 = $this->currPos;
-  $r36 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r36))) {
-    $r36 = self::$FAILED;
+  $r28 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r28))) {
+    $r28 = self::$FAILED;
   }
-  if ($r36 === self::$FAILED) {
-    $r36 = false;
+  if ($r28 === self::$FAILED) {
+    $r28 = false;
   } else {
-    $r36 = self::$FAILED;
+    $r28 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   // free $p6
-  $r35 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r35;
+  $this->discard_();
   // start seq_36
   $p6 = $this->currPos;
   if (strspn($this->input, "\$[{", $this->currPos, 1) !== 0) {
-    $r33 = true;
-    $r33 = false;
+    $r17 = true;
+    $r17 = false;
     $this->currPos = $p6;
   } else {
-    $r33 = self::$FAILED;
-    if (!$silence) { $this->fail(9); }
-    $r34 = self::$FAILED;
+    $r17 = self::$FAILED;
+    if (!$silence) { $this->fail(8); }
+    $r26 = self::$FAILED;
     goto seq_36;
   }
-  $r34 = $this->parsePattern($silence);
-  if ($r34===self::$FAILED) {
+  $r26 = $this->parsePattern($silence);
+  if ($r26===self::$FAILED) {
     $this->currPos = $p6;
-    $r34 = self::$FAILED;
+    $r26 = self::$FAILED;
     goto seq_36;
   }
   seq_36:
-  // pat <- $r34
-  if ($r34===self::$FAILED) {
+  // pat <- $r26
+  if ($r26===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   // free $p6
-  $r19 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r19;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "(") {
-    $r18 = true;
+    $r25 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
-    $r18 = self::$FAILED;
+    if (!$silence) { $this->fail(15); }
+    $r25 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
-  $r20 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r20;
+  $this->discard_();
   // start seq_37
   $p6 = $this->currPos;
-  $r29 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r29)) {
-    $r29 = false;
+  $r16 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r16)) {
+    $r16 = false;
     $this->currPos = $p6;
   } else {
-    $r29 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r31 = self::$FAILED;
+    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r20 = self::$FAILED;
     goto seq_37;
   }
-  $r31 = $this->parsePipe($silence);
-  if ($r31===self::$FAILED) {
+  $r20 = $this->parsePipe($silence);
+  if ($r20===self::$FAILED) {
     $this->currPos = $p6;
-    $r31 = self::$FAILED;
+    $r20 = self::$FAILED;
     goto seq_37;
   }
   seq_37:
-  // init <- $r31
-  if ($r31===self::$FAILED) {
+  // init <- $r20
+  if ($r20===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
   // free $p6
-  $r25 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r25;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ";") {
-    $r24 = true;
+    $r36 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(6); }
-    $r24 = self::$FAILED;
+    if (!$silence) { $this->fail(5); }
+    $r36 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
   }
-  $r22 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r22;
+  $this->discard_();
   // start seq_38
   $p6 = $this->currPos;
-  $r47 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r47)) {
-    $r47 = false;
+  $r38 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r38)) {
+    $r38 = false;
     $this->currPos = $p6;
   } else {
-    $r47 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r46 = self::$FAILED;
+    $r38 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r37 = self::$FAILED;
     goto seq_38;
   }
-  $r46 = $this->parsePipe($silence);
-  if ($r46===self::$FAILED) {
+  $r37 = $this->parsePipe($silence);
+  if ($r37===self::$FAILED) {
     $this->currPos = $p6;
-    $r46 = self::$FAILED;
+    $r37 = self::$FAILED;
     goto seq_38;
   }
   seq_38:
-  // update <- $r46
-  if ($r46===self::$FAILED) {
+  // update <- $r37
+  if ($r37===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
@@ -4657,36 +4609,35 @@ private function parseTerm($silence) {
   // free $p6
   // start seq_39
   $p6 = $this->currPos;
-  if (strspn($this->input, "\x09\x0a\x0d ;", $this->currPos, 1) !== 0) {
-    $r49 = true;
-    $r49 = false;
+  if (strspn($this->input, "\x09\x0a\x0d #;", $this->currPos, 1) !== 0) {
+    $r40 = true;
+    $r40 = false;
     $this->currPos = $p6;
   } else {
-    $r49 = self::$FAILED;
-    if (!$silence) { $this->fail(65); }
-    $r48 = self::$FAILED;
+    $r40 = self::$FAILED;
+    if (!$silence) { $this->fail(64); }
+    $r39 = self::$FAILED;
     goto seq_39;
   }
-  $r48 = $this->parseForeachExtract($silence);
-  if ($r48===self::$FAILED) {
+  $r39 = $this->parseForeachExtract($silence);
+  if ($r39===self::$FAILED) {
     $this->currPos = $p6;
-    $r48 = self::$FAILED;
+    $r39 = self::$FAILED;
     goto seq_39;
   }
   seq_39:
-  if ($r48===self::$FAILED) {
-    $r48 = null;
+  if ($r39===self::$FAILED) {
+    $r39 = null;
   }
   // free $p6
-  // extract <- $r48
-  $r50 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r50;
+  // extract <- $r39
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r51 = true;
+    $r41 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r51 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r41 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_34;
@@ -4695,72 +4646,71 @@ private function parseTerm($silence) {
   seq_34:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a44($r41, $r34, $r31, $r46, $r48);
+    $r1 = $this->a44($r32, $r26, $r20, $r37, $r39);
     goto choice_1;
   }
-  // free $r45,$r44,$r43,$r40,$r39,$r38,$r36,$r35,$r33,$r19,$r18,$r20,$r29,$r25,$r24,$r22,$r47,$r49,$r50,$r51
+  // free $r35,$r34,$r31,$r29,$r28,$r17,$r25,$r16,$r36,$r38,$r40,$r41
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_40
   $p3 = $this->currPos;
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "break", $this->currPos, 5, false) === 0) {
-    $r51 = true;
+    $r41 = true;
     $this->currPos += 5;
   } else {
-    if (!$silence) { $this->fail(66); }
-    $r51 = self::$FAILED;
+    if (!$silence) { $this->fail(65); }
+    $r41 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_40;
   }
   $p6 = $this->currPos;
-  $r50 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r50))) {
-    $r50 = self::$FAILED;
+  $r40 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r40))) {
+    $r40 = self::$FAILED;
   }
-  if ($r50 === self::$FAILED) {
-    $r50 = false;
+  if ($r40 === self::$FAILED) {
+    $r40 = false;
   } else {
-    $r50 = self::$FAILED;
+    $r40 = self::$FAILED;
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_40;
   }
   // free $p6
-  $r49 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r49;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "\$") {
-    $r47 = true;
+    $r38 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
-    $r47 = self::$FAILED;
+    if (!$silence) { $this->fail(11); }
+    $r38 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_40;
   }
   // start seq_41
   $p6 = $this->currPos;
-  $r24 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r24)) {
-    $r24 = false;
+  $r16 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r16)) {
+    $r16 = false;
     $this->currPos = $p6;
   } else {
-    $r24 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r22 = self::$FAILED;
+    $r16 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r36 = self::$FAILED;
     goto seq_41;
   }
-  $r22 = $this->parseName($silence);
-  if ($r22===self::$FAILED) {
+  $r36 = $this->parseName($silence);
+  if ($r36===self::$FAILED) {
     $this->currPos = $p6;
-    $r22 = self::$FAILED;
+    $r36 = self::$FAILED;
     goto seq_41;
   }
   seq_41:
-  // name <- $r22
-  if ($r22===self::$FAILED) {
+  // name <- $r36
+  if ($r36===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_40;
@@ -4770,62 +4720,59 @@ private function parseTerm($silence) {
   seq_40:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a45($r22);
+    $r1 = $this->a45($r36);
     goto choice_1;
   }
-  // free $r51,$r50,$r49,$r47,$r24
+  // free $r41,$r40,$r38,$r16
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_42
   $p3 = $this->currPos;
   // start seq_43
-  $r47 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r47)) {
-    $r47 = false;
+  $r38 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r38)) {
+    $r38 = false;
     $this->currPos = $p3;
   } else {
-    $r47 = self::$FAILED;
-    if (!$silence) { $this->fail(4); }
-    $r24 = self::$FAILED;
+    $r38 = self::$FAILED;
+    if (!$silence) { $this->fail(3); }
+    $r16 = self::$FAILED;
     goto seq_43;
   }
-  $r24 = $this->parseFuncName($silence);
-  if ($r24===self::$FAILED) {
+  $r16 = $this->parseFuncName($silence);
+  if ($r16===self::$FAILED) {
     $this->currPos = $p3;
-    $r24 = self::$FAILED;
+    $r16 = self::$FAILED;
     goto seq_43;
   }
   seq_43:
-  // name <- $r24
-  if ($r24===self::$FAILED) {
+  // name <- $r16
+  if ($r16===self::$FAILED) {
     $r1 = self::$FAILED;
     goto seq_42;
   }
-  $r49 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r49;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "(") {
-    $r50 = true;
+    $r40 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
-    $r50 = self::$FAILED;
+    if (!$silence) { $this->fail(15); }
+    $r40 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_42;
   }
-  $r51 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r51;
-  $r25 = $this->parseFuncArgs($silence);
-  // args <- $r25
-  $r29 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r29;
+  $this->discard_();
+  $r41 = $this->parseFuncArgs($silence);
+  // args <- $r41
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r20 = true;
+    $r25 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r20 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r25 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_42;
@@ -4834,40 +4781,40 @@ private function parseTerm($silence) {
   seq_42:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a46($r24, $r25);
+    $r1 = $this->a46($r16, $r41);
     goto choice_1;
   }
-  // free $r47,$r49,$r50,$r51,$r29,$r20
+  // free $r38,$r40,$r25
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_44
   $p3 = $this->currPos;
-  $r29 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r29)) {
-    $r29 = false;
+  $r40 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r40)) {
+    $r40 = false;
     $this->currPos = $p3;
   } else {
-    $r29 = self::$FAILED;
-    if (!$silence) { $this->fail(4); }
-    $r20 = self::$FAILED;
+    $r40 = self::$FAILED;
+    if (!$silence) { $this->fail(3); }
+    $r25 = self::$FAILED;
     goto seq_44;
   }
-  $r20 = $this->parseFuncName($silence);
-  if ($r20===self::$FAILED) {
+  $r25 = $this->parseFuncName($silence);
+  if ($r25===self::$FAILED) {
     $this->currPos = $p3;
-    $r20 = self::$FAILED;
+    $r25 = self::$FAILED;
     goto seq_44;
   }
   seq_44:
-  // name <- $r20
+  // name <- $r25
   // free $p3
-  $r1 = $r20;
+  $r1 = $r25;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a47($r20);
+    $r1 = $this->a47($r25);
   }
-  // free $r29
+  // free $r40
   // free $p2
   choice_1:
   return $r1;
@@ -4882,7 +4829,7 @@ private function parseSuffix($silence) {
     $r1 = $this->a48();
     goto choice_1;
   } else {
-    if (!$silence) { $this->fail(50); }
+    if (!$silence) { $this->fail(49); }
     $r1 = self::$FAILED;
   }
   // free $p2
@@ -4893,7 +4840,7 @@ private function parseSuffix($silence) {
     $r4 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(48); }
+    if (!$silence) { $this->fail(47); }
     $r4 = self::$FAILED;
     $r4 = null;
   }
@@ -4901,149 +4848,145 @@ private function parseSuffix($silence) {
     $r5 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
+    if (!$silence) { $this->fail(20); }
     $r5 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r6 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r6;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r7 = true;
+    $r6 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r6 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
   if (($this->input[$this->currPos] ?? null) === "?") {
-    $r8 = "?";
+    $r7 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
-    $r8 = self::$FAILED;
-    $r8 = null;
+    if (!$silence) { $this->fail(49); }
+    $r7 = self::$FAILED;
+    $r7 = null;
   }
-  // opt <- $r8
+  // opt <- $r7
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a49($r8);
+    $r1 = $this->a49($r7);
     goto choice_1;
   }
-  // free $r4,$r5,$r6,$r7
+  // free $r4,$r5,$r6
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_2
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === ".") {
-    $r7 = true;
-    $this->currPos++;
-  } else {
-    if (!$silence) { $this->fail(48); }
-    $r7 = self::$FAILED;
-    $r7 = null;
-  }
-  if (($this->input[$this->currPos] ?? null) === "[") {
     $r6 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
+    if (!$silence) { $this->fail(47); }
     $r6 = self::$FAILED;
+    $r6 = null;
+  }
+  if (($this->input[$this->currPos] ?? null) === "[") {
+    $r5 = true;
+    $this->currPos++;
+  } else {
+    if (!$silence) { $this->fail(20); }
+    $r5 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_2;
   }
-  $r5 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r5;
+  $this->discard_();
   $r4 = $this->parseSliceBound($silence);
   // from <- $r4
   if (($this->input[$this->currPos] ?? null) === ":") {
-    $r9 = true;
+    $r8 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(5); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(4); }
+    $r8 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_2;
   }
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
-  $r11 = $this->parseSliceBound($silence);
-  // to <- $r11
+  $this->discard_();
+  $r9 = $this->parseSliceBound($silence);
+  // to <- $r9
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r12 = true;
+    $r10 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r10 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_2;
   }
   if (($this->input[$this->currPos] ?? null) === "?") {
-    $r13 = "?";
+    $r11 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
-    $r13 = self::$FAILED;
-    $r13 = null;
+    if (!$silence) { $this->fail(49); }
+    $r11 = self::$FAILED;
+    $r11 = null;
   }
-  // opt <- $r13
+  // opt <- $r11
   $r1 = true;
   seq_2:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a50($r4, $r11, $r13);
+    $r1 = $this->a50($r4, $r9, $r11);
     goto choice_1;
   }
-  // free $r7,$r6,$r5,$r9,$r10,$r12
+  // free $r6,$r5,$r8,$r10
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_3
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === ".") {
-    $r12 = true;
-    $this->currPos++;
-  } else {
-    if (!$silence) { $this->fail(48); }
-    $r12 = self::$FAILED;
-    $r12 = null;
-  }
-  if (($this->input[$this->currPos] ?? null) === "[") {
     $r10 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(21); }
+    if (!$silence) { $this->fail(47); }
     $r10 = self::$FAILED;
+    $r10 = null;
+  }
+  if (($this->input[$this->currPos] ?? null) === "[") {
+    $r8 = true;
+    $this->currPos++;
+  } else {
+    if (!$silence) { $this->fail(20); }
+    $r8 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_3;
   }
-  $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r9;
+  $this->discard_();
   // start seq_4
-  $p14 = $this->currPos;
+  $p12 = $this->currPos;
   $r6 = $this->input[$this->currPos] ?? '';
   if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r6)) {
     $r6 = false;
-    $this->currPos = $p14;
+    $this->currPos = $p12;
   } else {
     $r6 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    if (!$silence) { $this->fail(1); }
     $r5 = self::$FAILED;
     goto seq_4;
   }
   $r5 = $this->parsePipe($silence);
   if ($r5===self::$FAILED) {
-    $this->currPos = $p14;
+    $this->currPos = $p12;
     $r5 = self::$FAILED;
     goto seq_4;
   }
@@ -5054,147 +4997,146 @@ private function parseSuffix($silence) {
     $r1 = self::$FAILED;
     goto seq_3;
   }
-  // free $p14
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  // free $p12
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "]") {
-    $r15 = true;
+    $r13 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(23); }
-    $r15 = self::$FAILED;
+    if (!$silence) { $this->fail(22); }
+    $r13 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_3;
   }
   if (($this->input[$this->currPos] ?? null) === "?") {
-    $r16 = "?";
+    $r14 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
-    $r16 = self::$FAILED;
-    $r16 = null;
+    if (!$silence) { $this->fail(49); }
+    $r14 = self::$FAILED;
+    $r14 = null;
   }
-  // opt <- $r16
+  // opt <- $r14
   $r1 = true;
   seq_3:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a51($r5, $r16);
+    $r1 = $this->a51($r5, $r14);
     goto choice_1;
   }
-  // free $r12,$r10,$r9,$r6,$r7,$r15
+  // free $r10,$r8,$r6,$r13
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_5
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === ".") {
-    $r15 = true;
+    $r13 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(48); }
-    $r15 = self::$FAILED;
-    $r15 = null;
+    if (!$silence) { $this->fail(47); }
+    $r13 = self::$FAILED;
+    $r13 = null;
   }
   // start seq_6
-  $p14 = $this->currPos;
-  $r6 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r6)) {
-    $r6 = false;
-    $this->currPos = $p14;
+  $p12 = $this->currPos;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r8)) {
+    $r8 = false;
+    $this->currPos = $p12;
   } else {
+    $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(48); }
     $r6 = self::$FAILED;
-    if (!$silence) { $this->fail(49); }
-    $r7 = self::$FAILED;
     goto seq_6;
   }
-  $r7 = $this->parseFieldName($silence);
-  if ($r7===self::$FAILED) {
-    $this->currPos = $p14;
-    $r7 = self::$FAILED;
+  $r6 = $this->parseFieldName($silence);
+  if ($r6===self::$FAILED) {
+    $this->currPos = $p12;
+    $r6 = self::$FAILED;
     goto seq_6;
   }
   seq_6:
-  // name <- $r7
-  if ($r7===self::$FAILED) {
+  // name <- $r6
+  if ($r6===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_5;
   }
-  // free $p14
+  // free $p12
   if (($this->input[$this->currPos] ?? null) === "?") {
-    $r9 = "?";
+    $r10 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
-    $r9 = self::$FAILED;
-    $r9 = null;
+    if (!$silence) { $this->fail(49); }
+    $r10 = self::$FAILED;
+    $r10 = null;
   }
-  // opt <- $r9
+  // opt <- $r10
   $r1 = true;
   seq_5:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a52($r7, $r9);
+    $r1 = $this->a52($r6, $r10);
     goto choice_1;
   }
-  // free $r15,$r6
+  // free $r13,$r8
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_7
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === ".") {
-    $r6 = true;
+    $r8 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(48); }
-    $r6 = self::$FAILED;
-    $r6 = null;
+    if (!$silence) { $this->fail(47); }
+    $r8 = self::$FAILED;
+    $r8 = null;
   }
   // start seq_8
-  $p14 = $this->currPos;
+  $p12 = $this->currPos;
   if (strspn($this->input, "\"'@", $this->currPos, 1) !== 0) {
-    $r10 = true;
-    $r10 = false;
-    $this->currPos = $p14;
+    $r15 = true;
+    $r15 = false;
+    $this->currPos = $p12;
   } else {
-    $r10 = self::$FAILED;
-    if (!$silence) { $this->fail(33); }
     $r15 = self::$FAILED;
+    if (!$silence) { $this->fail(32); }
+    $r13 = self::$FAILED;
     goto seq_8;
   }
-  $r15 = $this->parseString($silence);
-  if ($r15===self::$FAILED) {
-    $this->currPos = $p14;
-    $r15 = self::$FAILED;
+  $r13 = $this->parseString($silence);
+  if ($r13===self::$FAILED) {
+    $this->currPos = $p12;
+    $r13 = self::$FAILED;
     goto seq_8;
   }
   seq_8:
-  // name <- $r15
-  if ($r15===self::$FAILED) {
+  // name <- $r13
+  if ($r13===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_7;
   }
-  // free $p14
+  // free $p12
   if (($this->input[$this->currPos] ?? null) === "?") {
-    $r12 = "?";
+    $r16 = "?";
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(50); }
-    $r12 = self::$FAILED;
-    $r12 = null;
+    if (!$silence) { $this->fail(49); }
+    $r16 = self::$FAILED;
+    $r16 = null;
   }
-  // opt <- $r12
+  // opt <- $r16
   $r1 = true;
   seq_7:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a53($r15, $r12);
+    $r1 = $this->a53($r13, $r16);
   }
-  // free $r6,$r10
+  // free $r8,$r15
   // free $p3
   // free $p2
   choice_1:
@@ -5225,7 +5167,7 @@ private function parseFieldName($silence) {
     $r2 = substr($this->input, $p1, $this->currPos - $p1);
   } else {
     $r2 = self::$FAILED;
-    if (!$silence) { $this->fail(67); }
+    if (!$silence) { $this->fail(66); }
   }
   // free $r4,$r5
   // free $p3
@@ -5244,7 +5186,7 @@ private function parseDictPairs($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(68); }
+    if (!$silence) { $this->fail(67); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -5264,35 +5206,33 @@ private function parseDictPairs($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === ",") {
-      $r10 = true;
+      $r9 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(22); }
-      $r10 = self::$FAILED;
+      if (!$silence) { $this->fail(21); }
+      $r9 = self::$FAILED;
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $this->discard_();
     // start seq_4
-    $p12 = $this->currPos;
-    $r13 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r13)) {
-      $r13 = false;
-      $this->currPos = $p12;
+    $p10 = $this->currPos;
+    $r11 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(@-Z_a-z]/A", $r11)) {
+      $r11 = false;
+      $this->currPos = $p10;
     } else {
-      $r13 = self::$FAILED;
-      if (!$silence) { $this->fail(68); }
+      $r11 = self::$FAILED;
+      if (!$silence) { $this->fail(67); }
       $r7 = self::$FAILED;
       goto seq_4;
     }
     $r7 = $this->parseDictPair($silence);
     if ($r7===self::$FAILED) {
-      $this->currPos = $p12;
+      $this->currPos = $p10;
       $r7 = self::$FAILED;
       goto seq_4;
     }
@@ -5302,19 +5242,19 @@ private function parseDictPairs($silence) {
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p12
+    // free $p10
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r13
+    // free $r11
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r10,$r11
+  // free $r9
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -5448,7 +5388,7 @@ private function parseNumber($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a55($r3);
   } else {
-    if (!$silence) { $this->fail(69); }
+    if (!$silence) { $this->fail(68); }
   }
   // free $p2
   return $r1;
@@ -5462,7 +5402,7 @@ private function parseElseBody($silence) {
     $r4 = true;
     $this->currPos += 4;
   } else {
-    if (!$silence) { $this->fail(70); }
+    if (!$silence) { $this->fail(69); }
     $r4 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -5482,230 +5422,43 @@ private function parseElseBody($silence) {
     goto seq_1;
   }
   // free $p6
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  $this->discard_();
   // start seq_2
   $p6 = $this->currPos;
-  $r9 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r9)) {
-    $r9 = false;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r8)) {
+    $r8 = false;
     $this->currPos = $p6;
   } else {
-    $r9 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
     $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r7 = self::$FAILED;
     goto seq_2;
   }
-  $r8 = $this->parsePipe($silence);
-  if ($r8===self::$FAILED) {
+  $r7 = $this->parsePipe($silence);
+  if ($r7===self::$FAILED) {
     $this->currPos = $p6;
-    $r8 = self::$FAILED;
+    $r7 = self::$FAILED;
     goto seq_2;
   }
   seq_2:
-  // cond <- $r8
-  if ($r8===self::$FAILED) {
+  // cond <- $r7
+  if ($r7===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
   // free $p6
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "then", $this->currPos, 4, false) === 0) {
-    $r11 = true;
-    $this->currPos += 4;
-  } else {
-    if (!$silence) { $this->fail(59); }
-    $r11 = self::$FAILED;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  $p6 = $this->currPos;
-  $r12 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r12))) {
-    $r12 = self::$FAILED;
-  }
-  if ($r12 === self::$FAILED) {
-    $r12 = false;
-  } else {
-    $r12 = self::$FAILED;
-    $this->currPos = $p6;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  // free $p6
-  $r13 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r13;
-  // start seq_3
-  $p6 = $this->currPos;
-  $r15 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r15)) {
-    $r15 = false;
-    $this->currPos = $p6;
-  } else {
-    $r15 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r14 = self::$FAILED;
-    goto seq_3;
-  }
-  $r14 = $this->parsePipe($silence);
-  if ($r14===self::$FAILED) {
-    $this->currPos = $p6;
-    $r14 = self::$FAILED;
-    goto seq_3;
-  }
-  seq_3:
-  // then <- $r14
-  if ($r14===self::$FAILED) {
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  // free $p6
-  $r16 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r16;
-  // start seq_4
-  $p6 = $this->currPos;
-  $r18 = $this->input[$this->currPos] ?? '';
-  if ($r18 === "e") {
-    $r18 = false;
-    $this->currPos = $p6;
-  } else {
-    $r18 = self::$FAILED;
-    if (!$silence) { $this->fail(60); }
-    $r17 = self::$FAILED;
-    goto seq_4;
-  }
-  $r17 = $this->parseElseBody($silence);
-  if ($r17===self::$FAILED) {
-    $this->currPos = $p6;
-    $r17 = self::$FAILED;
-    goto seq_4;
-  }
-  seq_4:
-  // rest <- $r17
-  if ($r17===self::$FAILED) {
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_1;
-  }
-  // free $p6
-  $r1 = true;
-  seq_1:
-  if ($r1!==self::$FAILED) {
-    $this->savedPos = $p2;
-    $r1 = $this->a56($r8, $r14, $r17);
-    goto choice_1;
-  }
-  // free $r4,$r5,$r7,$r9,$r10,$r11,$r12,$r13,$r15,$r16,$r18
-  // free $p3
-  // free $p2
-  $p2 = $this->currPos;
-  // start seq_5
-  $p3 = $this->currPos;
-  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "else", $this->currPos, 4, false) === 0) {
-    $r18 = true;
-    $this->currPos += 4;
-  } else {
-    if (!$silence) { $this->fail(71); }
-    $r18 = self::$FAILED;
-    $r1 = self::$FAILED;
-    goto seq_5;
-  }
-  $p6 = $this->currPos;
-  $r16 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r16))) {
-    $r16 = self::$FAILED;
-  }
-  if ($r16 === self::$FAILED) {
-    $r16 = false;
-  } else {
-    $r16 = self::$FAILED;
-    $this->currPos = $p6;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_5;
-  }
-  // free $p6
-  $r15 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r15;
-  // start seq_6
-  $p6 = $this->currPos;
-  $r12 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
-    $r12 = false;
-    $this->currPos = $p6;
-  } else {
-    $r12 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
-    $r13 = self::$FAILED;
-    goto seq_6;
-  }
-  $r13 = $this->parsePipe($silence);
-  if ($r13===self::$FAILED) {
-    $this->currPos = $p6;
-    $r13 = self::$FAILED;
-    goto seq_6;
-  }
-  seq_6:
-  // body <- $r13
-  if ($r13===self::$FAILED) {
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_5;
-  }
-  // free $p6
-  $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r11;
-  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "end", $this->currPos, 3, false) === 0) {
-    $r10 = true;
-    $this->currPos += 3;
-  } else {
-    if (!$silence) { $this->fail(72); }
-    $r10 = self::$FAILED;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_5;
-  }
-  $p6 = $this->currPos;
-  $r9 = $this->input[$this->currPos] ?? '';
-  if (!(preg_match("/[0-9A-Z_a-z]/A", $r9))) {
-    $r9 = self::$FAILED;
-  }
-  if ($r9 === self::$FAILED) {
-    $r9 = false;
-  } else {
-    $r9 = self::$FAILED;
-    $this->currPos = $p6;
-    $this->currPos = $p3;
-    $r1 = self::$FAILED;
-    goto seq_5;
-  }
-  // free $p6
-  $r1 = true;
-  seq_5:
-  if ($r1!==self::$FAILED) {
-    $this->savedPos = $p2;
-    $r1 = $this->a57($r13);
-    goto choice_1;
-  }
-  // free $r18,$r16,$r15,$r12,$r11,$r10,$r9
-  // free $p3
-  // free $p2
-  $p2 = $this->currPos;
-  // start seq_7
-  $p3 = $this->currPos;
-  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "end", $this->currPos, 3, false) === 0) {
     $r9 = true;
-    $this->currPos += 3;
+    $this->currPos += 4;
   } else {
-    if (!$silence) { $this->fail(72); }
+    if (!$silence) { $this->fail(58); }
     $r9 = self::$FAILED;
+    $this->currPos = $p3;
     $r1 = self::$FAILED;
-    goto seq_7;
+    goto seq_1;
   }
   $p6 = $this->currPos;
   $r10 = $this->input[$this->currPos] ?? '';
@@ -5719,6 +5472,187 @@ private function parseElseBody($silence) {
     $this->currPos = $p6;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
+    goto seq_1;
+  }
+  // free $p6
+  $this->discard_();
+  // start seq_3
+  $p6 = $this->currPos;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
+    $r12 = false;
+    $this->currPos = $p6;
+  } else {
+    $r12 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r11 = self::$FAILED;
+    goto seq_3;
+  }
+  $r11 = $this->parsePipe($silence);
+  if ($r11===self::$FAILED) {
+    $this->currPos = $p6;
+    $r11 = self::$FAILED;
+    goto seq_3;
+  }
+  seq_3:
+  // then <- $r11
+  if ($r11===self::$FAILED) {
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_1;
+  }
+  // free $p6
+  $this->discard_();
+  // start seq_4
+  $p6 = $this->currPos;
+  $r14 = $this->input[$this->currPos] ?? '';
+  if ($r14 === "e") {
+    $r14 = false;
+    $this->currPos = $p6;
+  } else {
+    $r14 = self::$FAILED;
+    if (!$silence) { $this->fail(59); }
+    $r13 = self::$FAILED;
+    goto seq_4;
+  }
+  $r13 = $this->parseElseBody($silence);
+  if ($r13===self::$FAILED) {
+    $this->currPos = $p6;
+    $r13 = self::$FAILED;
+    goto seq_4;
+  }
+  seq_4:
+  // rest <- $r13
+  if ($r13===self::$FAILED) {
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_1;
+  }
+  // free $p6
+  $r1 = true;
+  seq_1:
+  if ($r1!==self::$FAILED) {
+    $this->savedPos = $p2;
+    $r1 = $this->a56($r7, $r11, $r13);
+    goto choice_1;
+  }
+  // free $r4,$r5,$r8,$r9,$r10,$r12,$r14
+  // free $p3
+  // free $p2
+  $p2 = $this->currPos;
+  // start seq_5
+  $p3 = $this->currPos;
+  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "else", $this->currPos, 4, false) === 0) {
+    $r14 = true;
+    $this->currPos += 4;
+  } else {
+    if (!$silence) { $this->fail(70); }
+    $r14 = self::$FAILED;
+    $r1 = self::$FAILED;
+    goto seq_5;
+  }
+  $p6 = $this->currPos;
+  $r12 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r12))) {
+    $r12 = self::$FAILED;
+  }
+  if ($r12 === self::$FAILED) {
+    $r12 = false;
+  } else {
+    $r12 = self::$FAILED;
+    $this->currPos = $p6;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_5;
+  }
+  // free $p6
+  $this->discard_();
+  // start seq_6
+  $p6 = $this->currPos;
+  $r9 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r9)) {
+    $r9 = false;
+    $this->currPos = $p6;
+  } else {
+    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
+    $r10 = self::$FAILED;
+    goto seq_6;
+  }
+  $r10 = $this->parsePipe($silence);
+  if ($r10===self::$FAILED) {
+    $this->currPos = $p6;
+    $r10 = self::$FAILED;
+    goto seq_6;
+  }
+  seq_6:
+  // body <- $r10
+  if ($r10===self::$FAILED) {
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_5;
+  }
+  // free $p6
+  $this->discard_();
+  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "end", $this->currPos, 3, false) === 0) {
+    $r8 = true;
+    $this->currPos += 3;
+  } else {
+    if (!$silence) { $this->fail(71); }
+    $r8 = self::$FAILED;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_5;
+  }
+  $p6 = $this->currPos;
+  $r5 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r5))) {
+    $r5 = self::$FAILED;
+  }
+  if ($r5 === self::$FAILED) {
+    $r5 = false;
+  } else {
+    $r5 = self::$FAILED;
+    $this->currPos = $p6;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
+    goto seq_5;
+  }
+  // free $p6
+  $r1 = true;
+  seq_5:
+  if ($r1!==self::$FAILED) {
+    $this->savedPos = $p2;
+    $r1 = $this->a57($r10);
+    goto choice_1;
+  }
+  // free $r14,$r12,$r9,$r8,$r5
+  // free $p3
+  // free $p2
+  $p2 = $this->currPos;
+  // start seq_7
+  $p3 = $this->currPos;
+  if ($this->currPos >= $this->inputLength ? false : substr_compare($this->input, "end", $this->currPos, 3, false) === 0) {
+    $r5 = true;
+    $this->currPos += 3;
+  } else {
+    if (!$silence) { $this->fail(71); }
+    $r5 = self::$FAILED;
+    $r1 = self::$FAILED;
+    goto seq_7;
+  }
+  $p6 = $this->currPos;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (!(preg_match("/[0-9A-Z_a-z]/A", $r8))) {
+    $r8 = self::$FAILED;
+  }
+  if ($r8 === self::$FAILED) {
+    $r8 = false;
+  } else {
+    $r8 = self::$FAILED;
+    $this->currPos = $p6;
+    $this->currPos = $p3;
+    $r1 = self::$FAILED;
     goto seq_7;
   }
   // free $p6
@@ -5728,7 +5662,7 @@ private function parseElseBody($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a35();
   }
-  // free $r9,$r10
+  // free $r5,$r8
   // free $p3
   // free $p2
   choice_1:
@@ -5741,7 +5675,7 @@ private function parseTryCatch($silence) {
     $r3 = true;
     $this->currPos += 5;
   } else {
-    if (!$silence) { $this->fail(73); }
+    if (!$silence) { $this->fail(72); }
     $r3 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -5761,17 +5695,16 @@ private function parseTryCatch($silence) {
     goto seq_1;
   }
   // free $p5
-  $r6 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r6;
+  $this->discard_();
   // start seq_2
   $p5 = $this->currPos;
-  $r7 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r7)) {
-    $r7 = false;
+  $r6 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r6)) {
+    $r6 = false;
     $this->currPos = $p5;
   } else {
-    $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(42); }
+    $r6 = self::$FAILED;
+    if (!$silence) { $this->fail(41); }
     $r1 = self::$FAILED;
     goto seq_2;
   }
@@ -5789,42 +5722,40 @@ private function parseTryCatch($silence) {
   }
   // free $p5
   seq_1:
-  // free $r7
+  // free $r6
   // free $p2
   return $r1;
 }
 private function parseForeachExtract($silence) {
   // start seq_1
   $p2 = $this->currPos;
-  $r3 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r3;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ";") {
-    $r4 = true;
+    $r3 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(6); }
-    $r4 = self::$FAILED;
+    if (!$silence) { $this->fail(5); }
+    $r3 = self::$FAILED;
     $this->currPos = $p2;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r5 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r5;
+  $this->discard_();
   // start seq_2
-  $p6 = $this->currPos;
-  $r7 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r7)) {
-    $r7 = false;
-    $this->currPos = $p6;
+  $p4 = $this->currPos;
+  $r5 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r5)) {
+    $r5 = false;
+    $this->currPos = $p4;
   } else {
-    $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
     $r1 = self::$FAILED;
     goto seq_2;
   }
   $r1 = $this->parsePipe($silence);
   if ($r1===self::$FAILED) {
-    $this->currPos = $p6;
+    $this->currPos = $p4;
     $r1 = self::$FAILED;
     goto seq_2;
   }
@@ -5834,9 +5765,9 @@ private function parseForeachExtract($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p6
+  // free $p4
   seq_1:
-  // free $r7
+  // free $r5
   // free $p2
   return $r1;
 }
@@ -5852,7 +5783,7 @@ private function parseFuncArgs($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    if (!$silence) { $this->fail(1); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -5872,35 +5803,33 @@ private function parseFuncArgs($silence) {
   for (;;) {
     // start seq_3
     $p8 = $this->currPos;
-    $r9 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r9;
+    $this->discard_();
     if (($this->input[$this->currPos] ?? null) === ";") {
-      $r10 = true;
+      $r9 = true;
       $this->currPos++;
     } else {
-      if (!$silence) { $this->fail(6); }
-      $r10 = self::$FAILED;
+      if (!$silence) { $this->fail(5); }
+      $r9 = self::$FAILED;
       $this->currPos = $p8;
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    $r11 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-    $this->currPos += $r11;
+    $this->discard_();
     // start seq_4
-    $p12 = $this->currPos;
-    $r13 = $this->input[$this->currPos] ?? '';
-    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r13)) {
-      $r13 = false;
-      $this->currPos = $p12;
+    $p10 = $this->currPos;
+    $r11 = $this->input[$this->currPos] ?? '';
+    if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r11)) {
+      $r11 = false;
+      $this->currPos = $p10;
     } else {
-      $r13 = self::$FAILED;
-      if (!$silence) { $this->fail(2); }
+      $r11 = self::$FAILED;
+      if (!$silence) { $this->fail(1); }
       $r7 = self::$FAILED;
       goto seq_4;
     }
     $r7 = $this->parsePipe($silence);
     if ($r7===self::$FAILED) {
-      $this->currPos = $p12;
+      $this->currPos = $p10;
       $r7 = self::$FAILED;
       goto seq_4;
     }
@@ -5910,19 +5839,19 @@ private function parseFuncArgs($silence) {
       $r7 = self::$FAILED;
       goto seq_3;
     }
-    // free $p12
+    // free $p10
     seq_3:
     if ($r7!==self::$FAILED) {
       $r6[] = $r7;
     } else {
       break;
     }
-    // free $r13
+    // free $r11
     // free $p8
   }
   // rest <- $r6
   // free $r7
-  // free $r9,$r10,$r11
+  // free $r9
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
@@ -5950,7 +5879,7 @@ private function parseSliceBound($silence) {
     $this->currPos = $p2;
   } else {
     $r3 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
+    if (!$silence) { $this->fail(6); }
     $r1 = self::$FAILED;
     goto seq_1;
   }
@@ -5979,7 +5908,7 @@ private function parseDictPair($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(74); }
+    if (!$silence) { $this->fail(73); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -5995,161 +5924,159 @@ private function parseDictPair($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r6 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r6;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ":") {
-    $r7 = true;
+    $r6 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(5); }
-    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(4); }
+    $r6 = self::$FAILED;
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   // start seq_3
-  $p10 = $this->currPos;
-  $r11 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r11)) {
-    $r11 = false;
-    $this->currPos = $p10;
+  $p8 = $this->currPos;
+  $r9 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r9)) {
+    $r9 = false;
+    $this->currPos = $p8;
   } else {
-    $r11 = self::$FAILED;
-    if (!$silence) { $this->fail(75); }
     $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(74); }
+    $r7 = self::$FAILED;
     goto seq_3;
   }
-  $r9 = $this->parseDictExpr($silence);
-  if ($r9===self::$FAILED) {
-    $this->currPos = $p10;
-    $r9 = self::$FAILED;
+  $r7 = $this->parseDictExpr($silence);
+  if ($r7===self::$FAILED) {
+    $this->currPos = $p8;
+    $r7 = self::$FAILED;
     goto seq_3;
   }
   seq_3:
-  // val <- $r9
-  if ($r9===self::$FAILED) {
+  // val <- $r7
+  if ($r7===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p10
+  // free $p8
   $r1 = true;
   seq_1:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a58($r4, $r9);
+    $r1 = $this->a58($r4, $r7);
     goto choice_1;
   }
-  // free $r5,$r6,$r7,$r8,$r11
+  // free $r5,$r6,$r9
   // free $p3
   // free $p2
   $p2 = $this->currPos;
   // start seq_4
   $p3 = $this->currPos;
-  $r8 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r8)) {
-    $r8 = false;
+  $r6 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r6)) {
+    $r6 = false;
     $this->currPos = $p3;
   } else {
-    $r8 = self::$FAILED;
-    if (!$silence) { $this->fail(49); }
-    $r11 = self::$FAILED;
+    $r6 = self::$FAILED;
+    if (!$silence) { $this->fail(48); }
+    $r9 = self::$FAILED;
     goto seq_4;
   }
-  $r11 = $this->parseFieldName($silence);
-  if ($r11===self::$FAILED) {
+  $r9 = $this->parseFieldName($silence);
+  if ($r9===self::$FAILED) {
     $this->currPos = $p3;
-    $r11 = self::$FAILED;
+    $r9 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  // name <- $r11
+  // name <- $r9
   // free $p3
-  $r1 = $r11;
+  $r1 = $r9;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a59($r11);
+    $r1 = $this->a59($r9);
     goto choice_1;
   }
-  // free $r8
+  // free $r6
   // free $p2
   $p2 = $this->currPos;
   // start seq_5
   $p3 = $this->currPos;
   if (strspn($this->input, "\"'@", $this->currPos, 1) !== 0) {
-    $r7 = true;
-    $r7 = false;
+    $r5 = true;
+    $r5 = false;
     $this->currPos = $p3;
   } else {
-    $r7 = self::$FAILED;
-    if (!$silence) { $this->fail(33); }
-    $r8 = self::$FAILED;
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(32); }
+    $r6 = self::$FAILED;
     goto seq_5;
   }
-  $r8 = $this->parseString($silence);
-  if ($r8===self::$FAILED) {
+  $r6 = $this->parseString($silence);
+  if ($r6===self::$FAILED) {
     $this->currPos = $p3;
-    $r8 = self::$FAILED;
+    $r6 = self::$FAILED;
     goto seq_5;
   }
   seq_5:
-  // name <- $r8
+  // name <- $r6
   // free $p3
-  $r1 = $r8;
+  $r1 = $r6;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a60($r8);
+    $r1 = $this->a60($r6);
     goto choice_1;
   }
-  // free $r7
+  // free $r5
   // free $p2
   $p2 = $this->currPos;
   // start seq_6
   $p3 = $this->currPos;
   if (($this->input[$this->currPos] ?? null) === "\$") {
-    $r7 = true;
+    $r5 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(12); }
-    $r7 = self::$FAILED;
+    if (!$silence) { $this->fail(11); }
+    $r5 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_6;
   }
   // start seq_7
-  $p10 = $this->currPos;
-  $r5 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r5)) {
-    $r5 = false;
-    $this->currPos = $p10;
+  $p8 = $this->currPos;
+  $r11 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r11)) {
+    $r11 = false;
+    $this->currPos = $p8;
   } else {
-    $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r6 = self::$FAILED;
+    $r11 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r10 = self::$FAILED;
     goto seq_7;
   }
-  $r6 = $this->parseName($silence);
-  if ($r6===self::$FAILED) {
-    $this->currPos = $p10;
-    $r6 = self::$FAILED;
+  $r10 = $this->parseName($silence);
+  if ($r10===self::$FAILED) {
+    $this->currPos = $p8;
+    $r10 = self::$FAILED;
     goto seq_7;
   }
   seq_7:
-  // name <- $r6
-  if ($r6===self::$FAILED) {
+  // name <- $r10
+  if ($r10===self::$FAILED) {
     $this->currPos = $p3;
     $r1 = self::$FAILED;
     goto seq_6;
   }
-  // free $p10
+  // free $p8
   $r1 = true;
   seq_6:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a61($r6);
+    $r1 = $this->a61($r10);
   }
-  // free $r7,$r5
+  // free $r5,$r11
   // free $p3
   // free $p2
   choice_1:
@@ -6163,28 +6090,27 @@ private function parseDictKey($silence) {
     $r3 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(16); }
+    if (!$silence) { $this->fail(15); }
     $r3 = self::$FAILED;
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  $r4 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r4;
+  $this->discard_();
   // start seq_2
-  $p5 = $this->currPos;
-  $r6 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r6)) {
-    $r6 = false;
-    $this->currPos = $p5;
+  $p4 = $this->currPos;
+  $r5 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r5)) {
+    $r5 = false;
+    $this->currPos = $p4;
   } else {
-    $r6 = self::$FAILED;
-    if (!$silence) { $this->fail(2); }
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(1); }
     $r1 = self::$FAILED;
     goto seq_2;
   }
   $r1 = $this->parsePipe($silence);
   if ($r1===self::$FAILED) {
-    $this->currPos = $p5;
+    $this->currPos = $p4;
     $r1 = self::$FAILED;
     goto seq_2;
   }
@@ -6194,15 +6120,14 @@ private function parseDictKey($silence) {
     $r1 = self::$FAILED;
     goto seq_1;
   }
-  // free $p5
-  $r7 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r7;
+  // free $p4
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === ")") {
-    $r8 = true;
+    $r6 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(18); }
-    $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(17); }
+    $r6 = self::$FAILED;
     $this->currPos = $p2;
     $r1 = self::$FAILED;
     goto seq_1;
@@ -6211,17 +6136,17 @@ private function parseDictKey($silence) {
   if ($r1!==self::$FAILED) {
     goto choice_1;
   }
-  // free $r6
+  // free $r5
   // free $p2
   // start seq_3
   $p2 = $this->currPos;
   if (strspn($this->input, "\"'@", $this->currPos, 1) !== 0) {
-    $r6 = true;
-    $r6 = false;
+    $r5 = true;
+    $r5 = false;
     $this->currPos = $p2;
   } else {
-    $r6 = self::$FAILED;
-    if (!$silence) { $this->fail(33); }
+    $r5 = self::$FAILED;
+    if (!$silence) { $this->fail(32); }
     $r1 = self::$FAILED;
     goto seq_3;
   }
@@ -6238,32 +6163,32 @@ private function parseDictKey($silence) {
   // free $p2
   $p2 = $this->currPos;
   // start seq_4
-  $p5 = $this->currPos;
-  $r10 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[A-Z_a-z]/A", $r10)) {
-    $r10 = false;
-    $this->currPos = $p5;
+  $p4 = $this->currPos;
+  $r8 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[A-Z_a-z]/A", $r8)) {
+    $r8 = false;
+    $this->currPos = $p4;
   } else {
-    $r10 = self::$FAILED;
-    if (!$silence) { $this->fail(13); }
-    $r9 = self::$FAILED;
+    $r8 = self::$FAILED;
+    if (!$silence) { $this->fail(12); }
+    $r7 = self::$FAILED;
     goto seq_4;
   }
-  $r9 = $this->parseName($silence);
-  if ($r9===self::$FAILED) {
-    $this->currPos = $p5;
-    $r9 = self::$FAILED;
+  $r7 = $this->parseName($silence);
+  if ($r7===self::$FAILED) {
+    $this->currPos = $p4;
+    $r7 = self::$FAILED;
     goto seq_4;
   }
   seq_4:
-  // name <- $r9
-  // free $p5
-  $r1 = $r9;
+  // name <- $r7
+  // free $p4
+  $r1 = $r7;
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a17($r9);
+    $r1 = $this->a17($r7);
   }
-  // free $r10
+  // free $r8
   // free $p2
   choice_1:
   return $r1;
@@ -6279,7 +6204,7 @@ private function parseDictExpr($silence) {
     $this->currPos = $p3;
   } else {
     $r5 = self::$FAILED;
-    if (!$silence) { $this->fail(7); }
+    if (!$silence) { $this->fail(6); }
     $r4 = self::$FAILED;
     goto seq_2;
   }
@@ -6297,35 +6222,33 @@ private function parseDictExpr($silence) {
   }
   // start seq_3
   $p7 = $this->currPos;
-  $r8 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r8;
+  $this->discard_();
   if (($this->input[$this->currPos] ?? null) === "|") {
-    $r9 = true;
+    $r8 = true;
     $this->currPos++;
   } else {
-    if (!$silence) { $this->fail(10); }
-    $r9 = self::$FAILED;
+    if (!$silence) { $this->fail(9); }
+    $r8 = self::$FAILED;
     $this->currPos = $p7;
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  $r10 = strspn($this->input, "\x09\x0a\x0d ", $this->currPos);
-  $this->currPos += $r10;
+  $this->discard_();
   // start seq_4
-  $p11 = $this->currPos;
-  $r12 = $this->input[$this->currPos] ?? '';
-  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r12)) {
-    $r12 = false;
-    $this->currPos = $p11;
+  $p9 = $this->currPos;
+  $r10 = $this->input[$this->currPos] ?? '';
+  if (preg_match("/[\"\$'-(\\--.0-9@-\\[_a-{]/A", $r10)) {
+    $r10 = false;
+    $this->currPos = $p9;
   } else {
-    $r12 = self::$FAILED;
-    if (!$silence) { $this->fail(75); }
+    $r10 = self::$FAILED;
+    if (!$silence) { $this->fail(74); }
     $r6 = self::$FAILED;
     goto seq_4;
   }
   $r6 = $this->parseDictExpr($silence);
   if ($r6===self::$FAILED) {
-    $this->currPos = $p11;
+    $this->currPos = $p9;
     $r6 = self::$FAILED;
     goto seq_4;
   }
@@ -6335,12 +6258,12 @@ private function parseDictExpr($silence) {
     $r6 = self::$FAILED;
     goto seq_3;
   }
-  // free $p11
+  // free $p9
   seq_3:
   if ($r6===self::$FAILED) {
     $r6 = null;
   }
-  // free $r12
+  // free $r10
   // free $p7
   // right <- $r6
   $r1 = true;
@@ -6349,7 +6272,7 @@ private function parseDictExpr($silence) {
     $this->savedPos = $p2;
     $r1 = $this->a62($r4, $r6);
   }
-  // free $r5,$r8,$r9,$r10
+  // free $r5,$r8
   // free $p3
   // free $p2
   return $r1;

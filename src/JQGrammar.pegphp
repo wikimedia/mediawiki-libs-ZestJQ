@@ -448,5 +448,5 @@ FieldName "field name"
 /* A character valid inside an identifier */
 IdentChar = [a-zA-Z0-9_]
 
-/* Optional whitespace */
-_ = [ \t\n\r]*
+/* Optional whitespace and line comments */
+_ = ( [ \t\n\r]+ / "#" [^\n]* )*
