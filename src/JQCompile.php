@@ -1,4 +1,5 @@
 <?php
+// @phan-file-suppress PhanUnusedClosureParameter
 declare( strict_types = 1 );
 
 namespace Wikimedia\Zest;
@@ -57,10 +58,24 @@ class JQCompile {
 	 *
 	 * @param array $node  AST node (must have a 'type' key)
 	 * @return \Closure(mixed $input, JQEnv $env): \Generator
-	 * @suppress PhanPluginNeverReturnMethod
 	 */
 	private function evalNode( array $node ): \Closure {
-		throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] );
+		return match ( $node['type'] ) {
+			'identity' => $this->evalIdentity(),
+			default    => throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] ),
+		};
+	}
+
+	/**
+	 * Compile an identity node (.).
+	 * Yields the input value unchanged.
+	 *
+	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 */
+	private function evalIdentity(): \Closure {
+		return static function ( mixed $input, JQEnv $env ): \Generator {
+			yield $input;
+		};
 	}
 
 	/**
