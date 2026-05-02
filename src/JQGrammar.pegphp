@@ -68,7 +68,7 @@ Pipe
   = "def" !IdentChar _ name:FuncName _ params:FuncParams _ ":" _ body:Pipe _ ";" _ rest:Pipe
     { return [ 'type' => 'def', 'name' => $name, 'params' => $params,
                'body' => $body, 'rest' => $rest ]; }
-  / src:Alt _ "as" !IdentChar _ pat:Pattern _ "|" _ body:Pipe
+  / src:Alt _ "as" !IdentChar _ pat:Patterns _ "|" _ body:Pipe
     { return [ 'type' => 'bind', 'expr' => $src, 'pattern' => $pat, 'body' => $body ]; }
   / "label" !IdentChar _ "$" name:Name _ "|" _ body:Pipe
     { return [ 'type' => 'label', 'name' => $name, 'body' => $body ]; }
@@ -260,16 +260,16 @@ Term
   / "try" !IdentChar _ body:Postfix _ catch_:TryCatch?
     { return [ 'type' => 'try', 'body' => $body, 'catch' => $catch_ ]; }
 
-  /* reduce Expr as Pattern ( init ; update ) */
+  /* reduce Expr as Patterns ( init ; update ) */
   / "reduce" !IdentChar _ src:Alt _
-    "as" !IdentChar _ pat:Pattern _
+    "as" !IdentChar _ pat:Patterns _
     "(" _ init:Query _ ";" _ update:Query _ ")"
     { return [ 'type' => 'reduce', 'src' => $src, 'pattern' => $pat,
                'init' => $init, 'update' => $update ]; }
 
-  /* foreach Expr as Pattern ( init ; update ) or ( init ; update ; extract ) */
+  /* foreach Expr as Patterns ( init ; update ) or ( init ; update ; extract ) */
   / "foreach" !IdentChar _ src:Expr _
-    "as" !IdentChar _ pat:Pattern _
+    "as" !IdentChar _ pat:Patterns _
     "(" _ init:Query _ ";" _ update:Query extract:ForeachExtract? _ ")"
     { return [ 'type' => 'foreach', 'src' => $src, 'pattern' => $pat,
                'init' => $init, 'update' => $update, 'extract' => $extract ]; }
@@ -372,6 +372,16 @@ FuncName "function name"
 /*  Pattern matching (used in "as", reduce, foreach)                   */
 /*  Full patterns: $var, [$a,$b], {key:$var}                          */
 /* ================================================================== */
+
+/* One or more patterns separated by ?// (alternative/backtracking pattern) */
+Patterns
+  = first:Pattern rest:(_ "?//" _ @Pattern)*
+    {
+        if ( count( $rest ) === 0 ) {
+            return $first;
+        }
+        return [ 'type' => 'alt_pattern', 'patterns' => array_merge( [ $first ], $rest ) ];
+    }
 
 Pattern
   = "$" name:Name
