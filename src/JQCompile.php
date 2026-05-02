@@ -4,6 +4,9 @@ declare( strict_types = 1 );
 
 namespace Wikimedia\Zest;
 
+use Closure;
+use Generator;
+
 /**
  * Compiler for JQ filter expressions.
  *
@@ -21,6 +24,15 @@ namespace Wikimedia\Zest;
  *              try-catch nodes and the ? suffix operator.
  *   JQBreak  — thrown by break/$label; propagates through try-catch nodes
  *              and is only caught by the matching label/$label node.
+ *
+ * Closure types used throughout this file:
+ *   Filter  = Closure(mixed $input, JQEnv $env): Generator
+ *             where the Generator yields zero or more mixed JQ output values
+ *             (null, bool, int, float, string, or array).
+ *   Matcher = Closure(mixed $val, JQEnv $env): Generator
+ *             where the Generator yields zero or one JQEnv: exactly one on a
+ *             successful pattern match (env extended with variable bindings),
+ *             or none if the match fails.
  */
 class JQCompile {
 
@@ -34,18 +46,18 @@ class JQCompile {
 	 *
 	 * @param array  $ast  AST produced by JQGrammar::parse()
 	 * @param JQEnv  $env  Initial lexical environment (builtins, prelude defs)
-	 * @return \Closure(mixed $input): \Generator
+	 * @return Closure(mixed $input): Generator
 	 */
-	public static function compile( array $ast, JQEnv $env ): \Closure {
+	public static function compile( array $ast, JQEnv $env ): Closure {
 		$compiler = new self();
-		$fn = $compiler->evalNode( $ast );
-		return static function ( mixed $input ) use ( $fn, $env ): \Generator {
+		$fn = $compiler->compileNode( $ast );
+		return static function ( mixed $input ) use ( $fn, $env ): Generator {
 			return $fn( $input, $env );
 		};
 	}
 
 	/**
-	 * Compile one AST node into a filter closure.
+	 * Compile one AST node into a Filter closure.
 	 *
 	 * The JQEnv is threaded at call time rather than captured at compile time.
 	 * This means runtime bindings — as-patterns, def scopes — can extend the
@@ -57,19 +69,19 @@ class JQCompile {
 	 * the body itself. See the 'def' case for details.
 	 *
 	 * @param array $node  AST node (must have a 'type' key)
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalNode( array $node ): \Closure {
+	private function compileNode( array $node ): Closure {
 		return match ( $node['type'] ) {
-			'identity' => $this->evalIdentity(),
-			'literal'  => $this->evalLiteral( $node ),
-			'pipe'     => $this->evalPipe( $node ),
-			'label'    => $this->evalLabel( $node ),
-			'break'    => $this->evalBreak( $node ),
-			'bind'     => $this->evalBind( $node ),
-			'field'    => $this->evalField( $node ),
-			'index'    => $this->evalIndex( $node ),
-			default    => throw new \LogicException( 'evalNode: not yet implemented for node type: ' . $node['type'] ),
+			'identity' => $this->compileIdentity(),
+			'literal'  => $this->compileLiteral( $node ),
+			'pipe'     => $this->compilePipe( $node ),
+			'label'    => $this->compileLabel( $node ),
+			'break'    => $this->compileBreak( $node ),
+			'bind'     => $this->compileBind( $node ),
+			'field'    => $this->compileField( $node ),
+			'index'    => $this->compileIndex( $node ),
+			default    => throw new \LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] ),
 		};
 	}
 
@@ -77,10 +89,10 @@ class JQCompile {
 	 * Compile an identity node (.).
 	 * Yields the input value unchanged.
 	 *
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalIdentity(): \Closure {
-		return static function ( mixed $input, JQEnv $env ): \Generator {
+	private function compileIdentity(): Closure {
+		return static function ( mixed $input, JQEnv $env ): Generator {
 			yield $input;
 		};
 	}
@@ -91,12 +103,12 @@ class JQCompile {
 	 * yielding all outputs produced across all intermediate values.
 	 *
 	 * @param array $node  Node with 'left' and 'right' keys
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalPipe( array $node ): \Closure {
-		$leftFn  = $this->evalNode( $node['left'] );
-		$rightFn = $this->evalNode( $node['right'] );
-		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): \Generator {
+	private function compilePipe( array $node ): Closure {
+		$leftFn  = $this->compileNode( $node['left'] );
+		$rightFn = $this->compileNode( $node['right'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
 			foreach ( $leftFn( $input, $env ) as $mid ) {
 				yield from $rightFn( $mid, $env );
 			}
@@ -108,11 +120,11 @@ class JQCompile {
 	 * Yields the literal value, ignoring the input.
 	 *
 	 * @param array $node  Node with 'value' key
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalLiteral( array $node ): \Closure {
+	private function compileLiteral( array $node ): Closure {
 		$value = $node['value'];
-		return static function ( mixed $input, JQEnv $env ) use ( $value ): \Generator {
+		return static function ( mixed $input, JQEnv $env ) use ( $value ): Generator {
 			yield $value;
 		};
 	}
@@ -124,12 +136,12 @@ class JQCompile {
 	 * is re-thrown so it can be caught by the appropriate outer label.
 	 *
 	 * @param array $node  Node with 'name' and 'body' keys
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalLabel( array $node ): \Closure {
+	private function compileLabel( array $node ): Closure {
 		$name   = $node['name'];
-		$bodyFn = $this->evalNode( $node['body'] );
-		return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn ): \Generator {
+		$bodyFn = $this->compileNode( $node['body'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn ): Generator {
 			try {
 				yield from $bodyFn( $input, $env );
 			} catch ( JQBreak $e ) {
@@ -151,11 +163,11 @@ class JQCompile {
 	 * without introducing unreachable code.
 	 *
 	 * @param array $node  Node with 'name' key
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalBreak( array $node ): \Closure {
+	private function compileBreak( array $node ): Closure {
 		$name = $node['name'];
-		return static function ( mixed $input, JQEnv $env ) use ( $name ): \Generator {
+		return static function ( mixed $input, JQEnv $env ) use ( $name ): Generator {
 			yield from [];
 			throw new JQBreak( $name );
 		};
@@ -173,13 +185,13 @@ class JQCompile {
 	 *   here are invisible outside the body, giving correct lexical scoping.
 	 *
 	 * @param array $node  Node with 'expr', 'pattern', and 'body' keys
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalBind( array $node ): \Closure {
-		$srcFn  = $this->evalNode( $node['expr'] );
-		$bodyFn = $this->evalNode( $node['body'] );
-		$patFn  = $this->matchPattern( $node['pattern'] );
-		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $bodyFn, $patFn ): \Generator {
+	private function compileBind( array $node ): Closure {
+		$srcFn  = $this->compileNode( $node['expr'] );
+		$bodyFn = $this->compileNode( $node['body'] );
+		$patFn  = $this->compilePattern( $node['pattern'] );
+		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $bodyFn, $patFn ): Generator {
 			foreach ( $srcFn( $input, $env ) as $val ) {
 				foreach ( $patFn( $val, $env ) as $innerEnv ) {
 					yield from $bodyFn( $input, $innerEnv );
@@ -189,28 +201,28 @@ class JQCompile {
 	}
 
 	/**
-	 * Compile a pattern into a matcher closure.
+	 * Compile a pattern into a Matcher closure.
 	 *
 	 * The pattern AST is traversed once here at compile time; sub-patterns
 	 * are recursively compiled and captured in the returned closure.
 	 * Type mismatches throw JQError at runtime so that alt_pattern (?//)
 	 * can catch and try the next alternative. A var_pattern always succeeds.
 	 *
-	 * @return \Closure(mixed $val, JQEnv $env): \Generator
+	 * @return Closure(mixed $val, JQEnv $env): Generator  Matcher
 	 */
-	private function matchPattern( array $pat ): \Closure {
+	private function compilePattern( array $pat ): Closure {
 		if ( $pat['type'] === 'var_pattern' ) {
 			$name = $pat['name'];
-			return static function ( mixed $val, JQEnv $env ) use ( $name ): \Generator {
+			return static function ( mixed $val, JQEnv $env ) use ( $name ): Generator {
 				yield $env->bind( $name, 0,
-					static function ( mixed $input, JQEnv $e ) use ( $val ): \Generator {
+					static function ( mixed $input, JQEnv $e ) use ( $val ): Generator {
 						yield $val;
 					}
 				);
 			};
 		} elseif ( $pat['type'] === 'array_pattern' ) {
-			$elemFns = array_map( fn( $p ) => $this->matchPattern( $p ), $pat['elems'] );
-			return static function ( mixed $val, JQEnv $env ) use ( $elemFns ): \Generator {
+			$elemFns = array_map( fn( $p ) => $this->compilePattern( $p ), $pat['elems'] );
+			return static function ( mixed $val, JQEnv $env ) use ( $elemFns ): Generator {
 				if ( !is_array( $val ) || !array_is_list( $val ) ) {
 					throw new JQError( 'Cannot destructure ' . self::typeName( $val ) . ' as array' );
 				}
@@ -235,9 +247,9 @@ class JQCompile {
 				if ( $keyNode['type'] !== 'literal' || !is_string( $keyNode['value'] ) ) {
 					throw new \LogicException( 'Computed keys in object patterns are not yet supported' );
 				}
-				$fields[] = [ $keyNode['value'], $this->matchPattern( $field['pattern'] ) ];
+				$fields[] = [ $keyNode['value'], $this->compilePattern( $field['pattern'] ) ];
 			}
-			return static function ( mixed $val, JQEnv $env ) use ( $fields ): \Generator {
+			return static function ( mixed $val, JQEnv $env ) use ( $fields ): Generator {
 				if ( !is_array( $val ) || array_is_list( $val ) ) {
 					throw new JQError( 'Cannot destructure ' . self::typeName( $val ) . ' as object' );
 				}
@@ -256,8 +268,8 @@ class JQCompile {
 				yield $currentEnv;
 			};
 		} elseif ( $pat['type'] === 'alt_pattern' ) {
-			$altFns = array_map( fn( $p ) => $this->matchPattern( $p ), $pat['patterns'] );
-			return static function ( mixed $val, JQEnv $env ) use ( $altFns ): \Generator {
+			$altFns = array_map( fn( $p ) => $this->compilePattern( $p ), $pat['patterns'] );
+			return static function ( mixed $val, JQEnv $env ) use ( $altFns ): Generator {
 				foreach ( $altFns as $altFn ) {
 					try {
 						foreach ( $altFn( $val, $env ) as $nextEnv ) {
@@ -303,13 +315,13 @@ class JQCompile {
 	 * absent); any other type throws JQError (suppressed to empty if opt).
 	 *
 	 * @param array $node  Node with 'expr', 'name', and 'opt' keys
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalField( array $node ): \Closure {
-		$exprFn = $this->evalNode( $node['expr'] );
+	private function compileField( array $node ): Closure {
+		$exprFn = $this->compileNode( $node['expr'] );
 		$name   = $node['name'];
 		$opt    = $node['opt'];
-		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $name, $opt ): \Generator {
+		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $name, $opt ): Generator {
 			foreach ( $exprFn( $input, $env ) as $base ) {
 				try {
 					if ( $base === null ) {
@@ -337,13 +349,13 @@ class JQCompile {
 	 * (with negative indices counting from the end). null input yields null.
 	 *
 	 * @param array $node  Node with 'expr', 'key', and 'opt' keys
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter
 	 */
-	private function evalIndex( array $node ): \Closure {
-		$exprFn = $this->evalNode( $node['expr'] );
-		$keyFn  = $this->evalNode( $node['key'] );
+	private function compileIndex( array $node ): Closure {
+		$exprFn = $this->compileNode( $node['expr'] );
+		$keyFn  = $this->compileNode( $node['key'] );
 		$opt    = $node['opt'];
-		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $keyFn, $opt ): \Generator {
+		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $keyFn, $opt ): Generator {
 			foreach ( $exprFn( $input, $env ) as $base ) {
 				// The key expression sees the original $input, not $base.
 				// e.g. in .a[.b], .b is evaluated against the outer input,
@@ -386,15 +398,15 @@ class JQCompile {
 	/**
 	 * Compile one AST node in path-expression mode.
 	 *
-	 * Yields path arrays such as ["foo", 0, "bar"] rather than the values at
-	 * those paths. Reserved for future use by path/1 and related builtins
-	 * (getpath, setpath, delpaths, leaf_paths, …).
+	 * The returned Closure yields path arrays such as ["foo", 0, "bar"]
+	 * rather than the values at those paths. Reserved for future use by
+	 * path/1 and related builtins (getpath, setpath, delpaths, leaf_paths…).
 	 *
 	 * @param array $node  AST node
-	 * @return \Closure(mixed $input, JQEnv $env): \Generator
+	 * @return Closure(mixed $input, JQEnv $env): Generator  Filter (yields path arrays, not values)
 	 * @suppress PhanPluginNeverReturnMethod
 	 */
-	private function evalPath( array $node ): \Closure {
-		throw new \LogicException( 'evalPath: not yet implemented for node type: ' . $node['type'] );
+	private function compilePath( array $node ): Closure {
+		throw new \LogicException( 'compilePath: not yet implemented for node type: ' . $node['type'] );
 	}
 }
