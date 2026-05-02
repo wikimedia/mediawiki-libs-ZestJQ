@@ -96,7 +96,7 @@ if ( $astOutput ) {
 		}
 		try {
 			$input = JQUtils::jsonDecode( $raw );
-		} catch (\JsonException) {
+		} catch (JQError) {
 			fwrite( STDERR, "zestjq: invalid JSON in file: $file\n" );
 			$exitCode = 2;
 			continue;
@@ -110,8 +110,8 @@ if ( $astOutput ) {
 		exit( 2 );
 	}
 	try {
-		$input = JQUtils::jsonDecode( $raw, false );
-	} catch (JsonException) {
+		$input = JQUtils::jsonDecode( $raw );
+	} catch (JQError) {
 		fwrite( STDERR, "zestjq: invalid JSON in stdin\n" );
 		exit( 2 );
 	}

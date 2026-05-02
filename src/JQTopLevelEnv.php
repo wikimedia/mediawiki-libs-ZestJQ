@@ -6,7 +6,6 @@ namespace Wikimedia\Zest;
 
 use Closure;
 use Generator;
-use JsonException;
 
 /**
  * Root environment pre-populated with native PHP builtin functions.
@@ -156,12 +155,7 @@ class JQTopLevelEnv extends JQEnv {
 			if ( !is_string( $input ) ) {
 				throw new JQError( 'fromjson requires a string, got ' . JQUtils::typeName( $input ) );
 			}
-			try {
-				$decoded = JQUtils::jsonDecode( $input );
-			} catch ( JsonException ) {
-				throw new JQError( 'Invalid JSON: ' . $input );
-			}
-			yield $decoded;
+			yield JQUtils::jsonDecode( $input );
 		};
 
 		// tonumber/0 — numbers pass through; strings are parsed

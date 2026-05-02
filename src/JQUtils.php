@@ -315,8 +315,12 @@ class JQUtils {
 	 */
 	public static function jsonDecode( string $json ): mixed {
 		// Strip any Unicode BOM marker (JQ compatibility)
-		$json = preg_replace( '/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)/', '', $json );
-		return json_decode( $json, false, 512, JSON_THROW_ON_ERROR );
+		$stripped = preg_replace( '/^(\xEF\xBB\xBF|\xFF\xFE|\xFE\xFF)/', '', $json );
+		try {
+			return json_decode( $stripped, false, 512, JSON_THROW_ON_ERROR );
+		} catch ( \JsonException ) {
+			throw new JQError( 'Invalid JSON: ' . $json );
+		}
 	}
 
 	/**

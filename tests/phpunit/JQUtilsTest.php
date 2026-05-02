@@ -3,7 +3,6 @@ declare( strict_types = 1 );
 
 namespace Wikimedia\Zest\Tests;
 
-use JsonException;
 use LogicException;
 use Wikimedia\Zest\JQError;
 use Wikimedia\Zest\JQUtils;
@@ -100,7 +99,7 @@ class JQUtilsTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	public function testJsonDecodeThrowsOnInvalid(): void {
-		$this->expectException( JsonException::class );
+		$this->expectException( JQError::class );
 		JQUtils::jsonDecode( 'not json' );
 	}
 
