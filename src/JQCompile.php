@@ -523,18 +523,25 @@ class JQCompile {
 		} elseif ( $pat['type'] === 'obj_pattern' ) {
 			$fields = [];
 			foreach ( $pat['fields'] as $field ) {
-				$keyNode = $field['key'];
-				if ( $keyNode['type'] !== 'literal' || !is_string( $keyNode['value'] ) ) {
-					throw new LogicException( 'Computed keys in object patterns are not yet supported' );
-				}
-				$fields[] = [ $keyNode['value'], $this->compilePattern( $field['pattern'] ) ];
+				$fields[] = [
+					$this->compileNode( $field['key'] ),
+					$this->compilePattern( $field['pattern'] )
+				];
 			}
 			return static function ( mixed $val, JQEnv $env ) use ( $fields ): Generator {
 				if ( !is_object( $val ) ) {
 					throw new JQError( 'Cannot destructure ' . JQUtils::typeName( $val ) . ' as object' );
 				}
 				$currentEnv = $env;
-				foreach ( $fields as [ $fieldName, $fieldFn ] ) {
+				foreach ( $fields as [ $keyFn, $fieldFn ] ) {
+					$fieldName = null;
+					foreach ( $keyFn( $val, $currentEnv ) as $k ) {
+						$fieldName = JQUtils::checkString( 'object index', $k );
+						break;
+					}
+					if ( $fieldName === null ) {
+						return;
+					}
 					$nextEnv = null;
 					foreach ( $fieldFn( $val->$fieldName ?? null, $currentEnv ) as $e ) {
 						$nextEnv = $e;
