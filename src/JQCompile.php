@@ -569,98 +569,120 @@ class JQCompile {
 	 * @return Closure(mixed $val, JQEnv $env): Generator  Matcher
 	 */
 	private function compilePattern( array $pat ): Closure {
-		if ( $pat['type'] === 'var_pattern' ) {
-			$key = '$' . $pat['name'];
-			return static function ( mixed $val, JQEnv $env ) use ( $key ): Generator {
-				yield $env->bind( $key, 0,
-					static function ( mixed $input, JQEnv $e ) use ( $val ): Generator {
-						yield $val;
-					}
-				);
-			};
-		} elseif ( $pat['type'] === 'array_pattern' ) {
-			$elemFns = array_map( fn ( $p ) => $this->compilePattern( $p ), $pat['elems'] );
-			return static function ( mixed $val, JQEnv $env ) use ( $elemFns ): Generator {
-				$val = JQUtils::checkArray( 'array_pattern', $val );
-				$envs = [ $env ];
-				foreach ( $elemFns as $i => $elemFn ) {
-					$nextEnvs = [];
-					foreach ( $envs as $currentEnv ) {
-						foreach ( $elemFn( $val[$i] ?? null, $currentEnv ) as $e ) {
-							$nextEnvs[] = $e;
-						}
-					}
-					if ( $nextEnvs === [] ) {
-						return;
-					}
-					$envs = $nextEnvs;
+		return match ( $pat['type'] ) {
+			'var_pattern'   => $this->compilePatternVar( $pat ),
+			'array_pattern' => $this->compilePatternArray( $pat ),
+			'obj_pattern'   => $this->compilePatternObj( $pat ),
+			'and_pattern'   => $this->compilePatternAnd( $pat ),
+			'alt_pattern'   => $this->compilePatternAlt( $pat ),
+			default => throw new LogicException( 'Unknown pattern type: ' . $pat['type'] ),
+		};
+	}
+
+	/** Compile a var_pattern ($x): always succeeds, binding the value to $x. */
+	private function compilePatternVar( array $pat ): Closure {
+		$key = '$' . $pat['name'];
+		return static function ( mixed $val, JQEnv $env ) use ( $key ): Generator {
+			yield $env->bind( $key, 0,
+				static function ( mixed $input, JQEnv $e ) use ( $val ): Generator {
+					yield $val;
 				}
-				yield from $envs;
-			};
-		} elseif ( $pat['type'] === 'obj_pattern' ) {
-			$fields = [];
-			foreach ( $pat['fields'] as $field ) {
-				$fields[] = [
-					$this->compileNode( $field['key'] ),
-					$this->compilePattern( $field['pattern'] ),
-				];
-			}
-			return static function ( mixed $val, JQEnv $env ) use ( $fields ): Generator {
-				if ( !is_object( $val ) ) {
-					throw new JQError( 'Cannot destructure ' . JQUtils::typeName( $val ) . ' as object' );
-				}
-				yield from self::matchObjFields( $val, $env, $fields, 0 );
-			};
-		} elseif ( $pat['type'] === 'and_pattern' ) {
-			// Applies each sub-pattern to the same value in sequence, threading the env.
-			// Used for {$b: subpat} which must both bind $b and match subpat.
-			$patFns = array_map( $this->compilePattern( ... ), $pat['patterns'] );
-			return static function ( mixed $val, JQEnv $env ) use ( $patFns ): Generator {
-				$envs = [ $env ];
-				foreach ( $patFns as $patFn ) {
-					$nextEnvs = [];
-					foreach ( $envs as $currentEnv ) {
-						foreach ( $patFn( $val, $currentEnv ) as $e ) {
-							$nextEnvs[] = $e;
-						}
-					}
-					if ( $nextEnvs === [] ) {
-						return;
-					}
-					$envs = $nextEnvs;
-				}
-				yield from $envs;
-			};
-		} elseif ( $pat['type'] === 'alt_pattern' ) {
-			$altFns = array_map( $this->compilePattern( ... ), $pat['patterns'] );
-			// Variables defined in non-matching alternatives must be null-filled.
-			$perAltVars = array_map( self::collectPatternVars( ... ), $pat['patterns'] );
-			$allVars = array_unique( array_merge( ...$perAltVars ) );
-			$missingPerAlt = array_map(
-				static fn ( $altVars ) => array_values( array_diff( $allVars, $altVars ) ),
-				$perAltVars
 			);
-			$yieldNull = fn () => $this->compileLiteral( [ 'value' => null ] );
-			return static function ( mixed $val, JQEnv $env ) use ( $altFns, $missingPerAlt, $yieldNull ): Generator {
-				foreach ( $altFns as $i => $altFn ) {
-					try {
-						foreach ( $altFn( $val, $env ) as $nextEnv ) {
-							// Fill in missing bindings before yielding this env
-							foreach ( $missingPerAlt[$i] as $var ) {
-								$nextEnv = $nextEnv->bind( $var, 0, $yieldNull() );
-							}
-							yield $nextEnv;
-							return;
-						}
-					} catch ( JQError ) {
-						// this alternative failed; try the next one
+		};
+	}
+
+	/** Compile an array_pattern ([$a, $b, ...]): checks type, then matches each element. */
+	private function compilePatternArray( array $pat ): Closure {
+		$elemFns = array_map( fn ( $p ) => $this->compilePattern( $p ), $pat['elems'] );
+		return static function ( mixed $val, JQEnv $env ) use ( $elemFns ): Generator {
+			$val = JQUtils::checkArray( 'array_pattern', $val );
+			$envs = [ $env ];
+			foreach ( $elemFns as $i => $elemFn ) {
+				$nextEnvs = [];
+				foreach ( $envs as $currentEnv ) {
+					foreach ( $elemFn( $val[$i] ?? null, $currentEnv ) as $e ) {
+						$nextEnvs[] = $e;
 					}
 				}
-				// all alternatives failed — yield nothing
-			};
-		} else {
-			throw new LogicException( 'Unknown pattern type: ' . $pat['type'] );
+				if ( $nextEnvs === [] ) {
+					return;
+				}
+				$envs = $nextEnvs;
+			}
+			yield from $envs;
+		};
+	}
+
+	/** Compile an obj_pattern ({key: pat, ...}): checks type, then matches each field. */
+	private function compilePatternObj( array $pat ): Closure {
+		$fields = [];
+		foreach ( $pat['fields'] as $field ) {
+			$fields[] = [
+				$this->compileNode( $field['key'] ),
+				$this->compilePattern( $field['pattern'] ),
+			];
 		}
+		return static function ( mixed $val, JQEnv $env ) use ( $fields ): Generator {
+			$val = JQUtils::checkObject( 'obj_pattern', $val );
+			yield from self::matchObjFields( $val, $env, $fields, 0 );
+		};
+	}
+
+	/**
+	 * Compile an and_pattern: applies each sub-pattern to the same value,
+	 * threading the env and accumulating all combinations.
+	 * Generated for {$b: subpat}, which must bind $b AND match subpat.
+	 */
+	private function compilePatternAnd( array $pat ): Closure {
+		$patFns = array_map( $this->compilePattern( ... ), $pat['patterns'] );
+		return static function ( mixed $val, JQEnv $env ) use ( $patFns ): Generator {
+			$envs = [ $env ];
+			foreach ( $patFns as $patFn ) {
+				$nextEnvs = [];
+				foreach ( $envs as $currentEnv ) {
+					foreach ( $patFn( $val, $currentEnv ) as $e ) {
+						$nextEnvs[] = $e;
+					}
+				}
+				if ( $nextEnvs === [] ) {
+					return;
+				}
+				$envs = $nextEnvs;
+			}
+			yield from $envs;
+		};
+	}
+
+	/**
+	 * Compile an alt_pattern (p1 ?// p2 ?// ...): tries each alternative in
+	 * order, yielding from the first that succeeds. Variables bound only in
+	 * non-matching alternatives are null-filled in the resulting env.
+	 */
+	private function compilePatternAlt( array $pat ): Closure {
+		$altFns = array_map( $this->compilePattern( ... ), $pat['patterns'] );
+		$perAltVars = array_map( self::collectPatternVars( ... ), $pat['patterns'] );
+		$allVars = array_unique( array_merge( ...$perAltVars ) );
+		$missingPerAlt = array_map(
+			static fn ( $altVars ) => array_values( array_diff( $allVars, $altVars ) ),
+			$perAltVars
+		);
+		$nullFn = $this->compileLiteral( [ 'value' => null ] );
+		return static function ( mixed $val, JQEnv $env ) use ( $altFns, $missingPerAlt, $nullFn ): Generator {
+			foreach ( $altFns as $i => $altFn ) {
+				try {
+					foreach ( $altFn( $val, $env ) as $nextEnv ) {
+						foreach ( $missingPerAlt[$i] as $var ) {
+							$nextEnv = $nextEnv->bind( $var, 0, $nullFn );
+						}
+						yield $nextEnv;
+						return;
+					}
+				} catch ( JQError ) {
+					// this alternative failed; try the next one
+				}
+			}
+			// all alternatives failed — yield nothing
+		};
 	}
 
 	/**
@@ -1092,9 +1114,9 @@ class JQCompile {
 	 */
 	private function compileSlice( array $node ): Closure {
 		$exprFn = $this->compileNode( $node['expr'] );
-		$yieldNull = fn () => $this->compileLiteral( [ 'value' => null ] );
-		$fromFn = $node['from'] !== null ? $this->compileNode( $node['from'] ) : $yieldNull();
-		$toFn   = $node['to'] !== null ? $this->compileNode( $node['to'] ) : $yieldNull();
+		$yieldNull = $this->compileLiteral( [ 'value' => null ] );
+		$fromFn = $node['from'] !== null ? $this->compileNode( $node['from'] ) : $yieldNull;
+		$toFn   = $node['to'] !== null ? $this->compileNode( $node['to'] ) : $yieldNull;
 		$opt    = $node['opt'];
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $fromFn, $toFn, $opt ): Generator {
 			foreach ( $exprFn( $input, $env ) as $item ) {
