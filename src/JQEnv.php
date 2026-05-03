@@ -114,8 +114,7 @@ class JQEnv {
 	 * here.
 	 */
 	public function enterPathMode(): JQPathEnv {
-		// use 'false' as a sentinel at the start of the path
-		return new JQPathEnv( $this, $this->io, [], false );
+		return new JQPathEnv( $this, $this->io, [], false, false );
 	}
 
 	/**

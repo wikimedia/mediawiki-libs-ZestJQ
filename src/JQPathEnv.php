@@ -3,6 +3,7 @@ declare( strict_types = 1 );
 
 namespace Wikimedia\Zest;
 
+use Closure;
 use LogicException;
 
 /**
@@ -20,8 +21,20 @@ class JQPathEnv extends JQEnv {
 		 * a sentinel `false`.)
 		 */
 		private mixed $pathKey,
+		/** Whether this path key is valid (some JQEnv are created for
+		 * bindings, not to extend a path).
+		 */
+		private bool $pathValid,
 	) {
 		parent::__construct( $parent, $io, $defs );
+	}
+
+	/** @inheritDoc */
+	public function bind( string $name, int $arity, Closure $fn ): self {
+		$key = "{$name}/{$arity}";
+		return new JQPathEnv( $this, $this->io, [
+			$key => $fn,
+		], false, false );
 	}
 
 	/** @inheritDoc */
@@ -39,7 +52,7 @@ class JQPathEnv extends JQEnv {
 
 	/** @inheritDoc */
 	public function appendPath( mixed $key ): self {
-		return new self( $this, $this->io, [], $key );
+		return new self( $this, $this->io, [], $key, true );
 	}
 
 	/** @inheritDoc */
@@ -56,9 +69,11 @@ class JQPathEnv extends JQEnv {
 	public function getPath(): array {
 		$r = [];
 		// Note that we don't add the path key corresponding to the
-		// very first "path mode" env, that was the `false` sentinel
-		for ( $p = $this; $p?->parent?->isPathMode(); $p = $p->parent ) {
-			$r[] = $p->pathKey;
+		// JQPathEnvs where the pathValid flag isn't set.
+		for ( $p = $this; $p?->isPathMode(); $p = $p->parent ) {
+			if ( $p->pathValid ) {
+				$r[] = $p->pathKey;
+			}
 		}
 		return array_reverse( $r );
 	}
