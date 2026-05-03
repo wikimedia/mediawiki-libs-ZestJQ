@@ -80,7 +80,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2337, 2341 =>
 			'debug/0 and input/0 not yet implemented',
 
-// implode does not replace out-of-range codepoints with U+FFFD
+			// implode does not replace out-of-range codepoints with U+FFFD
 			2403, 2407 =>
 			'implode does not replace out-of-range codepoints with U+FFFD replacement character',
 
@@ -88,7 +88,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2435, 2439, 2443, 2467, 2471, 2475, 2479, 2483 =>
 			'Array slicing and indexing with float or NaN bounds differs from jq behavior',
 
-// foreach with multiple initial values
+			// foreach with multiple initial values
 			2538 =>
 			'foreach with a multi-valued init expression not fully supported',
 
