@@ -356,7 +356,7 @@ ElseBody
   / "else" !IdentChar _ body:Query _ "end" !IdentChar
     { return $body; }
   / "end" !IdentChar
-    { return [ 'type' => 'literal', 'value' => null ]; }
+    { return [ 'type' => 'identity' ]; }
 
 TryCatch = "catch" !IdentChar _ @Postfix
 

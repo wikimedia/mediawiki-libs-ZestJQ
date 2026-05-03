@@ -41,11 +41,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1245, 1278, 1306, 1374 =>
 			'Assignment update operators (|=, +=, //=) have bugs with multi-index empty, NaN/Infinity inputs, and alternative update',
 
-			// if-then-end without else should return . (identity), not null
-			1342, 1350 =>
-			'if-then-end without else clause should return . (identity), not null',
-
-			// ltrimstr/rtrimstr return null for non-matching strings instead of original
+// ltrimstr/rtrimstr return null for non-matching strings instead of original
 			1520, 1524 =>
 			'ltrimstr/rtrimstr return null for non-matching inputs instead of the original string',
 

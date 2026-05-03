@@ -7511,7 +7511,7 @@ private function parseElseBody($silence) {
   seq_7:
   if ($r1!==self::$FAILED) {
     $this->savedPos = $p2;
-    $r1 = $this->a48();
+    $r1 = $this->a43();
   }
   // free $r5,$r8
   // free $p3
