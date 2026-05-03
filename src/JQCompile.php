@@ -1289,7 +1289,7 @@ class JQCompile {
 	 * @param list<int|float|string> $path
 	 * @param int $offset The current offset into $path
 	 */
-	private static function deleteAtPath( mixed $container, array $path, int $offset ): mixed {
+	public static function deleteAtPath( mixed $container, array $path, int $offset ): mixed {
 		if ( $offset >= count( $path ) ) {
 			return null;
 		}

@@ -283,6 +283,24 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 
+		// delpaths/1 — delete all listed paths from the input
+		$defs['delpaths/1'] = static function ( array $argFns ): Closure {
+			$pathsFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $pathsFn ): Generator {
+				foreach ( $pathsFn( $input, $env ) as $paths ) {
+					$paths = JQUtils::checkArray( 'delpaths', $paths );
+					// Process paths in reverse order so that deleting an array element
+					// by index doesn't shift the positions of later indices.
+					usort( $paths, static fn ( $a, $b ) => -JQUtils::compare( $a, $b ) );
+					$result = $input;
+					foreach ( $paths as $path ) {
+						$result = JQCompile::deleteAtPath( $result, (array)$path, 0 );
+					}
+					yield $result;
+				}
+			};
+		};
+
 		// _strindices/1 — array of codepoint positions where needle occurs in input string
 		$defs['_strindices/1'] = static function ( array $argFns ): Closure {
 			$needleFn = $argFns[0];
