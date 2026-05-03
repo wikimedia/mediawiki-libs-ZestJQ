@@ -283,6 +283,31 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 
+		// _strindices/1 — array of codepoint positions where needle occurs in input string
+		$defs['_strindices/1'] = static function ( array $argFns ): Closure {
+			$needleFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $needleFn ): Generator {
+				$str = JQUtils::checkString( '_strindices', $input );
+				foreach ( $needleFn( $input, $env ) as $needle ) {
+					$needle  = JQUtils::checkString( '_strindices', $needle );
+					$indices = [];
+					// explode() splits on the byte sequence of $needle in O(N).
+					// mb_strlen() of each piece gives the codepoint distance to
+					// the next match, avoiding O(N^2) repeated mb_strpos scans.
+					$pieces        = $needle ? explode( $needle, $str ) : [];
+					$needleCharLen = mb_strlen( $needle );
+					$charPos       = 0;
+					$last          = count( $pieces ) - 1;
+					for ( $i = 0; $i < $last; $i++ ) {
+						$charPos  += mb_strlen( $pieces[$i] );
+						$indices[] = $charPos;
+						$charPos  += $needleCharLen;
+					}
+					yield $indices;
+				}
+			};
+		};
+
 		// builtins/0 — list native builtin names (populated after the rest are defined)
 		$names = array_keys( $defs );
 		sort( $names );
