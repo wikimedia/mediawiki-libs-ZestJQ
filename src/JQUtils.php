@@ -50,7 +50,7 @@ class JQUtils {
 			// @phan-suppress-next-line PhanTypeInvalidLeftOperandOfAdd
 			return $val + 0;
 		}
-		throw new JQError( self::typeName( $val ) . ' (' . self::jsonEncode( $val ) . ') cannot be parsed as a number' );
+		throw new JQError( self::typeNameAndValue( $val ) . ' cannot be parsed as a number' );
 	}
 
 	/**
@@ -181,6 +181,20 @@ class JQUtils {
 			is_array( $v ) => 'array',
 			default => 'unknown',
 		};
+	}
+
+	/**
+	 * Format a value as "TYPE (value)" for inclusion in an error message,
+	 * matching jq's style. Strings longer than 24 code points are truncated.
+	 */
+	public static function typeNameAndValue( mixed $v ): string {
+		if ( is_string( $v ) && mb_strlen( $v ) > 24 ) {
+			$prefix = self::jsonEncode( mb_substr( $v, 0, 24 ) );
+			$encoded = substr( $prefix, 0, -1 ) . '..."';
+		} else {
+			$encoded = self::jsonEncode( $v );
+		}
+		return self::typeName( $v ) . ' (' . $encoded . ')';
 	}
 
 	// -----------------------------------------------------------------------
@@ -316,7 +330,8 @@ class JQUtils {
 		if ( is_object( $a ) && is_object( $b ) ) {
 			return (object)array_merge( get_object_vars( $a ), get_object_vars( $b ) );
 		}
-		throw new JQError( self::typeName( $a ) . ' and ' . self::typeName( $b ) . ' cannot be added' );
+		throw new JQError( self::typeNameAndValue( $a ) . ' and ' .
+			self::typeNameAndValue( $b ) . ' cannot be added' );
 	}
 
 	/**
@@ -338,7 +353,8 @@ class JQUtils {
 				}
 			) );
 		}
-		throw new JQError( self::typeName( $a ) . ' and ' . self::typeName( $b ) . ' cannot be subtracted' );
+		throw new JQError( self::typeNameAndValue( $a ) . ' and ' .
+			self::typeNameAndValue( $b ) . ' cannot be subtracted' );
 	}
 
 	/**

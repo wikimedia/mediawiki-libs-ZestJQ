@@ -846,7 +846,7 @@ class JQCompile {
 							yield $baseEnv->appendPath( $k )->maybeWithPath( $v );
 						}
 					} else {
-						throw new JQError( 'Cannot iterate over ' . JQUtils::typeName( $base ) . ' (' . JQUtils::toString( $base ) . ')' );
+						throw new JQError( 'Cannot iterate over ' . JQUtils::typeNameAndValue( $base ) );
 					}
 				} catch ( JQError $e ) {
 					if ( !$opt ) {
@@ -946,7 +946,7 @@ class JQCompile {
 					} elseif ( !$opt ) {
 						throw new JQError(
 							'Cannot index ' . JQUtils::typeName( $base ) .
-								' with ' . JQUtils::typeName( $key )
+								' with ' . JQUtils::typeNameAndValue( $key )
 						);
 					}
 				}

@@ -19,7 +19,9 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 
 	public static function skipReason( string $label, int $lineno ): ?string {
 		return match ( $lineno ) {
-			689 =>
+			// JSON cannot represent NaN or infinity; also affects 1E+1000 literals
+			// (jq clamps them to MAX_FLOAT; PHP represents them as INF which tojson encodes as null)
+			689, 2232, 2271, 2275 =>
 			'JSON can not portably represent NaN or infinite values',
 
 			1900, 1904, 1908, 1912, 1917, 1921, 1925, 1929, 1969, 1973, 1977,
@@ -42,9 +44,10 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1245, 1278, 1306, 1374 =>
 			'Assignment update operators (|=, +=, //=) have bugs with multi-index empty, NaN/Infinity inputs, and alternative update',
 
-// various error message format differences
-			1448, 1481, 1553, 1557, 1997, 2001, 2005, 2034, 2038, 2058, 2062,
-			2411, 2487, 2498, 2516, 2523 =>
+			// various error message format differences
+			// 2014: our arithmetic type errors omit the value (jq says "number (1234...) and string")
+			1448, 1481, 1553, 1557, 1997, 2005, 2014, 2058, 2062,
+			2498, 2516, 2523 =>
 			'Error message format differs from jq',
 
 			// indices/1 doesn't support overlapping string matches or array needles
@@ -64,13 +67,11 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1889, 1895, 2548 =>
 			'Date/time builtins not yet implemented (gmtime, mktime, strftime, strptime, strflocaltime)',
 
-			// have_decnum/0 not implemented; tests require arbitrary-precision decimal support
-			2014, 2196, 2200, 2204, 2224, 2228, 2232, 2271, 2275 =>
-			'have_decnum/0 not implemented; tests require arbitrary-precision decimal number support',
-
-			// arithmetic on integers outside IEEE 754 safe range
-			2211, 2215, 2219, 2241 =>
-			'Arithmetic on integers beyond IEEE 754 safe range differs from jq (no bignum support)',
+			// PHP uses exact int64 for integers, so values like 13911860366432393 are
+			// preserved exactly; jq without decnum rounds them to the nearest double
+			// (13911860366432392). Tests expect the jq double-rounded value.
+			2196, 2200, 2204, 2211, 2215, 2219, 2224, 2241 =>
+			'Number representation at IEEE 754 double-precision boundary differs from jq: PHP preserves exact int64 values',
 
 			// NaN handling: has(nan) on arrays, fromjson for nan/NaN literals
 			1733, 2315, 2319, 2324 =>

@@ -320,7 +320,7 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 				'.[-1] |= . + 1', '{}', 5, null, "zestjq: index requires string inputs, got number\n",
 			],
 			'negative on string' => [
-				'.[-1] |= . + 1', '"hello"', 5, null, "zestjq: Cannot index string with number\n",
+				'.[-1] |= . + 1', '"hello"', 5, null, "zestjq: Cannot index string with number (-1)\n",
 			],
 			// Floats are truncated toward zero, matching jq's (int) cast
 			'float truncated toward zero (negative)' => [

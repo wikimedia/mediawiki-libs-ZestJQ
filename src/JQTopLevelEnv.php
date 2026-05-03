@@ -78,6 +78,15 @@ class JQTopLevelEnv extends JQEnv {
 			yield from [];
 		};
 
+		// have_decnum/0, have_literal_numbers/0 — capability flags; this
+		// implementation uses IEEE 754 doubles, not arbitrary-precision decimals
+		$defs['have_decnum/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			yield false;
+		};
+		$defs['have_literal_numbers/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			yield false;
+		};
+
 		// error/0 — throw the input value as a JQError; jqValue carries original
 		$defs['error/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield from [];
