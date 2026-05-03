@@ -1011,24 +1011,15 @@ class JQCompile {
 	 */
 	private function compileSlice( array $node ): Closure {
 		$exprFn = $this->compileNode( $node['expr'] );
-		$fromFn = $node['from'] !== null ? $this->compileNode( $node['from'] ) : null;
-		$toFn   = $node['to'] !== null ? $this->compileNode( $node['to'] ) : null;
+		$yieldNull = $this->compileLiteral( [ 'value' => null ] );
+		$fromFn = $node['from'] !== null ? $this->compileNode( $node['from'] ) : $yieldNull;
+		$toFn   = $node['to'] !== null ? $this->compileNode( $node['to'] ) : $yieldNull;
 		$opt    = $node['opt'];
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn, $fromFn, $toFn, $opt ): Generator {
 			foreach ( $exprFn( $input, $env ) as $base ) {
-				# This is making the generator not lazy, which is probably
-				# not good
-				$fromVals = $fromFn !== null ? iterator_to_array( $fromFn( $input, $env ), false ) : [ null ];
-				$toVals   = $toFn !== null ? iterator_to_array( $toFn( $input, $env ), false ) : [ null ];
-				foreach ( $fromVals as $from ) {
-					foreach ( $toVals as $to ) {
-						try {
-							yield JQUtils::slice( $base, $from, $to );
-						} catch ( JQError $e ) {
-							if ( !$opt ) {
-								throw $e;
-							}
-						}
+				foreach ( $fromFn( $input, $env ) as $from ) {
+					foreach ( $toFn( $input, $env ) as $to ) {
+						yield from JQUtils::slice( $base, $from, $to, $opt );
 					}
 				}
 			}

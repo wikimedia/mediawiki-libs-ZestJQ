@@ -4,6 +4,7 @@ declare( strict_types = 1 );
 namespace Wikimedia\Zest;
 
 use Closure;
+use Generator;
 use LogicException;
 use stdClass;
 
@@ -407,32 +408,30 @@ class JQUtils {
 	 * Return a slice of an array or string.
 	 * Null input yields null; other types throw JQError.
 	 */
-	public static function slice( mixed $base, mixed $from, mixed $to ): mixed {
+	public static function slice( mixed $base, mixed $from, mixed $to, bool $opt ): Generator {
 		if ( $base === null ) {
-			return null;
-		}
-		if ( is_string( $base ) ) {
+			yield null;
+		} elseif ( $opt && !( self::isNumber( $from ) && self::isNumber( $to ) ) ) {
+			/* do nothing (yield no value) */
+		} elseif ( is_string( $base ) ) {
 			$len = mb_strlen( $base );
 			$f = self::normalizeSliceIdx( $from, $len, 0 );
 			$t = self::normalizeSliceIdx( $to, $len, $len );
-			return mb_substr( $base, $f, max( 0, $t - $f ) );
-		}
-		if ( is_array( $base ) ) {
+			yield mb_substr( $base, $f, max( 0, $t - $f ) );
+		} elseif ( is_array( $base ) ) {
 			$len = count( $base );
 			$f = self::normalizeSliceIdx( $from, $len, 0 );
 			$t = self::normalizeSliceIdx( $to, $len, $len );
-			return array_values( array_slice( $base, $f, max( 0, $t - $f ) ) );
+			yield array_values( array_slice( $base, $f, max( 0, $t - $f ) ) );
+		} elseif ( !$opt ) {
+			throw new JQError( self::typeName( $base ) . ' cannot be sliced' );
 		}
-		throw new JQError( self::typeName( $base ) . ' cannot be sliced' );
 	}
 
 	private static function normalizeSliceIdx( mixed $idx, int $len, int $default ): int {
-		if ( $idx === null ) {
-			return $default;
-		}
-		$i = (int)$idx;
+		$i = (int)self::checkNumber( 'slice', $idx ?? $default );
 		if ( $i < 0 ) {
-			$i = $len + $i;
+			$i += $len;
 		}
 		return min( max( 0, $i ), $len );
 	}
