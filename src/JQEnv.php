@@ -76,7 +76,7 @@ class JQEnv {
 	/**
 	 * Return the shared standard-library environment, building it on first call.
 	 *
-	 * The env is built by evaluating src/builtin.jq with $__env__ appended so
+	 * The env is built by evaluating src/builtin.jq with __env__ appended so
 	 * that all def statements register themselves and the resulting JQEnv is
 	 * returned. The env is then cached for the lifetime of the process.
 	 */
@@ -94,7 +94,7 @@ class JQEnv {
 				return $val;
 			}
 		}
-		throw new \RuntimeException( __METHOD__ . ': $__env__ was not yielded' );
+		throw new \RuntimeException( __METHOD__ . ': __env__ was not yielded' );
 	}
 
 	// -----------------------------------------------------------------------

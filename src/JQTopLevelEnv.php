@@ -30,12 +30,12 @@ class JQTopLevelEnv extends JQEnv {
 	private static function buildNativeBuiltins(): array {
 		$defs = [];
 
-		// $__env__/0 is a hack which yield the current JQEnv so callers
-		// can capture it.
+		// __env__/0 is a private builtin that yields the current JQEnv so
+		// callers can capture it.
 		// Used by bootstrapping code (JQEnv::buildStandardEnv) to extract
 		// the startup env after a sequence of def statements has been
 		// evaluated.
-		$defs['$__env__/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+		$defs['__env__/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield $env;
 		};
 
@@ -396,8 +396,11 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 
-		// builtins/0 — list native builtin names (populated after the rest are defined)
-		$names = array_keys( $defs );
+		// builtins/0 — list public native builtin names (no _ prefix; populated
+		// after the rest are defined so builtins/0 itself is excluded)
+		$names = array_values( array_filter(
+			array_keys( $defs ), static fn ( $name ) => !str_starts_with( $name, '_' )
+		) );
 		sort( $names );
 		$defs['builtins/0'] = static function ( mixed $input, JQEnv $env ) use ( $names ): Generator {
 			yield $names;

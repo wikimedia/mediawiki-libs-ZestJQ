@@ -103,11 +103,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2435, 2439, 2443, 2467, 2471, 2475, 2479, 2483 =>
 			'Array slicing and indexing with float or NaN bounds differs from jq behavior',
 
-			// builtins/0 exposes private _ functions
-			2169 =>
-			'builtins/0 exposes private _ functions that should be hidden from the public API',
-
-			// foreach with multiple initial values
+// foreach with multiple initial values
 			2538 =>
 			'foreach with a multi-valued init expression not fully supported',
 
