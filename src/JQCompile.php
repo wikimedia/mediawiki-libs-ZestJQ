@@ -109,6 +109,11 @@ class JQCompile {
 			'foreach'  => $this->compileForeach( $node ),
 			'slice'    => $this->compileSlice( $node ),
 			'assign'   => $this->compileAssign( $node ),
+			// Not yet implemented: module-level directives
+			'import', 'include', 'module' => static function ( mixed $input, JQEnv $env ) use ( $node ): Generator {
+				yield from [];
+				throw new LogicException( 'compileNode: module-level directives not implemented: ' . $node['type'] );
+			},
 			default    => static function ( mixed $input, JQEnv $env ) use ( $node ): Generator {
 				yield from [];
 				throw new LogicException( 'compileNode: not yet implemented for node type: ' . $node['type'] );
