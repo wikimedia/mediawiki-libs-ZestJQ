@@ -144,7 +144,22 @@ class JQCompile {
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
 			foreach ( $leftFn( $input, $env ) as $item ) {
 				[ $nextEnv, $mid ] = $env->maybeUnwrapPath( $item );
-				yield from $rightFn( $mid, $nextEnv );
+				if ( $env->isPathMode() ) {
+					// Re-root the accumulated path onto $env's binding chain.
+					// In path mode $nextEnv may be rooted at a different sentinel
+					// (e.g. from an n-arity def's arg wrapper), which would hide
+					// variable bindings in $env (such as recursive defs).  Since
+					// arg wrappers always prefix their fresh sentinel with
+					// $env->getPath(), $nextEnv->getPath() always returns the full
+					// path from the input root and can safely be re-applied here.
+					$rerooted = $env->leavePathMode()->enterPathMode();
+					foreach ( $nextEnv->getPath() as $key ) {
+						$rerooted = $rerooted->appendPath( $key );
+					}
+					yield from $rightFn( $mid, $rerooted );
+				} else {
+					yield from $rightFn( $mid, $nextEnv );
+				}
 			}
 		};
 	}
@@ -159,6 +174,7 @@ class JQCompile {
 	private function compileLiteral( array $node ): Closure {
 		$value = $node['value'];
 		return static function ( mixed $input, JQEnv $env ) use ( $value ): Generator {
+			JQUtils::assertNotPath( $value, $env );
 			yield $value;
 		};
 	}
@@ -223,7 +239,10 @@ class JQCompile {
 			if ( $fn === null ) {
 				throw new JQError( $key . ' is not defined' );
 			}
-			yield from $fn( $input, $env );
+			foreach ( $fn( $input, $env ) as $val ) {
+				JQUtils::assertNotPath( $val, $env );
+				yield $val;
+			}
 		};
 	}
 
@@ -299,8 +318,8 @@ class JQCompile {
 			$defEnvRef = $env;  // placeholder; overwritten below before first use
 			$factory = static function ( array $argFns ) use ( $filterNames, $bodyFn, &$defEnvRef ): Closure {
 				return static function ( mixed $in, JQEnv $callEnv ) use ( $filterNames, $argFns, $bodyFn, &$defEnvRef ): Generator {
-					// Start from the lexical env where the def was created.
-					$bodyEnv = $defEnvRef;
+					// Start from the lexical (normal-mode) env where the def was created.
+					$bodyEnv = $defEnvRef->leavePathMode();
 					// Inject each filter param so it evaluates in the call-site env.
 					foreach ( $filterNames as $i => $pName ) {
 						$argFn = $argFns[$i];
@@ -444,6 +463,7 @@ class JQCompile {
 	private function compileArray( array $node ): Closure {
 		if ( $node['expr'] === null ) {
 			return static function ( mixed $input, JQEnv $env ): Generator {
+				JQUtils::assertNotPath( [], $env );
 				yield [];
 			};
 		}
@@ -478,12 +498,13 @@ class JQCompile {
 		return static function ( mixed $input, JQEnv $env ) use ( $pairFns ): Generator {
 			// Create the objects as associative arrays in order to
 			// benefit from copy-on-write value semantics
+			$plainEnv = $env->leavePathMode();
 			$objects = [ [] ];
 			foreach ( $pairFns as [ $keyFn, $valFn ] ) {
 				$next = [];
 				foreach ( $objects as $obj ) {
-					foreach ( $keyFn( $input, $env ) as $key ) {
-						foreach ( $valFn( $input, $env ) as $val ) {
+					foreach ( $keyFn( $input, $plainEnv ) as $key ) {
+						foreach ( $valFn( $input, $plainEnv ) as $val ) {
 							$newObj = $obj;
 							if ( !( is_string( $key ) || is_numeric( $key ) ) ) {
 								throw new JQError( "Cannot use " . JQUtils::typeName( $key ) . " as object key" );
@@ -523,7 +544,7 @@ class JQCompile {
 		$bodyFn = $this->compileNode( $node['body'] );
 		$patFn  = $this->compilePattern( $node['pattern'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $bodyFn, $patFn ): Generator {
-			foreach ( $srcFn( $input, $env ) as $val ) {
+			foreach ( $srcFn( $input, $env->leavePathMode() ) as $val ) {
 				foreach ( $patFn( $val, $env ) as $innerEnv ) {
 					yield from $bodyFn( $input, $innerEnv );
 				}
@@ -552,7 +573,7 @@ class JQCompile {
 			return;
 		}
 		[ $keyFn, $fieldFn ] = $fields[$idx];
-		foreach ( $keyFn( $val, $env ) as $k ) {
+		foreach ( $keyFn( $val, $env->leavePathMode() ) as $k ) {
 			$fieldName = JQUtils::checkString( 'object index', $k );
 			foreach ( $fieldFn( $val->$fieldName ?? null, $env ) as $nextEnv ) {
 				yield from self::matchObjFields( $val, $nextEnv, $fields, $idx + 1 );
@@ -738,9 +759,12 @@ class JQCompile {
 			),
 		};
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn, $op ): Generator {
-			foreach ( $leftFn( $input, $env ) as $lv ) {
-				foreach ( $rightFn( $input, $env ) as $rv ) {
-					yield $op( $lv, $rv );
+			$plainEnv = $env->leavePathMode();
+			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
+				foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
+					$result = $op( $lv, $rv );
+					JQUtils::assertNotPath( $result, $env );
+					yield $result;
 				}
 			}
 		};
@@ -756,12 +780,16 @@ class JQCompile {
 		$leftFn  = $this->compileNode( $node['left'] );
 		$rightFn = $this->compileNode( $node['right'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
-			foreach ( $leftFn( $input, $env ) as $lv ) {
+			$plainEnv = $env->leavePathMode();
+			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
 				if ( !JQUtils::toBoolean( $lv ) ) {
+					JQUtils::assertNotPath( false, $env );
 					yield false;
 				} else {
-					foreach ( $rightFn( $input, $env ) as $rv ) {
-						yield JQUtils::toBoolean( $rv );
+					foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
+						$result = JQUtils::toBoolean( $rv );
+						JQUtils::assertNotPath( $result, $env );
+						yield $result;
 					}
 				}
 			}
@@ -777,12 +805,16 @@ class JQCompile {
 		$leftFn  = $this->compileNode( $node['left'] );
 		$rightFn = $this->compileNode( $node['right'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
-			foreach ( $leftFn( $input, $env ) as $lv ) {
+			$plainEnv = $env->leavePathMode();
+			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
 				if ( JQUtils::toBoolean( $lv ) ) {
+					JQUtils::assertNotPath( true, $env );
 					yield true;
 				} else {
-					foreach ( $rightFn( $input, $env ) as $rv ) {
-						yield JQUtils::toBoolean( $rv );
+					foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
+						$result = JQUtils::toBoolean( $rv );
+						JQUtils::assertNotPath( $result, $env );
+						yield $result;
 					}
 				}
 			}
@@ -835,9 +867,11 @@ class JQCompile {
 	private function compileNeg( array $node ): Closure {
 		$exprFn = $this->compileNode( $node['expr'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $exprFn ): Generator {
-			foreach ( $exprFn( $input, $env ) as $v ) {
-				$v = JQUtils::checkNumber( 'negation', $v );
-				yield -$v;
+			$plainEnv = $env->leavePathMode();
+			foreach ( $exprFn( $input, $plainEnv ) as $v ) {
+				$result = -JQUtils::checkNumber( 'negation', $v );
+				JQUtils::assertNotPath( $result, $env );
+				yield $result;
 			}
 		};
 	}
@@ -948,6 +982,7 @@ class JQCompile {
 			}
 		}
 		return static function ( mixed $input, JQEnv $env ) use ( $formatter, $compiledParts ): Generator {
+			$plainEnv = $env->leavePathMode();
 			$strings = [ '' ];
 			foreach ( $compiledParts as [ $kind, $data ] ) {
 				if ( $kind === 'text' ) {
@@ -955,14 +990,17 @@ class JQCompile {
 				} else {
 					$next = [];
 					foreach ( $strings as $prefix ) {
-						foreach ( $data( $input, $env ) as $val ) {
+						foreach ( $data( $input, $plainEnv ) as $val ) {
 							$next[] = $prefix . $formatter( $val );
 						}
 					}
 					$strings = $next;
 				}
 			}
-			yield from $strings;
+			foreach ( $strings as $s ) {
+				JQUtils::assertNotPath( $s, $env );
+				yield $s;
+			}
 		};
 	}
 
@@ -976,7 +1014,9 @@ class JQCompile {
 	private function compileFormat( array $node ): Closure {
 		$formatter = JQUtils::formatterFor( $node['fmt'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $formatter ): Generator {
-			yield $formatter( $input );
+			$result = $formatter( $input );
+			JQUtils::assertNotPath( $result, $env );
+			yield $result;
 		};
 	}
 
@@ -1001,9 +1041,12 @@ class JQCompile {
 		};
 		// jq evaluates right first (outer loop) then left (inner loop).
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn, $op ): Generator {
-			foreach ( $rightFn( $input, $env ) as $rv ) {
-				foreach ( $leftFn( $input, $env ) as $lv ) {
-					yield $op( $lv, $rv );
+			$plainEnv = $env->leavePathMode();
+			foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
+				foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
+					$result = $op( $lv, $rv );
+					JQUtils::assertNotPath( $result, $env );
+					yield $result;
 				}
 			}
 		};
@@ -1022,9 +1065,10 @@ class JQCompile {
 		$rightFn = $this->compileNode( $node['right'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
 			$found = false;
-			foreach ( $leftFn( $input, $env ) as $val ) {
+			foreach ( $leftFn( $input, $env ) as $item ) {
+				[ $itemEnv, $val ] = $env->maybeUnwrapPath( $item );
 				if ( JQUtils::toBoolean( $val ) ) {
-					yield $val;
+					yield $itemEnv->maybeWithPath( $val );
 					$found = true;
 				}
 			}
@@ -1074,13 +1118,14 @@ class JQCompile {
 		$updateFn = $this->compileNode( $node['update'] );
 		$patFn    = $this->compilePattern( $node['pattern'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $initFn, $updateFn, $patFn ): Generator {
+			$plainEnv = $env->leavePathMode();
 			$acc = null;
-			foreach ( $initFn( $input, $env ) as $initVal ) {
+			foreach ( $initFn( $input, $plainEnv ) as $initVal ) {
 				$acc = $initVal;
 				break;
 			}
-			foreach ( $srcFn( $input, $env ) as $val ) {
-				foreach ( $patFn( $val, $env ) as $boundEnv ) {
+			foreach ( $srcFn( $input, $plainEnv ) as $val ) {
+				foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
 					foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
 						$acc = $newAcc;
 						break;
@@ -1088,6 +1133,7 @@ class JQCompile {
 					break;
 				}
 			}
+			JQUtils::assertNotPath( $acc, $env );
 			yield $acc;
 		};
 	}
@@ -1107,20 +1153,25 @@ class JQCompile {
 		$patFn     = $this->compilePattern( $node['pattern'] );
 		$extractFn = $node['extract'] !== null ? $this->compileNode( $node['extract'] ) : null;
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $initFn, $updateFn, $patFn, $extractFn ): Generator {
+			$plainEnv = $env->leavePathMode();
 			$acc = null;
-			foreach ( $initFn( $input, $env ) as $initVal ) {
+			foreach ( $initFn( $input, $plainEnv ) as $initVal ) {
 				$acc = $initVal;
 				break;
 			}
-			foreach ( $srcFn( $input, $env ) as $val ) {
-				foreach ( $patFn( $val, $env ) as $boundEnv ) {
+			foreach ( $srcFn( $input, $plainEnv ) as $val ) {
+				foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
 					foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
 						$acc = $newAcc;
 						break;
 					}
 					if ( $extractFn !== null ) {
-						yield from $extractFn( $acc, $boundEnv );
+						foreach ( $extractFn( $acc, $boundEnv ) as $extracted ) {
+							JQUtils::assertNotPath( $extracted, $env );
+							yield $extracted;
+						}
 					} else {
+						JQUtils::assertNotPath( $acc, $env );
 						yield $acc;
 					}
 					break;
@@ -1205,6 +1256,7 @@ class JQCompile {
 	private function compileAssignSet( array $pathNode, Closure $rhsFn ): Closure {
 		$pathFn = $this->compileNode( $pathNode );
 		return static function ( mixed $input, JQEnv $env ) use ( $pathFn, $rhsFn ): Generator {
+			JQUtils::assertNotPath( $input, $env );
 			$pathEnv = $env->enterPathMode();
 			foreach ( $rhsFn( $input, $env ) as $newVal ) {
 				$result = $input;
@@ -1229,6 +1281,7 @@ class JQCompile {
 	private function compileAssignUpdate( array $pathNode, Closure $updateFn ): Closure {
 		$pathFn = $this->compileNode( $pathNode );
 		return static function ( mixed $input, JQEnv $env ) use ( $pathFn, $updateFn ): Generator {
+			JQUtils::assertNotPath( $input, $env );
 			$pathEnv  = $env->enterPathMode();
 			$toDelete = [];
 			foreach ( $pathFn( $input, $pathEnv ) as $item ) {
