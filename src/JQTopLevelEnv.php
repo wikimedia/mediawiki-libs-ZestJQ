@@ -152,6 +152,29 @@ class JQTopLevelEnv extends JQEnv {
 			yield JQUtils::toNumber( $input );
 		};
 
+		// toboolean/0 — booleans pass through; exactly "true"/"false" strings are converted
+		$defs['toboolean/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			if ( is_bool( $input ) ) {
+				yield $input;
+			} elseif ( $input === 'true' ) {
+				yield true;
+			} elseif ( $input === 'false' ) {
+				yield false;
+			} else {
+				$repr = JQUtils::typeName( $input ) . ' (' . JQUtils::jsonEncode( $input ) . ')';
+				throw new JQError( "{$repr} cannot be parsed as a boolean" );
+			}
+		};
+
+		// utf8bytelength/0 — byte length of a UTF-8 string
+		$defs['utf8bytelength/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			if ( !is_string( $input ) ) {
+				$repr = JQUtils::typeName( $input ) . ' (' . JQUtils::jsonEncode( $input ) . ')';
+				throw new JQError( "{$repr} only strings have UTF-8 byte length" );
+			}
+			yield strlen( $input );
+		};
+
 		// explode/0 — string → array of Unicode codepoints
 		$defs['explode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			$str = JQUtils::checkString( 'explode', $input );
