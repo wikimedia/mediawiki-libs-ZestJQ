@@ -131,6 +131,25 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	/**
+	 * Recursively apply $fn to every leaf value in a nested array/object tree.
+	 * Arrays and stdClass objects are traversed; $fn gets a chance to look
+	 * at (and normalize) every value, and the resulting objects are traversed.
+	 */
+	private static function mapDeep( callable $fn, mixed $v ): mixed {
+		$v = $fn( $v );
+		if ( is_array( $v ) ) {
+			return array_map(
+				static fn ( $item ) => self::mapDeep( $fn, $item ), $v
+			);
+		} elseif ( is_object( $v ) ) {
+			return (object)array_map(
+				static fn ( $item ) => self::mapDeep( $fn, $item ), (array)$v
+			);
+		}
+		return $v;
+	}
+
+	/**
 	 * Normalize error message strings so that minor wording differences between
 	 * our implementation and jq don't cause test failures.  Currently strips
 	 * the trailing context from "Invalid path expression …" messages.
@@ -141,20 +160,31 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 		// acceptable differences in error messages, especially when the
 		// upstream test in test.jq captures the error message into the
 		// output value.
-
-		return match ( $lineno ) {
+		$norm = match ( $lineno ) {
 			// Normalization function for various types of "invalid path
 			// expression" error messages.
 			1127, 1131, 1135, 1290, 1294 =>
-			array_map( static function ( mixed $v ): mixed {
+			static function ( mixed $v ): mixed {
 				if ( is_string( $v ) && str_starts_with( $v, 'Invalid path expression' ) ) {
 					return 'Invalid path expression';
 				}
 				return $v;
-			}, $vals ),
+			},
 
-			default => $vals,
+			// trim/ltrim/rtrim use checkString() which produces
+			// "X requires string inputs, got Y"; jq says "trim input must be a string"
+			1575 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && preg_match( '/^(l|r)?trim requires/', $v ) ) {
+					return 'trim input must be a string';
+				}
+				return $v;
+			},
+
+			default => null,
 		};
+
+		return ( $norm === null ) ? $vals : self::mapDeep( $norm, $vals );
 	}
 
 	/**

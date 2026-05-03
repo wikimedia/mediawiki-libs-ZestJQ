@@ -116,6 +116,17 @@ composer phan
 
 **Slice paths.** `compileSlice` in path mode yields path keys of the form `(object)['start' => $from, 'end' => $to]` (raw unnormalized bounds). `deleteAtPath` recognises a `stdClass` key as a slice and calls `JQUtils::normalizeSliceIdx()` (now public) to resolve the bounds against the actual array length before splicing.
 
+### Error messages
+
+We do not try to match jq's error message wording exactly. When throwing
+type errors, always use a `JQUtils::check*` method (e.g. `checkString`,
+`checkNumber`, `checkArray`) rather than crafting a custom message — this
+keeps wording consistent across builtins. If a `jq.test` case captures an
+error message into its expected output and our wording differs, add an entry
+to `JQCompileTest::normalizeErrors()` that rewrites the message as it
+appears in the test output (either rewriting our message to match
+jq's, or jq's message to match ours).
+
 ### Test coverage
 
 **`tests/JQCompileTest.php`** — Driven by `tests/jq.test`. Tests marked

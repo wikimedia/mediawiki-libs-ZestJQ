@@ -423,9 +423,9 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 			. "\u{2006}\u{2007}\u{2008}\u{2009}\u{200A}"
 			. "\u{2028}\u{2029}\u{202F}\u{205F}\u{3000}";
 		$input = json_encode( $ws . 'x' . $ws );
-		$this->assertEquals( [ 'x' ],        $this->runCompact( [ 'trim' ],  $input ) );
-		$this->assertEquals( [ 'x' . $ws ],  $this->runCompact( [ 'ltrim' ], $input ) );
-		$this->assertEquals( [ $ws . 'x' ],  $this->runCompact( [ 'rtrim' ], $input ) );
+		$this->assertEquals( [ 'x' ], $this->runCompact( [ 'trim' ], $input ) );
+		$this->assertEquals( [ 'x' . $ws ], $this->runCompact( [ 'ltrim' ], $input ) );
+		$this->assertEquals( [ $ws . 'x' ], $this->runCompact( [ 'rtrim' ], $input ) );
 	}
 
 }

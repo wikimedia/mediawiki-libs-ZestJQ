@@ -21,6 +21,18 @@ use Generator;
  * matching the convention used by JQCompile::compileCall().
  */
 class JQTopLevelEnv extends JQEnv {
+	// The character set from jq's jvp_codepoint_is_whitespace():
+	// PHP's trim() also strips NUL (U+0000) which jq does not, so we
+	// use an explicit regex instead.
+	private const WS_CLASS =
+		'[\x{0009}-\x{000D}\x{0020}\x{0085}\x{00A0}\x{1680}' .
+		'\x{2000}-\x{200A}\x{2028}\x{2029}\x{202F}\x{205F}\x{3000}]';
+	private const TRIM_BOTH =
+		'/^' . self::WS_CLASS . '+|' . self::WS_CLASS . '+$/u';
+	private const TRIM_LEFT =
+		'/^' . self::WS_CLASS . '+/u';
+	private const TRIM_RIGHT =
+		'/' . self::WS_CLASS . '+$/u';
 
 	public function __construct( IOContext $io ) {
 		parent::__construct( null, $io, self::buildNativeBuiltins() );
@@ -372,31 +384,17 @@ class JQTopLevelEnv extends JQEnv {
 		};
 
 		// trim/0, ltrim/0, rtrim/0 — strip Unicode whitespace
-		// Uses the same character set as jq's jvp_codepoint_is_whitespace():
-		// U+0009–U+000D, U+0020, U+0085, U+00A0, U+1680, U+2000–U+200A,
-		// U+2028–U+2029, U+202F, U+205F, U+3000.
-		// PHP's trim() also strips NUL (U+0000) which jq does not, so we
-		// use an explicit regex instead.
-		$wsClass = '[\x{0009}-\x{000D}\x{0020}\x{0085}\x{00A0}\x{1680}'
-			. '\x{2000}-\x{200A}\x{2028}\x{2029}\x{202F}\x{205F}\x{3000}]';
-		$trimFn = static function ( mixed $input, string $op ) use ( $wsClass ): string {
-			if ( !is_string( $input ) ) {
-				throw new JQError( 'trim input must be a string' );
-			}
-			return match ( $op ) {
-				'both'  => preg_replace( "/^{$wsClass}+|{$wsClass}+\$/u", '', $input ),
-				'left'  => preg_replace( "/^{$wsClass}+/u", '', $input ),
-				'right' => preg_replace( "/{$wsClass}+\$/u", '', $input ),
-			};
+		$defs['trim/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			$str = JQUtils::checkString( 'trim', $input );
+			yield preg_replace( self::TRIM_BOTH, '', $str );
 		};
-		$defs['trim/0'] = static function ( mixed $input, JQEnv $env ) use ( $trimFn ): Generator {
-			yield $trimFn( $input, 'both' );
+		$defs['ltrim/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			$str = JQUtils::checkString( 'ltrim', $input );
+			yield preg_replace( self::TRIM_LEFT, '', $str );
 		};
-		$defs['ltrim/0'] = static function ( mixed $input, JQEnv $env ) use ( $trimFn ): Generator {
-			yield $trimFn( $input, 'left' );
-		};
-		$defs['rtrim/0'] = static function ( mixed $input, JQEnv $env ) use ( $trimFn ): Generator {
-			yield $trimFn( $input, 'right' );
+		$defs['rtrim/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			$str = JQUtils::checkString( 'rtrim', $input );
+			yield preg_replace( self::TRIM_RIGHT, '', $str );
 		};
 
 		// _strindices/1 — array of codepoint positions where needle occurs in input string
