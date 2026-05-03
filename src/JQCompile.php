@@ -40,9 +40,6 @@ use stdClass;
  */
 class JQCompile {
 
-	/** Maximum array index; prevents accidental huge allocations. */
-	private const MAX_ARRAY_INDEX = 1024 * 1024;
-
 	/**
 	 * Compile a JQ AST into a reusable filter.
 	 *
@@ -1255,7 +1252,7 @@ class JQCompile {
 			if ( $index < 0 ) {
 				throw new JQError( 'Out of bounds negative array index' );
 			}
-			if ( $index >= self::MAX_ARRAY_INDEX ) {
+			if ( $index >= JQUtils::MAX_SIZE ) {
 				throw new JQError( 'Array index too large' );
 			}
 			$newArr = $container;

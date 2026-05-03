@@ -21,6 +21,8 @@ use stdClass;
  * objects.
  */
 class JQUtils {
+	/** Maximum array or string size; prevents accidental huge allocations. */
+	public const MAX_SIZE = 1024 * 1024;
 
 	// -----------------------------------------------------------------------
 	// Type selectors
@@ -351,10 +353,20 @@ class JQUtils {
 			return $a * $b;
 		}
 		if ( is_string( $a ) && self::isNumber( $b ) ) {
-			return $b <= 0 ? null : str_repeat( $a, (int)$b );
+			$b = (int)$b;
+			if ( $b < 0 ) {
+				return null;
+			}
+			if ( $a === '' || $b === 0 ) {
+				return '';
+			}
+			if ( $b > self::MAX_SIZE || mb_strlen( $a ) * $b > self::MAX_SIZE ) {
+				throw new JQError( 'Repeat string result too long' );
+			}
+			return str_repeat( $a, $b );
 		}
 		if ( self::isNumber( $a ) && is_string( $b ) ) {
-			return $a <= 0 ? null : str_repeat( $b, (int)$a );
+			return self::multiply( $b, $a );
 		}
 		if ( is_object( $a ) && is_object( $b ) ) {
 			return self::mergeObjects( $a, $b );
