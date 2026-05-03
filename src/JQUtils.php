@@ -50,7 +50,7 @@ class JQUtils {
 			// @phan-suppress-next-line PhanTypeInvalidLeftOperandOfAdd
 			return $val + 0;
 		}
-		throw new JQError( self::typeName( $val ) . ' is not a number' );
+		throw new JQError( self::typeName( $val ) . ' (' . self::jsonEncode( $val ) . ') cannot be parsed as a number' );
 	}
 
 	/**

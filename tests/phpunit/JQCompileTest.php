@@ -23,7 +23,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			689 =>
 			'JSON can not portably represent NaN or infinite values',
 
-			701 =>
+			9999999 =>
 			'Exact error message may differ from jq',
 
 			default => null,
