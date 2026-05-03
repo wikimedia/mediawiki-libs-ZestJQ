@@ -275,7 +275,17 @@ class JQCompile {
 			return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn, $restFn ): Generator {
 				$defEnvRef = $env;  // placeholder; overwritten below before first use
 				$binding = static function ( mixed $in, JQEnv $e ) use ( $bodyFn, &$defEnvRef ): Generator {
-					yield from $bodyFn( $in, $defEnvRef );
+					// Propagate path mode from the call site into the body (same as
+					// n-arity defs) so that structural operations inside the def
+					// yield path-wrapped values when invoked inside path/1.
+					$effectiveEnv = $defEnvRef->leavePathMode();
+					if ( $e->isPathMode() ) {
+						$effectiveEnv = $effectiveEnv->enterPathMode();
+						foreach ( $e->getPath() as $key ) {
+							$effectiveEnv = $effectiveEnv->appendPath( $key );
+						}
+					}
+					yield from $bodyFn( $in, $effectiveEnv );
 				};
 				$newEnv = $env->bind( $name, 0, $binding );
 				$defEnvRef = $newEnv;
@@ -296,22 +306,17 @@ class JQCompile {
 						$argFn = $argFns[$i];
 						$bodyEnv = $bodyEnv->bind( $pName, 0,
 							static function ( mixed $argIn, JQEnv $env ) use ( $argFn, $callEnv ): Generator {
+								$effectiveEnv = $callEnv->leavePathMode();
 								if ( $env->isPathMode() ) {
 									// Re-root the accumulated path onto $callEnv so that
 									// call-site variable bindings and path mode are both
 									// preserved.  Strip any path mode from $callEnv first
 									// so enterPathMode() doesn't throw when called from
 									// nested path-mode contexts.
-									$effectiveEnv = $callEnv->leavePathMode()
-										->enterPathMode();
+									$effectiveEnv = $effectiveEnv->enterPathMode();
 									foreach ( $env->getPath() as $key ) {
 										$effectiveEnv = $effectiveEnv->appendPath( $key );
 									}
-								} else {
-									// Called in normal mode (e.g. as an if-condition):
-									// strip any path mode from the call env so that
-									// identity and field access yield plain values.
-									$effectiveEnv = $callEnv->leavePathMode();
 								}
 								yield from $argFn( $argIn, $effectiveEnv );
 							}

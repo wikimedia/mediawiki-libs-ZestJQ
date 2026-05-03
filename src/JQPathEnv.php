@@ -70,6 +70,9 @@ class JQPathEnv extends JQEnv {
 
 	/** @inheritDoc */
 	public function maybeUnwrapPath( mixed $item ): array {
+		if ( !is_array( $item ) || !isset( $item[0] ) || !( $item[0] instanceof JQPathEnv ) ) {
+			throw new JQError( 'Invalid path expression with result ' . JQUtils::jsonEncode( $item ) );
+		}
 		return $item;
 	}
 }
