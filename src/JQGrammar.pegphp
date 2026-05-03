@@ -2,6 +2,8 @@
 /* File-scope initializer */
 declare( strict_types = 1 );
 namespace Wikimedia\Zest;
+
+use stdClass;
 }
 
 {
@@ -32,6 +34,13 @@ namespace Wikimedia\Zest;
 
     protected function initialize() {
          $this->filename = $this->options['filename'] ?? '<top-level>';
+    }
+
+    protected function makeLoc(): stdClass {
+        return (object)[
+	    'file' => $this->filename,
+	    'line' => $this->location()->start->line,
+	];
     }
 
     private static function build( array $left, ?array $right, string $type ): array {
@@ -292,9 +301,7 @@ Term
 
   /* $__loc__ — source location object */
   / "$__loc__" !IdentChar {
-    return [ 'type' => 'literal', 'value' => (object)[
-        'file' => $this->filename, 'line' => $this->location()->start->line,
-    ] ];
+    return [ 'type' => 'literal', 'value' => $this->makeLoc() ];
   }
 
   /* Format strings: @base64, @uri, @html, @csv, @tsv, @json, @text, @sh */
@@ -381,6 +388,9 @@ DictPair
     { return [ 'key' => $name,
                'value' => [ 'type' => 'index',
                             'key' => $name, 'opt' => false ] ]; }
+  / "$__loc__" !IdentChar /* weird special case! */
+    { return [ 'key' => [ 'type' => 'literal', 'value' => "__loc__" ],
+               'value' => [ 'type' => 'literal', 'value' => $this->makeLoc() ] ]; }
   / "$" name:Name
     { return [ 'key' => [ 'type' => 'literal', 'value' => $name ],
                'value' => [ 'type' => 'variable', 'name' => $name ] ]; }
