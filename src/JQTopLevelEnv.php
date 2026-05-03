@@ -243,12 +243,11 @@ class JQTopLevelEnv extends JQEnv {
 		$defs['round/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield (int)round( JQUtils::checkNumber( 'round', $input ) );
 		};
-		$defs['sqrt/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield sqrt( JQUtils::checkNumber( 'sqrt', $input ) );
-		};
-		$defs['fabs/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			yield abs( JQUtils::checkNumber( 'fabs', $input ) );
-		};
+		$defs['sqrt/0'] = self::mathFn( 'sqrt' );
+		$defs['fabs/0'] = self::mathFn( 'fabs', abs( ... ) );
+		$defs['sin/0']  = self::mathFn( 'sin' );
+		$defs['cos/0']  = self::mathFn( 'cos' );
+		$defs['atan/0'] = self::mathFn( 'atan' );
 
 		// Special float values and predicates
 		$defs['nan/0'] = static function ( mixed $input, JQEnv $env ): Generator {
@@ -377,6 +376,24 @@ class JQTopLevelEnv extends JQEnv {
 	 * - objects: every key of $b exists in $a with a contained value
 	 * - scalars: structural equality
 	 */
+
+	/**
+	 * Build a arity-0 Filter that applies a unary PHP math function to a
+	 * numeric input, using $name for both the JQ error message and (when $fn
+	 * is omitted) the PHP function to call.
+	 *
+	 * @param string $name JQ builtin name (used in type-error messages)
+	 * @param ?callable(int|float):(int|float) $fn PHP callable; defaults to the
+	 *   global function named $name
+	 * @return Closure(mixed,JQEnv):Generator
+	 */
+	private static function mathFn( string $name, ?callable $fn = null ): Closure {
+		$fn ??= $name( ... );
+		return static function ( mixed $input, JQEnv $env ) use ( $name, $fn ): Generator {
+			yield $fn( JQUtils::checkNumber( $name, $input ) );
+		};
+	}
+
 	private static function jqContains( mixed $a, mixed $b ): bool {
 		if ( is_string( $a ) && is_string( $b ) ) {
 			return str_contains( $a, $b );
