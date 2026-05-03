@@ -45,8 +45,9 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			'Assignment update operators (|=, +=, //=) have bugs with multi-index empty, NaN/Infinity inputs, and alternative update',
 
 			// various error message format differences
-			// 2014: our arithmetic type errors omit the value (jq says "number (1234...) and string")
-			1448, 2014, 2498 =>
+			// 2014: large-float number representation in error messages differs
+			// (jq: "12345678901234568000000000...", PHP: "1.2345678901234568E+29")
+			2014 =>
 			'Error message format differs from jq',
 
 			// indices/1 doesn't support overlapping string matches or array needles
@@ -169,6 +170,29 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			static function ( mixed $v ): mixed {
 				if ( is_string( $v ) && preg_match( '/^(l|r)?trim requires/', $v ) ) {
 					return 'trim input must be a string';
+				}
+				return $v;
+			},
+
+			// jq says "Cannot index TYPE with string ("field")"; we say
+			// "field requires an object input, got TYPE" — normalize both to "Cannot index TYPE"
+			1448 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && preg_match(
+					'/^(?:Cannot index|field requires an object input, got) (\w+)/',
+					$v, $m
+				) ) {
+					return 'Cannot index ' . $m[1];
+				}
+				return $v;
+			},
+
+			// jq gives a detailed parse error; we emit "Invalid JSON: <input>" —
+			// normalize any "Invalid ..." message to the common prefix
+			2498 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && str_starts_with( $v, 'Invalid ' ) ) {
+					return 'Invalid ';
 				}
 				return $v;
 			},
