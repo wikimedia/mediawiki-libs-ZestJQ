@@ -275,6 +275,16 @@ class JQTopLevelEnv extends JQEnv {
 		// j0, j1 (Bessel functions of the first kind), y0, y1 (second kind),
 		// logb (IEEE exponent extraction), significand (IEEE significand).
 
+		// Two-input math functions
+		$defs['atan2/2'] = self::mathFn2( 'atan2' );
+		$defs['fmod/2'] = self::mathFn2( 'fmod' );
+		$defs['hypot/2'] = self::mathFn2( 'hypot' );
+		$defs['pow/2'] = self::mathFn2( 'pow' );
+		$defs['copysign/2'] = self::mathFn2( 'copysign', static fn ( $x, $y )=>abs( $x ) * ( $y < 0 ? -1 : 1 ) );
+		$defs['fdim/2'] = self::mathFn2( 'fdim', static fn ( $x, $y )=>max( $x - $y, 0 ) );
+		$defs['fmax/2'] = self::mathFn2( 'fmax', static fn ( $x, $y )=>max( $x, $y ) );
+		$defs['fmin/2'] = self::mathFn2( 'fmin', static fn ( $x, $y )=>min( $x, $y ) );
+
 		// Special float values and predicates
 		$defs['nan/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			yield NAN;
@@ -426,6 +436,35 @@ class JQTopLevelEnv extends JQEnv {
 		$fn ??= $name( ... );
 		return static function ( mixed $input, JQEnv $env ) use ( $name, $fn ): Generator {
 			yield $fn( JQUtils::checkNumber( $name, $input ) );
+		};
+	}
+
+	/**
+	 * Build a arity-2 Filter that applies a binary PHP math function to a
+	 * two arguments, using $name for both the JQ error message and (when $fn
+	 * is omitted) the PHP function to call.  The Filter ignores its
+	 * input.
+	 *
+	 * @param string $name JQ builtin name (used in type-error messages)
+	 * @param ?callable(int|float,int|float):(int|float) $fn PHP callable; defaults to the
+	 *   global function named $name
+	 * @return Closure(array):Closure
+	 */
+	private static function mathFn2( string $name, ?callable $fn = null ): Closure {
+		$fn ??= $name( ... );
+		return static function ( array $argFns ) use ( $name, $fn ): Closure {
+			[ $leftFn, $rightFn ] = $argFns;
+			return static function ( mixed $input, JQEnv $env ) use ( $name, $fn, $leftFn, $rightFn ): Generator {
+				// for binops jq generally evaluates right first (outer loop)
+				// then left (inner loop).
+				foreach ( $rightFn( $input, $env ) as $rv ) {
+					$rv = JQUtils::checkNumber( $name, $rv );
+					foreach ( $leftFn( $input, $env ) as $lv ) {
+						$lv = JQUtils::checkNumber( $name, $lv );
+						yield $fn( $lv, $rv );
+					}
+				}
+			};
 		};
 	}
 
