@@ -370,6 +370,48 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 	}
 
 	// -----------------------------------------------------------------------
+	// Update assignment operator |=
+	// -----------------------------------------------------------------------
+
+	public static function assignUpdateProvider(): array {
+		return [
+			// |= with a multi-value update uses the FIRST yielded value (unlike
+			// reduce/foreach which use the last/all values respectively).
+			// jq: {"a":1} | .a |= (. + 1, . + 2)  → {"a":2}  (1+1=2, first value)
+			'|= uses first value when update yields multiple' => [
+				'.a |= (. + 1, . + 2)',
+				'{"a":1}',
+				[ '{"a":2}' ],
+			],
+			// |= with empty update deletes the path (no new value → omit the key)
+			// jq: {"a":1,"b":2} | .a |= empty  → {"b":2}
+			'|= empty deletes the path' => [
+				'.a |= empty',
+				'{"a":1,"b":2}',
+				[ '{"b":2}' ],
+			],
+			// |= on multi-path (lhs produces multiple paths): each path is updated
+			// independently using the first value from the update expression.
+			// jq: {"a":1,"b":2} | (.a,.b) |= (. * 10, . + 1)  → {"a":10,"b":20}
+			'|= multi-path each uses first value' => [
+				'(.a,.b) |= (. * 10, . + 1)',
+				'{"a":1,"b":2}',
+				[ '{"a":10,"b":20}' ],
+			],
+		];
+	}
+
+	/**
+	 * @dataProvider assignUpdateProvider
+	 * @covers \Wikimedia\Zest\JQCompile
+	 */
+	public function testAssignUpdate( string $filter, string $jsonInput, array $expectedJsonOutputs ): void {
+		$actual = $this->runCompact( [ $filter ], $jsonInput );
+		$expected = array_map( json_decode( ... ), $expectedJsonOutputs );
+		$this->assertEquals( $expected, $actual );
+	}
+
+	// -----------------------------------------------------------------------
 	// Destructuring patterns: multi-valued key produces multiple env bindings
 	// -----------------------------------------------------------------------
 
