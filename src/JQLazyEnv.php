@@ -23,12 +23,22 @@ class JQLazyEnv extends JQEnv {
 	private ?JQEnv $resolved = null;
 
 	public function __construct( IOContext $io ) {
-		parent::__construct( null, $io );
+		parent::__construct( new JQTopLevelEnv( $io ), $io );
 	}
 
 	/** @inheritDoc */
 	public function lookup( string $name, int $arity ): ?Closure {
-		$this->resolved ??= JQEnv::getStdEnv();
+		if ( $this->resolved === null ) {
+			// Maybe this is a built-in; try to resolve in the
+			// top level env
+			$binding = parent::lookup( $name, $arity );
+			if ( $binding !== null ) {
+				return $binding;
+			}
+			// Ok, I guess we have to load the stdenv now.
+			// @phan-suppress-next-line PhanTypeMismatchArgumentSuperType
+			$this->resolved = self::buildStandardEnv( $this->parent );
+		}
 		return $this->resolved->lookup( $name, $arity );
 	}
 }

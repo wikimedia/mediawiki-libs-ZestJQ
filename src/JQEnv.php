@@ -70,14 +70,15 @@ abstract class JQEnv {
 	 * returned. The env is then cached for the lifetime of the process.
 	 */
 	public static function getStdEnv(): JQEnv {
-		self::$stdEnv ??= self::buildStandardEnv();
+		self::$stdEnv ??= new JQLazyEnv( new IOContext );
 		return self::$stdEnv;
 	}
 
-	private static function buildStandardEnv(): JQEnv {
-		$baseEnv = new JQTopLevelEnv( new IOContext );
+	protected static function buildStandardEnv( ?JQTopLevelEnv $topLevelEnv = null ): JQEnv {
+		// The standard environment is built with a null IOContext
+		$topLevelEnv ??= new JQTopLevelEnv( new IOContext );
 		$ast = JQBuiltin::getAst();
-		$f = JQCompile::compile( $ast, $baseEnv );
+		$f = JQCompile::compile( $ast, $topLevelEnv );
 		foreach ( $f( null ) as $val ) {
 			if ( $val instanceof JQEnv ) {
 				return $val;

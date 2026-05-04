@@ -70,9 +70,13 @@ class JQCmd {
 			return 3;
 		}
 
-		$io     = new IOContext;
-		$env    = new JQLazyEnv( $io );
-		$filter = JQCompile::compile( $ast, $env );
+		// If we support IOContexts in the future, we'd create a new
+		// JQIOEnv here with the user's IOContext and the
+		// JQEnv::getStdEnv() as its parent, in order to evaluate the
+		// code, ensuring that the user IOContext is separate from the
+		// 'no op'/'no user input' IO context used to evaluate the
+		// standard environment.
+		$filter = JQCompile::compile( $ast, JQEnv::getStdEnv() );
 
 		$exitCode = 0;
 		try {

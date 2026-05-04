@@ -5,10 +5,9 @@ namespace Wikimedia\Zest\Tests;
 
 use Closure;
 use Throwable;
-use Wikimedia\Zest\IOContext;
 use Wikimedia\Zest\JQCompile;
+use Wikimedia\Zest\JQEnv;
 use Wikimedia\Zest\JQGrammar;
-use Wikimedia\Zest\JQLazyEnv;
 use Wikimedia\Zest\JQUtils;
 
 /**
@@ -289,8 +288,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 		$expected = array_map( JQUtils::jsonDecode( ... ), $expected );
 		$g = new JQGrammar;
 		$ast = $g->parse( $query );
-		$env = new JQLazyEnv( new IOContext );
-		$eval = JQCompile::compile( $ast, $env );
+		$eval = JQCompile::compile( $ast, JQEnv::getStdEnv() );
 		$result = [];
 		foreach ( $eval( $input ) as $val ) {
 			// Deliberately dropping the keys from the generator here,

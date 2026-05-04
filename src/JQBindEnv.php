@@ -36,6 +36,6 @@ class JQBindEnv extends JQEnv {
 		if ( $this->key === $key ) {
 			return $this->binding;
 		}
-		return $this->parent?->lookup( $name, $arity );
+		return parent::lookup( $name, $arity );
 	}
 }
