@@ -1477,12 +1477,8 @@ class JQCompile {
 			return $newObj;
 		}
 		if ( JQUtils::isNumber( $key ) && is_array( $container ) ) {
-			JQUtils::assertIsList( 'deleteAtPath', $container );
-			$index = (int)$key;
-			if ( $index < 0 ) {
-				$index += count( $container );
-			}
-			if ( $index >= 0 && $index < count( $container ) ) {
+			$index = JQUtils::adjustIndex( 'deleteAtPath', $key, $container );
+			if ( $index !== null ) {
 				$newArr = $container;
 				array_splice( $newArr, $index, 1 );
 				return $newArr;

@@ -42,9 +42,8 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			//   position.  Correct handling requires path adjustment after each
 			//   deletion (tracking how each splice shifts later indices), which is
 			//   not yet implemented.
-			// 1188, 1192: NaN index treated as index 0 instead of being ignored
-			1173, 1184, 1188, 1192 =>
-			'del() has bugs with error messages, overlapping indices, and NaN indices',
+			1173, 1184 =>
+			'del() has bugs with error messages and overlapping indices',
 
 			// various error message format differences
 			// 2014: large-float number representation in error messages differs
