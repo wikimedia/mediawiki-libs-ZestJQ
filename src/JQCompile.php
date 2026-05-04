@@ -1086,22 +1086,19 @@ class JQCompile {
 		$patFn    = $this->compilePattern( $node['pattern'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $initFn, $updateFn, $patFn ): Generator {
 			$plainEnv = $env->leavePathMode();
-			$acc = null;
-			foreach ( $initFn( $input, $plainEnv ) as $initVal ) {
-				$acc = $initVal;
-				break;
-			}
-			foreach ( $srcFn( $input, $plainEnv ) as $val ) {
-				foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
-					foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
-						$acc = $newAcc;
-						break;
+			foreach ( $initFn( $input, $plainEnv ) as $acc ) {
+				foreach ( $srcFn( $input, $plainEnv ) as $val ) {
+					foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
+						foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
+							$acc = $newAcc;
+							// no break: use the last update value as the new acc
+						}
+						// no break: chain all pattern bindings through the acc
 					}
-					break;
 				}
+				JQUtils::assertNotPath( $acc, $env );
+				yield $acc;
 			}
-			JQUtils::assertNotPath( $acc, $env );
-			yield $acc;
 		};
 	}
 

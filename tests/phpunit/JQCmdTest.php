@@ -464,6 +464,50 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 		$this->assertEquals( $expected, $actual );
 	}
 
+	public static function reduceProvider(): array {
+		return [
+			// Multi-value init: each init value starts its own independent reduce;
+			// one output is yielded per init value.
+			// jq: [reduce (1,2) as $x (0,1; . + $x)]  → [3,4]
+			'multi-value init' => [
+				'[reduce (1,2) as $x (0,1; . + $x)]',
+				'null',
+				[ '[3,4]' ],
+			],
+			// Multi-value update: all values are produced by the update expression
+			// but only the LAST one becomes the new accumulator (unlike foreach which
+			// yields all of them).
+			// jq: [reduce (1,2,3) as $x (1; . + $x, . * 2)]  → [8]
+			//   $x=1: 1+1=2 and 1*2=2 → last=2, acc=2
+			//   $x=2: 2+2=4 and 2*2=4 → last=4, acc=4
+			//   $x=3: 4+3=7 and 4*2=8 → last=8, acc=8
+			'multi-value update uses last value' => [
+				'[reduce (1,2,3) as $x (1; . + $x, . * 2)]',
+				'null',
+				[ '[8]' ],
+			],
+			// Multi-value pattern: {("a","b"): $x} yields two bindings per object;
+			// all bindings chain through the accumulator (like foreach).
+			// jq: [reduce .[] as {("a","b"): $x} (0; . + $x)]
+			//   on [{"a":1,"b":2},{"a":10,"b":20}]  → [33]
+			'multi-value pattern chains through acc' => [
+				'[reduce .[] as {("a","b"): $x} (0; . + $x)]',
+				'[{"a":1,"b":2},{"a":10,"b":20}]',
+				[ '[33]' ],
+			],
+		];
+	}
+
+	/**
+	 * @dataProvider reduceProvider
+	 * @covers \Wikimedia\Zest\JQCompile
+	 */
+	public function testReduce( string $filter, string $jsonInput, array $expectedJsonOutputs ): void {
+		$actual = $this->runCompact( [ $filter ], $jsonInput );
+		$expected = array_map( json_decode( ... ), $expectedJsonOutputs );
+		$this->assertEquals( $expected, $actual );
+	}
+
 	/**
 	 * Verify that trim/ltrim/rtrim strip exactly the Unicode whitespace
 	 * characters defined by jq's jvp_codepoint_is_whitespace():
