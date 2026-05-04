@@ -7,6 +7,7 @@ use Closure;
 use Throwable;
 use Wikimedia\Zest\JQCompile;
 use Wikimedia\Zest\JQEnv;
+use Wikimedia\Zest\JQError;
 use Wikimedia\Zest\JQGrammar;
 use Wikimedia\Zest\JQUtils;
 
@@ -83,10 +84,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// JSON nesting and path depth limits not implemented
 			2558, 2563, 2568, 2593, 2602 =>
 			'JSON nesting depth limits and path depth limits not yet implemented',
-
-			// error re-thrown inside try-catch propagates past outer generator yields
-			2359 =>
-			'Error propagation through generators differs from jq when error follows yielded output',
 
 			default => null,
 		};
@@ -289,10 +286,19 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 		$ast = $g->parse( $query );
 		$eval = JQCompile::compile( $ast, JQEnv::getStdEnv() );
 		$result = [];
-		foreach ( $eval( $input ) as $val ) {
-			// Deliberately dropping the keys from the generator here,
-			// so we don't get collisions we make a list out of the results.
-			$result[] = $val;
+		try {
+			foreach ( $eval( $input ) as $val ) {
+				// Deliberately dropping the keys from the generator here,
+				// so we don't get collisions we make a list out of the results.
+				$result[] = $val;
+			}
+		} catch ( JQError $e ) {
+			// As with the upstream test runner (apparently): if we throw
+			// only after at least one result, then don't count this as a
+			// failure. (See test on line 2359)
+			if ( !$result ) {
+				throw $e;
+			}
 		}
 		$e = static function ( $val ) {
 			$result = json_encode( $val );
