@@ -32,12 +32,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1993 =>
 			'Module-level directives not implemented',
 
-			// setpath/2: non-scalar path keys (e.g. arrays) silently return
-			// the container unchanged instead of throwing an error; jq throws
-			// "Cannot update field at array index of array"
-			2533 =>
-			'setpath/2 silently ignores non-scalar path key instead of throwing',
-
 			// del() bugs:
 			// 1173: wrong error message for non-array arg to delpaths
 			// 1163, 1177: null nodes created for paths through missing object keys
@@ -60,10 +54,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// (jq: "12345678901234568000000000...", PHP: "1.2345678901234568E+29")
 			2014 =>
 			'Error message format differs from jq',
-
-			// indices/1 doesn't support array needles on arrays
-			1581, 1585, 1589 =>
-			'indices/1 does not support array-needle searches on arrays',
 
 			// bsearch/1 not yet implemented
 			1827, 1835, 1839 =>

@@ -903,13 +903,21 @@ class JQCompile {
 						yield $baseEnv->appendPath( $key )->maybeWithPath( $base->$key ?? null );
 					} elseif ( is_array( $base ) ) {
 						JQUtils::assertIsList( 'index', $base );
-						if ( $opt && !JQUtils::isNumber( $key ) ) {
+						if ( is_array( $key ) ) {
+							// Sub-array search: find all starting positions where
+							// $key appears as a contiguous sub-sequence of $base.
+							// Used by builtin.jq's indices/1 definition.
+							JQUtils::assertIsList( 'index', $key );
+							$positions = self::arraySubarraySearch( $base, $key );
+							yield $baseEnv->appendPath( $key )->maybeWithPath( $positions );
+						} elseif ( $opt && !JQUtils::isNumber( $key ) ) {
 							continue;
+						} else {
+							$index = JQUtils::adjustIndex( 'index', $key, $base );
+							yield $baseEnv->appendPath( $key )->maybeWithPath(
+								( $index === null ) ? null : $base[$index]
+							);
 						}
-						$index = JQUtils::adjustIndex( 'index', $key, $base );
-						yield $baseEnv->appendPath( $key )->maybeWithPath(
-							( $index === null ) ? null : $base[$index]
-						);
 					} elseif ( !$opt ) {
 						throw new JQError(
 							'Cannot index ' . JQUtils::typeName( $base ) .
@@ -1303,6 +1311,28 @@ class JQCompile {
 	}
 
 	/**
+	 * Find all starting positions where $needle appears as a contiguous
+	 * sub-sequence of $haystack, including overlapping matches.
+	 */
+	private static function arraySubarraySearch( array $haystack, array $needle ): array {
+		$needleLen = count( $needle );
+		$haystackLen = count( $haystack );
+		$positions = [];
+		$limit = $haystackLen - $needleLen;
+		for ( $j = 0; $j <= $limit; $j++ ) {
+			for ( $k = 0; $k < $needleLen; $k++ ) {
+				if ( JQUtils::compare( $haystack[$j + $k], $needle[$k] ) !== 0 ) {
+					break;
+				}
+			}
+			if ( $k === $needleLen ) {
+				$positions[] = $j;
+			}
+		}
+		return $positions;
+	}
+
+	/**
 	 * Navigate to the value at $path within $val.
 	 * null propagates (null[x] → null); out-of-bounds returns null.
 	 *
@@ -1329,6 +1359,11 @@ class JQCompile {
 				return null;
 			}
 			return self::getAtPath( $val[$idx], $path, $offset );
+		} elseif ( is_array( $key ) ) {
+			if ( !is_array( $val ) ) {
+				return null;
+			}
+			return self::getAtPath( self::arraySubarraySearch( $val, $key ), $path, $offset );
 		}
 		return null;
 	}
@@ -1384,6 +1419,9 @@ class JQCompile {
 				$container[$index] ?? null, $path, $offset, $newVal
 			);
 			return $newArr;
+		}
+		if ( is_array( $key ) ) {
+			throw new JQError( 'Cannot update field at array index of array' );
 		}
 		// Slice-path key: (object)['start' => ..., 'end' => ...] produced by
 		// compileSlice in path mode.  Splices the replacement array into position.
@@ -1446,6 +1484,9 @@ class JQCompile {
 				array_splice( $newArr, $index, 1 );
 				return $newArr;
 			}
+		}
+		if ( is_array( $key ) ) {
+			throw new JQError( 'Cannot delete array element of array' );
 		}
 		// Slice-path key: (object)['start' => ..., 'end' => ...] produced by
 		// compileSlice in path mode.  Splices the range out of the array.
