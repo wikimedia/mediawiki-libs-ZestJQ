@@ -228,10 +228,17 @@ class JQTopLevelEnv extends JQEnv {
 		};
 
 		// implode/0 — array of Unicode codepoints → string
-		$defs['implode/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+		$validate = static fn ( $n ) =>
+			// improper codepoints get mapped to U+FFFD REPLACEMENT CHARACTER
+			// (out of range, or in the utf16 surrogate area)
+			( $n < 0 || $n > 0x10FFFF || ( $n >= 0xD800 && $n <= 0xDFFF ) )
+				  ? 0xFFFD : $n;
+		$defs['implode/0'] = static function ( mixed $input, JQEnv $env ) use ( $validate ): Generator {
 			$input = JQUtils::checkArray( 'implode', $input );
 			$chars = array_map(
-				static fn ( $code ) => mb_chr( (int)JQUtils::checkNumber( 'implode', $code ) ),
+				static fn ( $code ) => mb_chr(
+					$validate( (int)JQUtils::checkNumber( 'implode', $code, allowNaN: false ) )
+				),
 				$input
 			);
 			yield implode( '', $chars );
@@ -768,11 +775,8 @@ class JQTopLevelEnv extends JQEnv {
 		$v = JQUtils::checkArray( $who, $v );
 		for ( $i = 0; $i < 8; $i++ ) {
 			$v[$i] = JQUtils::checkNumber(
-				"{$who} element {$i}", $v[$i] ?? $defaults[$i]
+				"{$who} element {$i}", $v[$i] ?? $defaults[$i], allowNaN: false
 			);
-			if ( is_float( $v[$i] ) && is_nan( $v[$i] ) ) {
-				throw new JQError( "{$who} element {$i} is NaN" );
-			}
 		}
 		return $v;
 	}

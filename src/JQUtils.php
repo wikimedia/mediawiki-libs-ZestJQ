@@ -149,10 +149,15 @@ class JQUtils {
 	 * Assert that $val is a number (int or float) and return it; throw JQError otherwise.
 	 * $who names the operation for the error message (e.g. 'floor').
 	 */
-	public static function checkNumber( string $who, mixed $val ): int|float {
+	public static function checkNumber( string $who, mixed $val, bool $allowNaN = true ): int|float {
 		if ( !self::isNumber( $val ) ) {
 			throw new JQError(
 				"{$who} requires a number input, got " . self::typeName( $val )
+			);
+		}
+		if ( is_float( $val ) && is_nan( $val ) && !$allowNaN ) {
+			throw new JQError(
+				"{$who} requires a number input, got NaN"
 			);
 		}
 		return $val;

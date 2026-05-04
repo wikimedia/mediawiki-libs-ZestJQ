@@ -22,7 +22,9 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// (jq clamps them to MAX_FLOAT; PHP represents them as INF which tojson encodes as null).
 			// 1306: input contains bare Infinity/-Infinity/NaN/-NaN literals, which
 			// our JSON decoder does not accept.
-			689, 1306, 2232, 2271, 2275 =>
+			// 2407: input contains bare nan literal ([nan] element), which our
+			// JSON decoder does not accept.
+			689, 1306, 2232, 2271, 2275, 2407 =>
 			'JSON can not portably represent NaN or infinite values',
 
 			1900, 1904, 1908, 1912, 1917, 1921, 1925, 1929, 1969, 1973, 1977,
@@ -77,10 +79,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// debug/0 and input/0 not yet implemented
 			2337, 2341 =>
 			'debug/0 and input/0 not yet implemented',
-
-			// implode does not replace out-of-range codepoints with U+FFFD
-			2403, 2407 =>
-			'implode does not replace out-of-range codepoints with U+FFFD replacement character',
 
 			// JSON nesting and path depth limits not implemented
 			2558, 2563, 2568, 2593, 2602 =>
