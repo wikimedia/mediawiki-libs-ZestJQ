@@ -33,7 +33,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			'Module-level directives not implemented',
 
 			// del() bugs:
-			// 1173: wrong error message for non-array arg to delpaths
 			// 1184: mixed integer+slice deletion — e.g. del(.[1],.[2],[-3:9]):
 			//   slice keys (stdClass, rank 6) sort before integer keys (rank 3)
 			//   in reversed JQUtils::compare, so slices are always deleted first;
@@ -50,10 +49,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// (jq: "12345678901234568000000000...", PHP: "1.2345678901234568E+29")
 			2014 =>
 			'Error message format differs from jq',
-
-			// bsearch/1 not yet implemented
-			1827, 1835, 1839 =>
-			'bsearch/1 not yet implemented',
 
 			// PHP uses exact int64 for integers, so values like 13911860366432393 are
 			// preserved exactly; jq without decnum rounds them to the nearest double
@@ -248,6 +243,16 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 				) ) {
 					$req = $m[2] === 'number' ? 'array' : 'object';
 					return "setAtPath requires an {$req} input, got {$m[1]}";
+				}
+				return $v;
+			},
+
+			// bsearch uses checkArray which says "bsearch requires an array input, got TYPE";
+			// jq says "TYPE (VALUE) cannot be searched from"
+			1839 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && preg_match( '/^(\w+) \(.*\) cannot be searched from$/', $v, $m ) ) {
+					return 'bsearch requires an array input, got ' . $m[1];
 				}
 				return $v;
 			},

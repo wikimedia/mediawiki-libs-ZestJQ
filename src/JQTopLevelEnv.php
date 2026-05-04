@@ -655,6 +655,33 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 
+		// bsearch/1 — binary search on a sorted array.
+		// Returns the index if found; -(insertion_point)-1 if not found.
+		$defs['bsearch/1'] = static function ( array $argFns ): Closure {
+			$needleFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $needleFn ): Generator {
+				$input = JQUtils::checkArray( 'bsearch', $input );
+				foreach ( $needleFn( $input, $env ) as $needle ) {
+					$lo = 0;
+					$hi = count( $input ) - 1;
+					$result = null;
+					while ( $lo <= $hi ) {
+						$mid = intdiv( $lo + $hi, 2 );
+						$cmp = JQUtils::compare( $input[$mid], $needle );
+						if ( $cmp === 0 ) {
+							$result = $mid;
+							break;
+						} elseif ( $cmp < 0 ) {
+							$lo = $mid + 1;
+						} else {
+							$hi = $mid - 1;
+						}
+					}
+					yield $result ?? -$lo - 1;
+				}
+			};
+		};
+
 		// -----------------------------------------------------------------------
 		// Date/time builtins
 		// -----------------------------------------------------------------------
