@@ -41,6 +41,8 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			//   position.  Correct handling requires path adjustment after each
 			//   deletion (tracking how each splice shifts later indices), which is
 			//   not yet implemented.
+			// There's also an upstream bug here:
+			//   https://github.com/jqlang/jq/issues/3538
 			1184 =>
 			'del() has a bug with mixed integer+slice overlapping deletion',
 
@@ -60,9 +62,9 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2315, 2319, 2324 =>
 			'NaN handling differs from jq (tojson, fromjson does not accept nan literals)',
 
-			// debug/0 and input/0 not yet implemented
+			// debug/0 and input/0 not implemented
 			2337, 2341 =>
-			'debug/0 and input/0 not yet implemented',
+			'debug/0 and input/0 not implemented',
 
 			// setpath with a 10000-element path: setAtPath is recursive, so a
 			// path of depth 10000 exhausts PHP's call stack before returning.
@@ -73,7 +75,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 
 			// JSON nesting and path depth limits not implemented
 			2558, 2563, 2568, 2593, 2602 =>
-			'JSON nesting depth limits and path depth limits not yet implemented',
+			'JSON nesting depth limits and path depth limits not implemented',
 
 			default => null,
 		};
