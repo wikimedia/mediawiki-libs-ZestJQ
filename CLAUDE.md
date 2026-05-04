@@ -52,11 +52,11 @@ composer phan
 
 **`src/JQGrammar.pegphp`** — PEG grammar source. After any edit, regenerate with `composer regen-jq-parser` to update `src/JQGrammar.php`.
 
-**`src/JQCompile.php`** — Walks the AST and returns a `Closure(mixed $input, JQEnv $env): Generator`. Each `compileXxx()` method handles one node type. The dispatch table is `compileNode()`. Node types `import`, `include`, and `module` are not yet implemented; everything else the grammar can produce is handled.
+**`src/JQCompile.php`** — Walks the AST and returns a `Closure(mixed $input, JQEnv $env): Generator`. Each `compileXxx()` method handles one node type. The dispatch table is `compileNode()`. Node types `import`, `include`, and `module` are not yet implemented; everything else the grammar can produce is handled. Also contains the public static helpers `getAtPath`, `setAtPath`, `deleteAtPath`, and `arraySubarraySearch` used by builtins in `JQTopLevelEnv`.
 
 **`src/JQTopLevelEnv.php`** — Native PHP builtins (arity-0 as bare Filters, arity-N as factory closures). Add new builtins here, not to `builtin.jq` (keep that close to upstream). The `builtins/0` snapshot is taken before adding itself, so new entries appear automatically.
 
-**`src/JQUtils.php`** — Shared helpers: type checking (`checkString`, `checkNumber`, …), `typeName`, `toBoolean`, `isNumber`, `jsonEncode`/`jsonDecode`, `add`/`subtract`/`multiply`/`divide`, `compare`, `setAtPath`, `deleteAtPath`.
+**`src/JQUtils.php`** — Shared helpers: type checking (`checkString`, `checkNumber`, …), `typeName`, `toBoolean`, `isNumber`, `jsonEncode`/`jsonDecode`, `add`/`subtract`/`multiply`/`divide`, `compare`.
 
 **`src/JQEnv.php`** / **`src/JQLazyEnv.php`** — Environment chain. `JQLazyEnv` defers loading `builtin.jq` until first use.
 
@@ -81,7 +81,7 @@ composer phan
 - **Binop generator order**: right operand is the outer loop, left is the inner loop (matches jq semantics). `and`/`or` are the opposite (left-outer) with short-circuit.
 - **Pattern variables** (`var_pattern`, `array_pattern`, `obj_pattern`, `alt_pattern`) are compiled by `compilePattern()`, not `compileNode()`.
 - **`foreach EXPR as $pat (init; update; extract)`**: `$pat` is visible in `update` and `extract` but NOT in `init`.
-- **`_strindices/1`** returns Unicode codepoint offsets (matching jq PR #3065, not the byte offsets of the jq 1.7 binary). Implemented with `explode()` for O(N) performance.
+- **`_strindices/1`** returns Unicode codepoint offsets (matching jq PR #3065, not the byte offsets of the jq 1.7 binary). Implemented with `preg_split()` on a lookahead pattern `(?=NEEDLE)` to find overlapping matches; `mb_strlen()` on each piece accumulates codepoint offsets in O(N) time.
 
 ### Path mode
 
