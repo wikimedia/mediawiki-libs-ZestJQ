@@ -7,34 +7,37 @@ use Closure;
 use LogicException;
 
 /**
- * Subclass of JQEnv used in path mode to trace the
- * path corresponding to values collected, in addition
- * to the usual functions of an Env.
+ * Subclass of JQEnv used in path mode to trace the path corresponding to
+ * values collected, in addition to the usual functions of an Env.
+ *
+ * Two-parent design: $parent (inherited from JQEnv) is always a plain JQEnv
+ * used exclusively for variable lookups — lookup() reaches it in one step.
+ * $pathParent is the previous JQPathEnv in the path chain, used exclusively
+ * by getPath(). The two chains are completely independent, so binding depth
+ * and path depth do not affect each other's performance.
  */
 class JQPathEnv extends JQEnv {
 
 	public function __construct(
 		?JQEnv $parent,
 		IOContext $io,
-		array $defs,
-		/** The single path segment stored at this level. (First segment is
-		 * a sentinel `false`.)
-		 */
-		private mixed $pathKey,
-		/** Whether this path key is valid (some JQEnv are created for
-		 * bindings, not to extend a path).
-		 */
-		private bool $pathValid,
+		/** Previous JQPathEnv in the path chain; null at the root. */
+		private readonly ?JQPathEnv $pathParent,
+		/** The single path segment stored at this level. */
+		private readonly mixed $pathKey,
+		/** Whether this node contributes a key to the path (false for binding nodes). */
+		private readonly bool $pathValid,
 	) {
-		parent::__construct( $parent, $io, $defs );
+		parent::__construct( $parent, $io );
 	}
 
 	/** @inheritDoc */
 	public function bind( string $name, int $arity, Closure $fn ): self {
-		$key = "{$name}/{$arity}";
-		return new JQPathEnv( $this, $this->io, [
-			$key => $fn,
-		], false, false );
+		// Insert the binding into the plain-JQEnv binding-parent chain so
+		// that lookup() stays O(1), then return a new JQPathEnv at the same
+		// path position (same pathParent/pathKey/pathValid).
+		$newEnv = $this->parent->bind( $name, $arity, $fn );
+		return new self( $newEnv, $this->io, $this->pathParent, $this->pathKey, $this->pathValid );
 	}
 
 	/** @inheritDoc */
@@ -46,31 +49,41 @@ class JQPathEnv extends JQEnv {
 	 * @inheritDoc
 	 * @return never
 	 */
+	// @phan-suppress-next-line PhanUnusedPublicMethodParameter
 	public function enterPathMode(): JQPathEnv {
+		throw new LogicException( 'already in path mode' );
+	}
+
+	/**
+	 * @inheritDoc
+	 * @return never
+	 */
+	// @phan-suppress-next-line PhanUnusedPublicMethodParameter
+	public function maybeEnterPathMode( JQEnv $parent ): JQEnv {
 		throw new LogicException( 'already in path mode' );
 	}
 
 	/** @inheritDoc */
 	public function appendPath( mixed $key ): self {
-		return new self( $this, $this->io, [], $key, true );
+		// Binding parent is unchanged; extend the path chain by one step.
+		return new self( $this->parent, $this->io, $this, $key, true );
 	}
 
 	/** @inheritDoc */
 	public function leavePathMode(): JQEnv {
-		// *not* a JQPathEnv
-		return new JQEnv( $this, $this->io, [] );
+		// O(1): return the plain-JQEnv binding parent directly, no allocation.
+		return $this->parent ??
+			throw new LogicException( 'JQPathEnv has no binding parent' );
 	}
 
 	/**
 	 * Reconstruct the full path array for this env.
-	 * Segments are gathered bottom-up (O(N) push) and then reversed once.
+	 * Traverses the $pathParent chain (one step per path segment) and reverses once.
 	 * @inheritDoc
 	 */
 	public function getPath(): array {
 		$r = [];
-		// Note that we don't add the path key corresponding to the
-		// JQPathEnvs where the pathValid flag isn't set.
-		for ( $p = $this; $p?->isPathMode(); $p = $p->parent ) {
+		for ( $p = $this; $p !== null; $p = $p->pathParent ) {
 			if ( $p->pathValid ) {
 				$r[] = $p->pathKey;
 			}

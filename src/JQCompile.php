@@ -144,22 +144,10 @@ class JQCompile {
 		return static function ( mixed $input, JQEnv $env ) use ( $leftFn, $rightFn ): Generator {
 			foreach ( $leftFn( $input, $env ) as $item ) {
 				[ $nextEnv, $mid ] = $env->maybeUnwrapPath( $item );
-				if ( $env->isPathMode() ) {
-					// Re-root the accumulated path onto $env's binding chain.
-					// In path mode $nextEnv may be rooted at a different sentinel
-					// (e.g. from an n-arity def's arg wrapper), which would hide
-					// variable bindings in $env (such as recursive defs).  Since
-					// arg wrappers always prefix their fresh sentinel with
-					// $env->getPath(), $nextEnv->getPath() always returns the full
-					// path from the input root and can safely be re-applied here.
-					$rerooted = $env->leavePathMode()->enterPathMode();
-					foreach ( $nextEnv->getPath() as $key ) {
-						$rerooted = $rerooted->appendPath( $key );
-					}
-					yield from $rightFn( $mid, $rerooted );
-				} else {
-					yield from $rightFn( $mid, $nextEnv );
-				}
+				// Re-root: keep $env's binding chain but carry $nextEnv's
+				// accumulated path so the right side extends from the correct
+				// position.  O(1) — no loop over path segments needed.
+				yield from $rightFn( $mid, $env->leavePathMode()->maybeEnterPathMode( $nextEnv ) );
 			}
 		};
 	}
@@ -297,13 +285,8 @@ class JQCompile {
 					// Propagate path mode from the call site into the body (same as
 					// n-arity defs) so that structural operations inside the def
 					// yield path-wrapped values when invoked inside path/1.
-					$effectiveEnv = $defEnvRef->leavePathMode();
-					if ( $e->isPathMode() ) {
-						$effectiveEnv = $effectiveEnv->enterPathMode();
-						foreach ( $e->getPath() as $key ) {
-							$effectiveEnv = $effectiveEnv->appendPath( $key );
-						}
-					}
+					$effectiveEnv = $defEnvRef->leavePathMode()
+						->maybeEnterPathMode( $e );
 					yield from $bodyFn( $in, $effectiveEnv );
 				};
 				$newEnv = $env->bind( $name, 0, $binding );
@@ -325,18 +308,10 @@ class JQCompile {
 						$argFn = $argFns[$i];
 						$bodyEnv = $bodyEnv->bind( $pName, 0,
 							static function ( mixed $argIn, JQEnv $env ) use ( $argFn, $callEnv ): Generator {
-								$effectiveEnv = $callEnv->leavePathMode();
-								if ( $env->isPathMode() ) {
-									// Re-root the accumulated path onto $callEnv so that
-									// call-site variable bindings and path mode are both
-									// preserved.  Strip any path mode from $callEnv first
-									// so enterPathMode() doesn't throw when called from
-									// nested path-mode contexts.
-									$effectiveEnv = $effectiveEnv->enterPathMode();
-									foreach ( $env->getPath() as $key ) {
-										$effectiveEnv = $effectiveEnv->appendPath( $key );
-									}
-								}
+								$effectiveEnv = $callEnv->leavePathMode()
+									// Re-root: call-site bindings ($callEnv) with the
+									// path accumulated so far in the body ($env).
+									->maybeEnterPathMode( $env );
 								yield from $argFn( $argIn, $effectiveEnv );
 							}
 						);
@@ -344,15 +319,7 @@ class JQCompile {
 					// Propagate path mode from the call site into the body so that
 					// structural operations inside the def (identity, field, iter…)
 					// yield path-wrapped values when invoked inside path/1.
-					if ( $callEnv->isPathMode() ) {
-						$bodyPathEnv = $bodyEnv->enterPathMode();
-						foreach ( $callEnv->getPath() as $key ) {
-							$bodyPathEnv = $bodyPathEnv->appendPath( $key );
-						}
-						yield from $bodyFn( $in, $bodyPathEnv );
-					} else {
-						yield from $bodyFn( $in, $bodyEnv );
-					}
+					yield from $bodyFn( $in, $bodyEnv->maybeEnterPathMode( $callEnv ) );
 				};
 			};
 			// @phan-suppress-next-line PhanTypeMismatchArgumentSuperType

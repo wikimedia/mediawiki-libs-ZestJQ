@@ -48,8 +48,17 @@ class JQTopLevelEnv extends JQEnv {
 		'Z' => 'T', 'z' => 'O', 's' => 'U',
 	];
 
+	/** @var array<string,Closure> */
+	private array $builtins;
+
 	public function __construct( IOContext $io ) {
-		parent::__construct( null, $io, self::buildNativeBuiltins() );
+		parent::__construct( null, $io );
+		$this->builtins = self::buildNativeBuiltins();
+	}
+
+	/** @inheritDoc */
+	public function lookup( string $name, int $arity ): ?Closure {
+		return $this->builtins["{$name}/{$arity}"] ?? null;
 	}
 
 	/** @return array<string,Closure> */

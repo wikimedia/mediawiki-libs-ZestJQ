@@ -21,20 +21,17 @@ use LogicException;
  * getPath() walks up the chain and reconstructs the full array once, at the
  * point where path/1 reads it.
  */
-class JQEnv {
+abstract class JQEnv {
 
 	private static ?JQEnv $stdEnv = null;
 
 	/**
 	 * @param ?JQEnv $parent Parent binding
 	 * @param IOContext $io Shared I/O context (same object across all derived envs)
-	 * @param array<string,?Closure(mixed,JQEnv):Generator> $defs Compiled functions keyed "name/arity"
-	 *   e.g. "map/1", "length/0", "foo::bar/2"
 	 */
 	public function __construct(
 		protected readonly ?JQEnv $parent,
 		public readonly IOContext $io,
-		protected array $defs = [],
 	) {
 	}
 
@@ -48,11 +45,8 @@ class JQEnv {
 	 * @param int $arity Number of filter arguments
 	 * @param Closure(mixed,JQEnv):Generator $fn Compiled Filter
 	 */
-	public function bind( string $name, int $arity, Closure $fn ): self {
-		$key = "{$name}/{$arity}";
-		return new self( $this, $this->io, [
-			$key => $fn,
-		] );
+	public function bind( string $name, int $arity, Closure $fn ): JQEnv {
+		return new JQBindEnv( $this, $this->io, "{$name}/{$arity}", $fn );
 	}
 
 	/**
@@ -65,12 +59,7 @@ class JQEnv {
 	 *   null if the binding doesn't exists
 	 */
 	public function lookup( string $name, int $arity ): ?Closure {
-		$key = "{$name}/{$arity}";
-		if ( !array_key_exists( $key, $this->defs ) ) {
-			// look up in parent, and cache it here.
-			$this->defs[$key] = $this->parent?->lookup( $name, $arity );
-		}
-		return $this->defs[$key];
+		return $this->parent?->lookup( $name, $arity );
 	}
 
 	/**
@@ -107,14 +96,28 @@ class JQEnv {
 	}
 
 	/**
-	 * Return a new env that is the root of a fresh path-collection
-	 * context.  The returned env returns true from ::isPathMode() and
-	 * has an empty path; $this becomes the parent for variable
-	 * lookups but is NOT itself in path mode, so getPath() stops
-	 * here.
+	 * Return a new env that is the root of a fresh path-collection context.
+	 * The returned env is in path mode with an empty path.
 	 */
 	public function enterPathMode(): JQPathEnv {
-		return new JQPathEnv( $this, $this->io, [], false, false );
+		return new JQPathEnv( $this, $this->io, null, false, false );
+	}
+
+	/**
+	 * If $parent is in path mode, then enter path mode with $parent
+	 * as the path parent, so that getPath() chains through it.  This
+	 * is used for re-rooting when threading path context across
+	 * def/pipe boundaries).
+	 *
+	 * @param JQEnv $pathParent Existing path chain which we would
+	 *  re-root onto, if it is a JQPathEnv.
+	 */
+	public function maybeEnterPathMode( JQEnv $pathParent ): JQEnv {
+		if ( $pathParent->isPathMode() ) {
+			// @phan-suppress-next-line PhanTypeMismatchArgument
+			return new JQPathEnv( $this, $this->io, $pathParent, false, false );
+		}
+		return $this;
 	}
 
 	/**
