@@ -87,32 +87,41 @@ composer phan
 
 `path/1` is implemented by running its argument filter in **path mode**, represented by the `JQPathEnv` subclass of `JQEnv`.
 
-**Representation.** In path mode, structural generators yield `[$pathEnv, $value]` pairs instead of bare values. `$pathEnv` is a `JQPathEnv` whose chain encodes the accumulated path as a linked list of single-key tail segments; `getPath()` walks the chain bottom-up (pushing to a reverse array, then reversing once) to reconstruct the full path array in O(N) time without O(N²) array spreading at each step.
+**Representation.** In path mode, structural generators yield `[$pathEnv, $value]` pairs instead of bare values. `$pathEnv` is a `JQPathEnv` whose `$pathParent` chain encodes the accumulated path as a linked list of single-key tail segments; `getPath()` traverses the `$pathParent` chain (pushing keys bottom-up, then reversing once) to reconstruct the full path array in O(N) time.
 
-`JQPathEnv` carries a single `$pathKey` field per node. The root `JQPathEnv` created by `enterPathMode()` uses `false` as a sentinel key so that `getPath()` can stop at the right level (it collects keys while `$p->parent->isPathMode()` is true, so the sentinel's own key is never included).
+**Two-parent design.** `JQPathEnv` has two independent parent chains:
+- `$parent` (inherited from `JQEnv`): the plain-env binding chain, used exclusively by `lookup()` and `leavePathMode()`.
+- `$pathParent`: the previous `JQPathEnv` in the path chain, used exclusively by `getPath()`. `null` at the root.
+
+The root `JQPathEnv` created by `enterPathMode()` has `$pathParent = null` and `$pathValid = false`. `appendPath($key)` creates a new `JQPathEnv` with `$pathValid = true`, extending the `$pathParent` chain by one step while leaving `$parent` unchanged. Binding depth and path depth are therefore completely independent.
+
+`JQBindEnv` (returned by `JQEnv::bind()`) is a plain-env subclass that stores one `(key, binding)` pair. When `JQPathEnv::bind()` is called, it inserts the new binding into the plain-env `$parent` chain and returns a new `JQPathEnv` at the same path position.
 
 **Path mode API — `JQEnv` (normal mode) vs `JQPathEnv` (path mode):**
 
 | Method | `JQEnv` (normal) | `JQPathEnv` (path) |
 |--------|------------------|--------------------|
 | `isPathMode()` | `false` | `true` |
-| `enterPathMode()` | returns new `JQPathEnv` (sentinel root) | throws `LogicException` |
-| `appendPath($key)` | returns `$this` (no-op, no allocation) | returns new `JQPathEnv` child storing `$key` |
-| `leavePathMode()` | returns `$this` (no-op, no allocation) | returns new plain `JQEnv` |
-| `getPath()` | throws `LogicException` | walks chain bottom-up, returns reversed array |
+| `enterPathMode()` | returns new `JQPathEnv` (empty root) | throws `LogicException` |
+| `maybeEnterPathMode($p)` | if `$p->isPathMode()`, returns new `JQPathEnv` rooted at `$p`; else returns `$this` | throws `LogicException` |
+| `appendPath($key)` | returns `$this` (no-op, no allocation) | returns new `JQPathEnv` extending `$pathParent` chain |
+| `leavePathMode()` | returns `$this` (no-op, no allocation) | returns `$this->parent` directly (O(1), no allocation) |
+| `getPath()` | throws `LogicException` | traverses `$pathParent` chain, returns reversed array |
 | `maybeWithPath($v)` | returns `$v` unchanged | returns `[$this, $v]` |
-| `maybeUnwrapPath($item)` | returns `[$this, $item]` | returns `$item` (already a pair) |
+| `maybeUnwrapPath($item)` | returns `[$this, $item]` | unpacks `[$pathEnv, $value]` pair |
 | `extractPath($item)` | `$item[0]->getPath()` (same in both) | same |
 
 **How compile\* methods participate:**
 - `compileIdentity`: `yield $env->maybeWithPath($input)` — path does not extend.
-- `compileField`, `compileIndex`, `compileIter`, `compileSlice`: call `$env->appendPath($key)->maybeWithPath($value)` so each access extends the path by one segment. The key/bound expressions for index and slice are evaluated with `leavePathMode()`.
-- `compilePipe`: uses `maybeUnwrapPath` to unpack each left-side output and forward the path env to the right side.
+- `compileField`, `compileIndex`, `compileIter`, `compileSlice`: unpack each input with `maybeUnwrapPath`, then call `$baseEnv->appendPath($key)->maybeWithPath($value)` so each access extends the path by one segment. The key/bound expressions for index and slice are evaluated with `leavePathMode()`.
+- `compilePipe`: unpacks each left-side output with `maybeUnwrapPath` to get `[$nextEnv, $mid]`, then re-roots the right side: `$env->leavePathMode()->maybeEnterPathMode($nextEnv)`. This is O(1) — no loop over path segments.
 - `compileIf`: evaluates the condition with `leavePathMode()` so that `select(f)` (defined as `if f then . else empty end`) works correctly inside path expressions.
 - `compileTryCatch`: runs the catch handler with `leavePathMode()` since the error value is not a path output.
-- `compileComma`, `compileDef`, `compileCall`: no changes needed — the path-mode flag flows naturally through `$env`.
+- `compileComma`: no changes needed — path-mode flag flows through `$env`.
+- `compileDef` (0-arity): the body closure re-roots via `$defEnvRef->leavePathMode()->maybeEnterPathMode($callSiteEnv)` so the body can yield path-wrapped values when invoked inside `path/1`.
+- `compileDef` (n-arity): each filter param closure re-roots via `$callEnv->leavePathMode()->maybeEnterPathMode($bodyEnv)`, carrying the path position accumulated in the body back through the param; the body itself is entered via `$bodyEnv->maybeEnterPathMode($callEnv)`.
 
-**Filter parameters across `def` boundaries.** When a filter parameter `f` is called inside `path(f)`, the binding closure in `compileDef` normally discards the runtime env and uses the captured `$callEnv`. When `$env->isPathMode()` is true it instead re-roots the accumulated path onto `$callEnv` via `$callEnv->enterPathMode()` followed by `appendPath()` for each segment returned by `$env->getPath()`. This preserves both the call-site variable bindings and the path prefix (typically 0–2 segments deep).
+**Filter parameters across `def` boundaries.** Re-rooting (`leavePathMode()->maybeEnterPathMode($other)`) is O(1): it creates one new `JQPathEnv` node whose `$parent` is the current env's binding chain and whose `$pathParent` is `$other`'s path chain root. No loop over path segments is needed. This is the replacement for the old `getPath()` + loop + `appendPath()` pattern.
 
 **Slice paths.** `compileSlice` in path mode yields path keys of the form `(object)['start' => $from, 'end' => $to]` (raw unnormalized bounds). `deleteAtPath` recognises a `stdClass` key as a slice and calls `JQUtils::normalizeSliceIdx()` (now public) to resolve the bounds against the actual array length before splicing.
 
