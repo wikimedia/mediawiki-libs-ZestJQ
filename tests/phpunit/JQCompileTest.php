@@ -42,8 +42,8 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			//   position.  Correct handling requires path adjustment after each
 			//   deletion (tracking how each splice shifts later indices), which is
 			//   not yet implemented.
-			1173, 1184 =>
-			'del() has bugs with error messages and overlapping indices',
+			1184 =>
+			'del() has a bug with mixed integer+slice overlapping deletion',
 
 			// various error message format differences
 			// 2014: large-float number representation in error messages differs
@@ -248,6 +248,16 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 				) ) {
 					$req = $m[2] === 'number' ? 'array' : 'object';
 					return "setAtPath requires an {$req} input, got {$m[1]}";
+				}
+				return $v;
+			},
+
+			// delpaths uses checkArray which says "delpaths requires an array input, got TYPE";
+			// jq says "Paths must be specified as an array"
+			1173 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && str_starts_with( $v, 'delpaths requires an array input' ) ) {
+					return 'Paths must be specified as an array';
 				}
 				return $v;
 			},
