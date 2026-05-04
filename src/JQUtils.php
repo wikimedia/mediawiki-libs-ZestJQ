@@ -373,7 +373,10 @@ class JQUtils {
 			return $a * $b;
 		}
 		if ( is_string( $a ) && self::isNumber( $b ) ) {
-			$b = (int)$b;
+			if ( is_float( $b ) && is_nan( $b ) ) {
+				return null;
+			}
+			$b = (int)floor( $b );
 			if ( $b < 0 ) {
 				return null;
 			}

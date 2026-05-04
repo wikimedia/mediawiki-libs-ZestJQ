@@ -53,10 +53,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1548, 1581, 1585, 1589 =>
 			'indices/1 does not support overlapping string matches or array-needle searches on arrays',
 
-			// string * fractional/NaN number behavior
-			1625, 1629 =>
-			'String repetition with fractional or NaN multiplier differs from jq behavior',
-
 			// bsearch/1 not yet implemented
 			1827, 1835, 1839 =>
 			'bsearch/1 not yet implemented',
