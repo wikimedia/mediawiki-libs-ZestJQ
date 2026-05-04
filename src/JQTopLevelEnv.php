@@ -5,6 +5,9 @@ declare( strict_types = 1 );
 namespace Wikimedia\Zest;
 
 use Closure;
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
 use Generator;
 
 /**
@@ -33,6 +36,17 @@ class JQTopLevelEnv extends JQEnv {
 		'/^' . self::WS_CLASS . '+/u';
 	private const TRIM_RIGHT =
 		'/' . self::WS_CLASS . '+$/u';
+
+	/**
+	 * Map between C strftime/strptime specifier letters and PHP date() characters.
+	 */
+	private const TIME_SPEC_FROM_C_MAP = [
+		'Y' => 'Y', 'y' => 'y', 'm' => 'm', 'd' => 'd',
+		'H' => 'H', 'I' => 'h', 'M' => 'i', 'S' => 's',
+		'A' => 'l', 'a' => 'D', 'B' => 'F', 'b' => 'M', 'h' => 'M',
+		'p' => 'A', 'P' => 'a', 'u' => 'N', 'w' => 'w',
+		'Z' => 'T', 'z' => 'O', 's' => 'U',
+	];
 
 	public function __construct( IOContext $io ) {
 		parent::__construct( null, $io, self::buildNativeBuiltins() );
@@ -575,6 +589,83 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 
+		// -----------------------------------------------------------------------
+		// Date/time builtins
+		// -----------------------------------------------------------------------
+
+		$utc = new DateTimeZone( 'UTC' );
+		$localtz = new DateTimeZone( date_default_timezone_get() );
+
+		$defs['now/0'] = static function ( mixed $input, JQEnv $env ): Generator {
+			yield microtime( true );
+		};
+
+		$defs['gmtime/0'] = static function ( mixed $input, JQEnv $env ) use ( $utc ): Generator {
+			$ts = JQUtils::checkNumber( 'gmtime', $input );
+			$dt = ( new DateTimeImmutable( '@' . (int)$ts ) )
+				->setTimezone( $utc );
+			yield self::dateTimeToJqArray( $dt, (float)$ts );
+		};
+
+		$defs['mktime/0'] = static function ( mixed $input, JQEnv $env ) use ( $utc ): Generator {
+			$input = self::checkTmArray( 'mktime', $input );
+			yield self::jqArrayToDateTime( $input, $utc )->getTimestamp();
+		};
+
+		$defs['strftime/1'] = static function ( array $argFns ) use ( $utc ): Closure {
+			$fmtFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $utc, $fmtFn ): Generator {
+				foreach ( $fmtFn( $input, $env ) as $fmt ) {
+					$fmt = JQUtils::checkString( 'strftime/1', $fmt );
+					if ( JQUtils::isNumber( $input ) ) {
+						$dt = ( new DateTimeImmutable( '@' . (int)$input ) )
+							->setTimezone( $utc );
+					} else {
+						$input = self::checkTmArray( 'strftime/1', $input );
+						$dt = self::jqArrayToDateTime( $input, $utc );
+					}
+					yield self::strftimeFmt( $fmt, $dt );
+				}
+			};
+		};
+
+		$defs['strflocaltime/1'] = static function ( array $argFns ) use ( $localtz ): Closure {
+			$fmtFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $localtz, $fmtFn ): Generator {
+				foreach ( $fmtFn( $input, $env ) as $fmt ) {
+					$fmt = JQUtils::checkString( 'strflocaltime/1', $fmt );
+					if ( JQUtils::isNumber( $input ) ) {
+						$dt = ( new DateTimeImmutable( '@' . (int)$input ) )
+							->setTimezone( $localtz );
+					} else {
+						$input = self::checkTmArray( 'strflocaltime/1', $input );
+						$dt = self::jqArrayToDateTime( $input, $localtz );
+					}
+					yield self::strftimeFmt( $fmt, $dt );
+				}
+			};
+		};
+
+		$defs['strptime/1'] = static function ( array $argFns ) use ( $utc ): Closure {
+			$fmtFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $utc, $fmtFn ): Generator {
+				foreach ( $fmtFn( $input, $env ) as $fmt ) {
+					[ $input, $fmt ] = JQUtils::checkStrings( 'strptime/1', $input, $fmt );
+					$phpFmt = self::cFmtToPhpParseFmt( $fmt );
+					$dt = DateTimeImmutable::createFromFormat(
+						'!' . $phpFmt, $input, $utc
+					);
+					if ( $dt === false ) {
+						throw new JQError(
+							'date ' . JQUtils::jsonEncode( $input ) .
+							' does not match format ' . JQUtils::jsonEncode( $fmt )
+						);
+					}
+					yield self::dateTimeToJqArray( $dt );
+				}
+			};
+		};
+
 		// builtins/0 — list public native builtin names (no _ prefix; populated
 		// after the rest are defined so builtins/0 itself is excluded)
 		$names = array_values( array_filter(
@@ -650,6 +741,125 @@ class JQTopLevelEnv extends JQEnv {
 			};
 		};
 	}
+
+	// -----------------------------------------------------------------------
+	// Date/time helpers
+	// -----------------------------------------------------------------------
+
+	/**
+	 * Check that a jq broken-down time array has all-numeric (non-NaN) elements.
+	 * Short arrays are allowed; the missing tail elements default to
+	 * 1970-01-01T00:00:00.00.
+	 *
+	 * @return list<int|float>
+	 */
+	private static function checkTmArray( string $who, mixed $v ): array {
+		$defaults = [ 1970, 0, 1, 0, 0, 0, 0, 0 ];
+		$v = JQUtils::checkArray( $who, $v );
+		for ( $i = 0; $i < 8; $i++ ) {
+			$v[$i] = JQUtils::checkNumber(
+				"{$who} element {$i}", $v[$i] ?? $defaults[$i]
+			);
+			if ( is_float( $v[$i] ) && is_nan( $v[$i] ) ) {
+				throw new JQError( "{$who} element {$i} is NaN" );
+			}
+		}
+		return $v;
+	}
+
+	/**
+	 * Convert a jq broken-down time array to a DateTimeImmutable in the
+	 * given time zone.
+	 * Array layout: [year, month(0-based), day(1-based), hour, min, sec+frac, wday, yday].
+	 * Short arrays are padded with zeros (day defaults to 1).
+	 */
+	private static function jqArrayToDateTime( array $arr, DateTimeZone $tz ): DateTimeImmutable {
+		// @phan-suppress-next-line PhanUnusedVariable serves as documentation
+		[ $year, $month, $day, $hour, $min, $sec, $weekday, $yearday ] = $arr;
+		// @phan-suppress-next-line PhanTypeMismatchReturnNullable
+		return DateTimeImmutable::createFromFormat(
+			'Y-m-d H:i:s',
+			// Month is 0-based, convert to 1-based
+			sprintf( '%04d-%02d-%02d %02d:%02d:%02d', $year, $month + 1, $day, $hour, $min, $sec ),
+			$tz
+		);
+	}
+
+	/**
+	 * Convert a DateTimeInterface to a jq 8-element broken-down time array.
+	 * $fracSecs is the original float Unix timestamp; its fractional part is
+	 * added to the seconds field (matching C's tm2jv behaviour).
+	 */
+	private static function dateTimeToJqArray( DateTimeInterface $dt, float $fracSecs = 0.0 ): array {
+		$frac = fmod( $fracSecs, 1.0 );
+		return [
+			(int)$dt->format( 'Y' ),
+			(int)$dt->format( 'n' ) - 1, // 1-based → 0-based
+			(int)$dt->format( 'j' ),
+			(int)$dt->format( 'G' ),
+			(int)$dt->format( 'i' ),
+			(int)$dt->format( 's' ) + $frac,
+			(int)$dt->format( 'w' ), // 0=Sunday
+			(int)$dt->format( 'z' ), // 0-based yearday
+		];
+	}
+
+	/**
+	 * Format a DateTime using a C strftime-style format string.
+	 */
+	private static function strftimeFmt( string $fmt, DateTimeInterface $dt ): string {
+		$out = '';
+		for ( $i = 0, $len = strlen( $fmt ); $i < $len; $i++ ) {
+			if ( $fmt[$i] !== '%' || $i + 1 >= $len ) {
+				$out .= $fmt[$i];
+			} else {
+				$spec = $fmt[++$i];
+				$cspec = self::TIME_SPEC_FROM_C_MAP[$spec] ?? null;
+				$out .= match ( $spec ) {
+					'%' => '%',
+					'n' => "\n",
+					't' => "\t",
+					'j' => sprintf( '%03d', (int)$dt->format( 'z' ) + 1 ),
+					'e' => sprintf( '%2d', (int)$dt->format( 'j' ) ),
+					'T' => $dt->format( 'H:i:s' ),
+					'D' => $dt->format( 'm/d/y' ),
+					'R' => $dt->format( 'H:i' ),
+					'F' => $dt->format( 'Y-m-d' ),
+					default => $cspec ? $dt->format( $cspec ) : '',
+				};
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Convert a C strptime format string to a PHP createFromFormat format string.
+	 * Alphabetic literal characters are escaped with \ so PHP doesn't treat them
+	 * as format specifiers.
+	 */
+	private static function cFmtToPhpParseFmt( string $fmt ): string {
+		$out = '';
+		for ( $i = 0, $len = strlen( $fmt ); $i < $len; $i++ ) {
+			$ch = $fmt[$i];
+			if ( $ch !== '%' || $i + 1 >= $len ) {
+				$out .= ctype_alpha( $ch ) ? ( '\\' . $ch ) : $ch;
+			} else {
+				$spec = $fmt[++$i];
+				$cspec = self::TIME_SPEC_FROM_C_MAP[ $spec ] ?? null;
+				$out .= match ( $spec ) {
+					'%' => '\\%',
+					'n' => "\n",
+					't' => "\t",
+					default => $cspec ?? '',
+				};
+			}
+		}
+		return $out;
+	}
+
+	// -----------------------------------------------------------------------
+	// Other helpers
+	// -----------------------------------------------------------------------
 
 	private static function jqContains( mixed $a, mixed $b ): bool {
 		if ( is_string( $a ) && is_string( $b ) ) {

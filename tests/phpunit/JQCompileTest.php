@@ -62,11 +62,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			1827, 1835, 1839 =>
 			'bsearch/1 not yet implemented',
 
-			// date/time builtins not yet implemented
-			1843, 1847, 1851, 1855, 1859, 1863, 1868, 1872, 1876, 1881, 1885,
-			1889, 1895, 2548 =>
-			'Date/time builtins not yet implemented (gmtime, mktime, strftime, strptime, strflocaltime)',
-
 			// PHP uses exact int64 for integers, so values like 13911860366432393 are
 			// preserved exactly; jq without decnum rounds them to the nearest double
 			// (13911860366432392). Tests expect the jq double-rounded value.
@@ -232,6 +227,32 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 					$v, $m
 				) ) {
 					return $m[1] . ' requires string inputs';
+				}
+				return $v;
+			},
+
+			// invalid tm array: our checkNumber error says "FUNC element N requires
+			// a number input, got TYPE"; jq says "FUNC requires parsed datetime inputs"
+			1868, 1872, 1876 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && preg_match(
+					'/^(strftime\/1|strflocaltime\/1|mktime)\b.*\brequires.*input,\s*got/',
+					$v, $m
+				) ) {
+					return $m[1] . ' requires parsed datetime inputs';
+				}
+				return $v;
+			},
+
+			// invalid format argument: our checkString says "FUNC requires string
+			// inputs, got TYPE"; jq says "FUNC requires a string format"
+			1881, 1885 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && preg_match(
+					'/^(strftime\/1|strflocaltime\/1) requires string inputs/',
+					$v, $m
+				) ) {
+					return $m[1] . ' requires a string format';
 				}
 				return $v;
 			},
