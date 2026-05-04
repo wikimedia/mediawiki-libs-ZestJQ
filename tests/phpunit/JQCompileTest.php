@@ -34,9 +34,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 
 			// del() bugs:
 			// 1173: wrong error message for non-array arg to delpaths
-			// 1163, 1177: null nodes created for paths through missing object keys
-			//   (deleteAtPath clones the object and sets the missing key to null
-			//   instead of leaving it absent when the path doesn't exist)
 			// 1184: mixed integer+slice deletion — e.g. del(.[1],.[2],[-3:9]):
 			//   slice keys (stdClass, rank 6) sort before integer keys (rank 3)
 			//   in reversed JQUtils::compare, so slices are always deleted first;
@@ -46,8 +43,8 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			//   deletion (tracking how each splice shifts later indices), which is
 			//   not yet implemented.
 			// 1188, 1192: NaN index treated as index 0 instead of being ignored
-			1163, 1173, 1177, 1184, 1188, 1192 =>
-			'del() has bugs with error messages, missing-key paths, overlapping indices, and NaN indices',
+			1173, 1184, 1188, 1192 =>
+			'del() has bugs with error messages, overlapping indices, and NaN indices',
 
 			// various error message format differences
 			// 2014: large-float number representation in error messages differs

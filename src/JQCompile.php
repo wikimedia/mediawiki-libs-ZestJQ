@@ -1454,8 +1454,11 @@ class JQCompile {
 		$key = $path[$offset++];
 		if ( $offset < count( $path ) ) {
 			if ( is_string( $key ) && is_object( $container ) ) {
+				if ( !property_exists( $container, $key ) ) {
+					return $container;
+				}
 				$new       = clone $container;
-				$new->$key = self::deleteAtPath( $container->$key ?? null, $path, $offset );
+				$new->$key = self::deleteAtPath( $container->$key, $path, $offset );
 				return $new;
 			}
 			if ( JQUtils::isNumber( $key ) && is_array( $container ) ) {
