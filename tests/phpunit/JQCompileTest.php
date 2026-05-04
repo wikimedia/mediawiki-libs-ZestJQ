@@ -67,9 +67,9 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2196, 2200, 2204, 2211, 2215, 2219, 2224, 2241 =>
 			'Number representation at IEEE 754 double-precision boundary differs from jq: PHP preserves exact int64 values',
 
-			// NaN handling: has(nan) on arrays, fromjson for nan/NaN literals
-			1733, 2315, 2319, 2324 =>
-			'NaN handling differs from jq (has(nan) on array, fromjson does not accept nan literals)',
+			// NaN handling: tojson, fromjson for nan/NaN literals
+			2315, 2319, 2324 =>
+			'NaN handling differs from jq (tojson, fromjson does not accept nan literals)',
 
 			// debug/0 and input/0 not yet implemented
 			2337, 2341 =>
@@ -79,10 +79,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2403, 2407 =>
 			'implode does not replace out-of-range codepoints with U+FFFD replacement character',
 
-			// array slicing with float or NaN bounds uses truncation rather than floor
-			2435, 2439, 2443, 2467, 2471, 2475, 2479, 2483 =>
-			'Array slicing and indexing with float or NaN bounds differs from jq behavior',
-
 			// foreach with multiple initial values
 			2538 =>
 			'foreach with a multi-valued init expression not fully supported',
@@ -90,10 +86,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// JSON nesting and path depth limits not implemented
 			2558, 2563, 2568, 2593, 2602 =>
 			'JSON nesting depth limits and path depth limits not yet implemented',
-
-			// ? operator does not suppress errors from assignment with invalid key type
-			2086 =>
-			'Error suppression with ? on assignment with invalid key type does not produce empty output',
 
 			// error re-thrown inside try-catch propagates past outer generator yields
 			2359 =>
@@ -252,6 +244,16 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 					$v, $m
 				) ) {
 					return $m[1] . ' requires a string format';
+				}
+				return $v;
+			},
+
+			// setAtPath throws "setAtPath requires an array input, got string"
+			// when asked to update a string slice; jq says "Cannot update string slices"
+			2479 =>
+			static function ( mixed $v ): mixed {
+				if ( is_string( $v ) && str_starts_with( $v, 'setAtPath requires an array input' ) ) {
+					return 'Cannot update string slices';
 				}
 				return $v;
 			},

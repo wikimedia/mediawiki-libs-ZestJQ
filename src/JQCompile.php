@@ -907,7 +907,7 @@ class JQCompile {
 							continue;
 						}
 						$index = JQUtils::adjustIndex( 'index', $key, $base );
-						yield $baseEnv->appendPath( (int)$key )->maybeWithPath(
+						yield $baseEnv->appendPath( $key )->maybeWithPath(
 							( $index === null ) ? null : $base[$index]
 						);
 					} elseif ( !$opt ) {
@@ -1331,6 +1331,9 @@ class JQCompile {
 			// null is promoted to array
 			$container ??= [];
 			$container = JQUtils::checkArray( 'setAtPath', $container );
+			if ( is_float( $key ) && is_nan( $key ) ) {
+				throw new JQError( 'Cannot set array element at NaN index' );
+			}
 			$index = (int)$key;
 			if ( $index < 0 ) {
 				$index += count( $container );
@@ -1353,11 +1356,11 @@ class JQCompile {
 		}
 		// Slice-path key: (object)['start' => ..., 'end' => ...] produced by
 		// compileSlice in path mode.  Splices the replacement array into position.
-		if ( is_object( $key ) && is_array( $container ) ) {
-			JQUtils::assertIsList( 'setAtPath', $container );
+		if ( is_object( $key ) ) {
+			$container = JQUtils::checkArray( 'setAtPath', $container );
 			$len  = count( $container );
-			$f    = JQUtils::normalizeSliceIdx( $key->start ?? null, $len, 0 );
-			$t    = JQUtils::normalizeSliceIdx( $key->end ?? null, $len, $len );
+			$f    = JQUtils::normalizeSliceIdx( $key->start ?? null, $len, 0, floor: true );
+			$t    = JQUtils::normalizeSliceIdx( $key->end ?? null, $len, $len, ceil: true );
 			$repl = is_array( $newVal ) ? $newVal : [];
 			$newArr = $container;
 			array_splice( $newArr, $f, max( 0, $t - $f ), $repl );
@@ -1418,8 +1421,8 @@ class JQCompile {
 		if ( is_object( $key ) && is_array( $container ) ) {
 			JQUtils::assertIsList( 'deleteAtPath', $container );
 			$len = count( $container );
-			$f   = JQUtils::normalizeSliceIdx( $key->start ?? null, $len, 0 );
-			$t   = JQUtils::normalizeSliceIdx( $key->end ?? null, $len, $len );
+			$f   = JQUtils::normalizeSliceIdx( $key->start ?? null, $len, 0, floor: true );
+			$t   = JQUtils::normalizeSliceIdx( $key->end ?? null, $len, $len, ceil: true );
 			$newArr = $container;
 			array_splice( $newArr, $f, max( 0, $t - $f ) );
 			return array_values( $newArr );

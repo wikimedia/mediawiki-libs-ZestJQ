@@ -160,7 +160,11 @@ class JQUtils {
 
 	public static function adjustIndex( string $who, mixed $index, array $container ): ?int {
 		$container = self::assertIsList( $who, $container );
-		$index = (int)self::checkNumber( $who, $index );
+		$index = self::checkNumber( $who, $index );
+		if ( is_float( $index ) && is_nan( $index ) ) {
+			return null;
+		}
+		$index = (int)$index;
 		$length = count( $container );
 		if ( $index < 0 ) {
 			$index += $length;
@@ -445,21 +449,27 @@ class JQUtils {
 			/* do nothing (yield no value) */
 		} elseif ( is_string( $base ) ) {
 			$len = mb_strlen( $base );
-			$f = self::normalizeSliceIdx( $from, $len, 0 );
-			$t = self::normalizeSliceIdx( $to, $len, $len );
+			$f = self::normalizeSliceIdx( $from, $len, 0, floor: true );
+			$t = self::normalizeSliceIdx( $to, $len, $len, ceil: true );
 			yield mb_substr( $base, $f, max( 0, $t - $f ) );
 		} elseif ( is_array( $base ) ) {
 			$len = count( $base );
-			$f = self::normalizeSliceIdx( $from, $len, 0 );
-			$t = self::normalizeSliceIdx( $to, $len, $len );
+			$f = self::normalizeSliceIdx( $from, $len, 0, floor: true );
+			$t = self::normalizeSliceIdx( $to, $len, $len, ceil: true );
 			yield array_values( array_slice( $base, $f, max( 0, $t - $f ) ) );
 		} elseif ( !$opt ) {
 			throw new JQError( self::typeName( $base ) . ' cannot be sliced' );
 		}
 	}
 
-	public static function normalizeSliceIdx( mixed $idx, int $len, int $default ): int {
-		$i = (int)self::checkNumber( 'slice', $idx ?? $default );
+	public static function normalizeSliceIdx( mixed $idx, int $len, int $default, bool $floor = false, bool $ceil = false ): int {
+		$i = self::checkNumber( 'slice', $idx ?? $default );
+		if ( is_float( $i ) && is_nan( $i ) ) {
+			$i = $default;
+		} else {
+			// https://github.com/jqlang/jq/issues/2815
+			$i = (int)( $floor ? floor( $i ) : ( $ceil ? ceil( $i ) : $i ) );
+		}
 		if ( $i < 0 ) {
 			$i += $len;
 		}
