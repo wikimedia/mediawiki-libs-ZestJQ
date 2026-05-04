@@ -442,6 +442,15 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 				'[1,2]',
 				[ '[1,3,2,4]' ],
 			],
+			// Multi-value pattern: {(expr): $x} yields one binding per key; all
+			// bindings chain through the accumulator in order.
+			// jq: [foreach .[] as {("a","b"): $x} (0; . + $x)]
+			//   on [{"a":1,"b":2},{"a":10,"b":20}] → [1,3,13,33]
+			'multi-value pattern chains through acc' => [
+				'[foreach .[] as {("a","b"): $x} (0; . + $x)]',
+				'[{"a":1,"b":2},{"a":10,"b":20}]',
+				[ '[1,3,13,33]' ],
+			],
 		];
 	}
 

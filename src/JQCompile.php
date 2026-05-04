@@ -1126,7 +1126,8 @@ class JQCompile {
 					foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
 						// Yield each update value (or its extract); use the last as the
 						// new acc.  If update is empty, acc is unchanged and nothing is
-						// yielded for this step.
+						// yielded for this step.  Multiple pattern bindings per source
+						// value chain through the accumulator in order.
 						foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
 							$acc = $newAcc;
 							if ( $extractFn !== null ) {
@@ -1139,7 +1140,6 @@ class JQCompile {
 								yield $acc;
 							}
 						}
-						break; // patterns yield at most one binding
 					}
 				}
 			}
