@@ -1121,27 +1121,24 @@ class JQCompile {
 		$extractFn = $node['extract'] !== null ? $this->compileNode( $node['extract'] ) : null;
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $initFn, $updateFn, $patFn, $extractFn ): Generator {
 			$plainEnv = $env->leavePathMode();
-			$acc = null;
-			foreach ( $initFn( $input, $plainEnv ) as $initVal ) {
-				$acc = $initVal;
-				break;
-			}
-			foreach ( $srcFn( $input, $plainEnv ) as $val ) {
-				foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
-					foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
-						$acc = $newAcc;
+			foreach ( $initFn( $input, $plainEnv ) as $acc ) {
+				foreach ( $srcFn( $input, $plainEnv ) as $val ) {
+					foreach ( $patFn( $val, $plainEnv ) as $boundEnv ) {
+						foreach ( $updateFn( $acc, $boundEnv ) as $newAcc ) {
+							$acc = $newAcc;
+							break;
+						}
+						if ( $extractFn !== null ) {
+							foreach ( $extractFn( $acc, $boundEnv ) as $extracted ) {
+								JQUtils::assertNotPath( $extracted, $env );
+								yield $extracted;
+							}
+						} else {
+							JQUtils::assertNotPath( $acc, $env );
+							yield $acc;
+						}
 						break;
 					}
-					if ( $extractFn !== null ) {
-						foreach ( $extractFn( $acc, $boundEnv ) as $extracted ) {
-							JQUtils::assertNotPath( $extracted, $env );
-							yield $extracted;
-						}
-					} else {
-						JQUtils::assertNotPath( $acc, $env );
-						yield $acc;
-					}
-					break;
 				}
 			}
 		};

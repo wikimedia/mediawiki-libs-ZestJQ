@@ -75,10 +75,6 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			2403, 2407 =>
 			'implode does not replace out-of-range codepoints with U+FFFD replacement character',
 
-			// foreach with multiple initial values
-			2538 =>
-			'foreach with a multi-valued init expression not fully supported',
-
 			// JSON nesting and path depth limits not implemented
 			2558, 2563, 2568, 2593, 2602 =>
 			'JSON nesting depth limits and path depth limits not yet implemented',
