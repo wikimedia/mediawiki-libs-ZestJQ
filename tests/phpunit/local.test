@@ -3,48 +3,366 @@
 
 # These are local tests, specific to our PHP implementation.
 
-# Documenting that slices are visible in the output as objects,
-# that negative indices are not normalized in `path/1` output,
-# and that duplicates are not removed.
+####################################################################
+# Documenting path representation, as exposed by the `path` built-in
+####################################################################
+
+# Slices are reported as objects with {start:, end:} keys using the
+# raw (unnormalized) bounds; negative indices are not normalized to
+# positive; duplicate paths are not deduplicated.
 path(.[-3:9],.[-3],.[-3])
 null
 [{"start":-3,"end":9}]
 [-3]
 [-3]
 
-# Upstream is inconsistent in handling of negative array indices:
+###########################################################################
+# del() with mixed negative/positive indices and slices
+#
+# Upstream jq is inconsistent in handling of negative array indices:
 # https://github.com/jqlang/jq/issues/3538
+###########################################################################
+
+# top-level array: negative (.[-6] → index 4), positive, and duplicate
 del(.[-6],.[6],.[6])
 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 [0,1,2,3,5,7,8,9]
 
+# nested via positive root index: negative/positive/duplicate subpath
 del(.[0][-6],.[0][6],.[0][6])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,3,5,7,8,9]]
 
+# nested via negative root index: negative/positive/duplicate subpath
 del(.[-1][-6],.[-1][6],.[-1][6])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,3,5,7,8,9]]
 
-# if we mix positive and negative indices, we should still get the
-# same result
+# mixed positive and negative root indices into the same nested array
 del(.[-1][-6],.[0][6],.[-1][6])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,3,5,7,8,9]]
 
+# same paths as above, different expression order (should give same result)
 del(.[0][-6],.[-1][6],.[0][6])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,3,5,7,8,9]]
 
-# this should interact properly with slices as well
+# mixed indices and a slice: individual elements and slice range all removed
 del(.[0][-6],.[0][6],.[0][6],.[0][3:8])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,8,9]]
 
+# negative slice bounds with mixed indices
 del(.[0][-6],.[0][6],.[0][6],.[-1][-7:-2])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,1,2,8,9]]
 
+# negative root index with a positive slice subpath
 del(.[-1][-6],.[-1][6],.[-1][6],.[0][1:4])
 [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
 [[0,5,7,8,9]]
+
+####################################
+# setAtPath null container promotion
+####################################
+
+# int index promotes null to array
+.[0] = "val"
+null
+["val"]
+
+# int index pads gaps with null
+.[3] = "val"
+null
+[null,null,null,"val"]
+
+# string key promotes null to object
+.foo = "val"
+null
+{"foo":"val"}
+
+# nested string path cascades null objects
+.a.b = "val"
+null
+{"a":{"b":"val"}}
+
+# int then string path cascades null
+.[0].foo = "val"
+null
+[{"foo":"val"}]
+
+# string then int path cascades null
+.foo[0] = "val"
+null
+{"foo":["val"]}
+
+# update-assign promotes null to array
+.[0] |= . + 1
+null
+[1]
+
+# update-assign promotes null to object
+.foo |= . + 1
+null
+{"foo":1}
+
+# float index truncated toward zero (1.9 → 1), not rounded
+.[1.9] = "val"
+null
+[null,"val"]
+
+####################################################################
+# deleteAtPath array splicing (|= empty)
+#
+# jq's del/|= empty always splices the element out (shifts remaining
+# elements left, reducing length by 1); it never sets a slot to null.
+# Out-of-bounds indices (positive or negative) are silently ignored.
+# Float indices are truncated toward zero before resolving.
+#####################################################################
+
+# delete middle element
+.[2] |= empty
+[1,2,3,4,5]
+[1,2,4,5]
+
+# delete last element (positive index)
+.[4] |= empty
+[1,2,3,4,5]
+[1,2,3,4]
+
+# delete last element (negative index)
+.[-1] |= empty
+[1,2,3,4,5]
+[1,2,3,4]
+
+# delete middle element (negative index)
+.[-3] |= empty
+[1,2,3,4,5]
+[1,2,4,5]
+
+# delete first element
+.[0] |= empty
+[1,2,3,4,5]
+[2,3,4,5]
+
+# negative index that resolves to middle element
+.[-4] |= empty
+[1,2,3,4,5]
+[1,3,4,5]
+
+# out-of-bounds positive index is no-op
+.[10] |= empty
+[1,2,3]
+[1,2,3]
+
+# out-of-bounds negative index is no-op
+.[-4] |= empty
+[1,2,3]
+[1,2,3]
+
+# float index truncated toward zero before deletion
+.[1.9] |= empty
+[1,2,3]
+[1,3]
+
+# negative float truncated toward zero before deletion
+.[-1.9] |= empty
+[1,2,3]
+[1,2]
+
+###########################################################
+# null containers: all deletions are no-ops, returning null
+###########################################################
+
+# null container with int index
+.[0] |= empty
+null
+null
+
+# null container with string key
+.foo |= empty
+null
+null
+
+# null container with negative index
+.[-1] |= empty
+null
+null
+
+# null container with large index
+.[5] |= empty
+null
+null
+
+#########################################
+# deleteAtPath slice splicing (|= empty)
+#
+# A single slice splice removes exactly the elements in [from, to).
+#########################################
+
+# single slice, middle
+.[2:5] |= empty
+[0,1,2,3,4,5,6,7]
+[0,1,5,6,7]
+
+# single slice, negative from index
+.[-3:] |= empty
+[0,1,2,3,4]
+[0,1]
+
+# single slice, implicit from index
+.[:-2] |= empty
+[0,1,2,3,4]
+[3,4]
+
+# empty slice is no-op
+.[2:2] |= empty
+[0,1,2,3]
+[0,1,2,3]
+
+# two slices: higher-end first in expression
+(.[5:7], .[1:3]) |= empty
+[0,1,2,3,4,5,6,7]
+[0,3,4,7]
+
+# two slices: lower-end first in expression: identical output
+(.[1:3], .[5:7]) |= empty
+[0,1,2,3,4,5,6,7]
+[0,3,4,7]
+
+# integer index before all slice starts is unaffected by slice removal order
+(.[0], .[5:7]) |= empty
+[0,1,2,3,4,5,6,7]
+[1,2,3,4,7]
+
+# integer index after all slice starts is unaffected by slice removal order
+(.[5:7], .[0]) |= empty
+[0,1,2,3,4,5,6,7]
+[1,2,3,4,7]
+
+#####################################################################
+# Multi-path assignment (lhs = rhs where lhs produces multiple paths)
+#####################################################################
+
+# .[] produces one path per element; all must be set (from jq.test line 1306)
+.[] = 1
+[1,2,3]
+[1,1,1]
+
+# comma expression on lhs produces two paths; both must be set
+(.a,.b) = 1
+{"a":0,"b":0,"c":0}
+{"a":1,"b":1,"c":0}
+
+# multi-value rhs × multi-path lhs: one output per rhs value,
+# all paths set each time (yields one output per rhs value)
+.[] = (1,2)
+[0,0,0]
+[1,1,1]
+[2,2,2]
+
+################################
+# Update assignment operator |=
+################################
+
+# |= with a multi-value update uses the FIRST yielded value (unlike
+# reduce/foreach which use the last/all values respectively).
+.a |= (. + 1, . + 2)
+{"a":1}
+{"a":2}
+
+# |= with empty update deletes the path (no new value → omit the key)
+.a |= empty
+{"a":1,"b":2}
+{"b":2}
+
+# |= on multi-path (lhs produces multiple paths): each path is updated
+# independently using the first value from the update expression.
+(.a,.b) |= (. * 10, . + 1)
+{"a":1,"b":2}
+{"a":10,"b":20}
+
+#####################
+# Destructuring patterns: multi-valued key produces multiple env bindings
+#####################
+
+# obj_pattern with expression key yields one env per key value
+. as {("a","b"): $x} | $x
+{"a":1,"b":2}
+1
+2
+
+# same key repeated in obj_pattern yields two envs
+# (same field, different iteration)
+. as [{("a","b"): $x}, $y] | [$x, $y]
+[{"a":1,"b":2},3]
+[1,3]
+[2,3]
+
+# and_pattern ({$b: subpat}): $b binds once; subpat with
+# multi-key yields two envs
+. as {$b: {("c","d"): $x}} | [$b, $x]
+{"b":{"c":10,"d":20}}
+[{"c":10,"d":20},10]
+[{"c":10,"d":20},20]
+
+##########################################################
+# foreach: multi-value and empty init, update, and pattern
+##########################################################
+
+# Multi-value update: all values are yielded; the last becomes the new acc.
+# Each branch of the comma sees the original acc, not intermediate results.
+[foreach range(3) as $x (5; . + $x, . * 2)]
+null
+[5,10,11,20,22,40]
+
+# Empty update: When update is empty for a step, nothing is yielded for that
+# step and the accumulator is unchanged.
+[foreach range(4) as $x (0; if . < 2 then . + $x else empty end)]
+null
+[0,1,3]
+
+# Multi-value update with extract: extract is applied to each update value.
+[foreach range(3) as $x (1; . + $x, . * 2; . + 1000)]
+null
+[1001,1002,1003,1004,1006,1008]
+
+# Multi-value init: each init value runs an independent chain (from #3227).
+[foreach .[] as $x (0, 1; . + $x)]
+[1,2]
+[1,3,2,4]
+
+# Multi-value pattern: {(expr): $x} yields one binding per key; all
+# bindings chain through the accumulator in order.
+[foreach .[] as {("a","b"): $x} (0; . + $x)]
+[{"a":1,"b":2},{"a":10,"b":20}]
+[1,3,13,33]
+
+###################################################
+# reduce with multi-value init, update, and pattern
+###################################################
+
+# Multi-value init: each init value starts its own independent reduce;
+# one output is yielded per init value.
+# jq: [reduce (1,2) as $x (0,1; . + $x)]  → [3,4]
+[reduce (1,2) as $x (0,1; . + $x)]
+null
+[3,4]
+
+# Multi-value update: all values are produced by the update expression
+# but only the LAST one becomes the new accumulator (unlike foreach which
+# yields all of them).
+# jq: [reduce (1,2,3) as $x (1; . + $x, . * 2)]  → [8]
+#   $x=1: 1+1=2 and 1*2=2 → last=2, acc=2
+#   $x=2: 2+2=4 and 2*2=4 → last=4, acc=4
+#   $x=3: 4+3=7 and 4*2=8 → last=8, acc=8
+[reduce (1,2,3) as $x (1; . + $x, . * 2)]
+null
+[8]
+
+# Multi-value pattern: {("a","b"): $x} yields two bindings per object;
+# all bindings chain through the accumulator in order (like foreach).
+[reduce .[] as {("a","b"): $x} (0; . + $x)]
+[{"a":1,"b":2},{"a":10,"b":20}]
+[33]

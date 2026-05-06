@@ -134,13 +134,16 @@ keeps wording consistent across builtins. If a `jq.test` case captures an
 error message into its expected output and our wording differs, add an entry
 to `JQCompileTest::normalizeErrors()` that rewrites the message as it
 appears in the test output (either rewriting our message to match
-jq's, or jq's message to match ours).
+jq's, or jq's message to match ours).  For test cases in `local.test`,
+update the test to match the expected error message wording.  Our main
+goal is consistency and economy in the error checking code.
 
 ### Test coverage
 
-**`tests/JQCompileTest.php`** — Driven by `tests/jq.test`. Tests marked
-`fail` in the upstream file are excluded entirely. Tests with a known
-bug are listed in `skipReason()` and run in a special mode: the test
+**`tests/JQCompileTest.php`** — Driven by `tests/jq.test` (upstream
+tests) and `tests/local.test` (local tests specific to our implementation).
+Tests with a known bug are listed in `upstreamSkipReason` or
+`localSkipReason()` and run in a special mode: the test
 body executes normally, and if it **fails** (throws or asserts false)
 the test is marked skipped with the reason string; if it unexpectedly
 **passes**, the test fails with "Test marked to skip, but it
@@ -148,7 +151,8 @@ unexpectedly passed!" — this is intentional, to keep the skip list
 accurate as bugs are fixed.
 
 **Workflow for fixing a bug covered by a skip entry:**
-1. Remove the relevant line numbers from `skipReason()`.
+1. Remove the relevant line numbers from `upstreamSkipReason()` (for
+   `tests/jq.test`) or `localSkipReason()` (for `tests/local.test`).
 2. Fix the bug.
 3. Run `vendor/bin/phpunit tests/JQCompileTest.php` to confirm the
    formerly-skipped tests now pass and no new failures appear.
@@ -157,15 +161,39 @@ accurate as bugs are fixed.
 **Workflow when a fix accidentally resolves additional skipped tests:**
 Run the full PHPUnit suite; any skip entry whose test now passes will
 surface as a `FAILURE: Test marked to skip, but it unexpectedly
-passed!`. Remove those entries from `skipReason()` and include the
-cleanup in the same commit as the fix.
+passed!`. Remove those entries from `localSkipReason()` or
+`upstreamSkipReason()` and include the cleanup in the same commit as the fix.
 
-**`tests/JQCmdTest.php`** — Hand-written integration tests for the `zestjq` CLI covering edge cases not easily expressed in the jq.test format (negative indices, null container promotion, `deleteAtPath` splice behavior, halt/error exit codes).
+**`tests/JQCmdTest.php`** — Hand-written integration tests for the
+`zestjq` CLI covering edge cases not easily expressed in the `jq.test`
+format, for example halt/error exit codes or command-line options.
+
+### Test file format (jq.test / local.test)
+
+Both files use the same line-oriented format parsed by `JQGrammarTest::loadTests()`:
+
+- **Blank lines** and **`#`-prefixed lines** are skipped; they serve as separators and comments between test groups.
+- Each **normal group** is three or more non-blank, non-comment lines:
+  - Line 1: the jq filter expression
+  - Line 2: the JSON input value
+  - Lines 3+: one expected output value per line (multiple lines = multiple values yielded by the filter)
+- **`%%FAIL` groups** (jq.test only): the first line is `%%FAIL` or `%%FAIL IGNORE MSG`, the second line is a query expected to be syntactically invalid. These are parse-only tests; `JQCompileTest` ignores them entirely.
+
+Implicitly, the `#`-prefixed lines immediately before a set of
+"normal group" or "%%FAIL group" tests should describe the purpose of
+the single tests that follows the comment.  Comments blocked by lines with
+more than three `#` characters describe the entire group of tests
+before the next blocked comment.
+
+### Where to add new tests
+
+- **Pure JQ evaluation** (filter + input → one or more JSON outputs, no error expected): add to `tests/local.test`.
+- **CLI-specific behavior** (exit codes, error messages, flags like `-r`/`--ast`, stdin handling, `halt`/`halt_error`): add to `tests/JQCmdTest.php`.
 
 ## Dependency notes
 
 - `wikimedia/remex-html` is a **dev-only** dependency used in tests (`ZestTest::parseHtml()`). The library itself has no runtime HTML parser dependency.
 - PHP ≥ 8.1 required. `ext-mbstring` and `ext-xml` are required; `ext-intl` is optional (used in `unichr()`).
-- `src/builtin.jq` and `tests/jq.test` come from upstream jq, don't
-  make any changes to them.  Instead add new built-ins to
-  `src/JQTopLevelEnv.php` and new tests to `tests/JQCmdTest.php`.
+- `src/builtin.jq` and `tests/jq.test` come from upstream jq; do not
+  modify them. Instead new built-ins should be added to
+  `src/JQTopLevelEnv.php` and new local tests added to `tests/local.test`.

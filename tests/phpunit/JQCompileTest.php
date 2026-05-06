@@ -23,7 +23,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	// skipped.  Currently indexed by line number in the upstream
 	// file, which we might regret if upstream removes or rearranges
 	// tests.
-	public static function skipReason( string $label, int $lineno ): ?string {
+	public static function upstreamSkipReason( string $label, int $lineno ): ?string {
 		return match ( $lineno ) {
 			// JSON cannot represent NaN or infinity; also affects 1E+1000 literals
 			// (jq clamps them to MAX_FLOAT; PHP represents them as INF which tojson encodes as null).
@@ -274,23 +274,31 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 					$test['input'],
 					$test['expected'],
 					fn ( $v ) => self::normalizeErrors( $v, $test['label'], $test['lineno'] ),
-					self::skipReason( $test['label'], $test['lineno'] ),
+					self::upstreamSkipReason( $test['label'], $test['lineno'] ),
 				];
 			}
 		}
+	}
+
+	public static function localSkipReason( string $label, int $lineno ): ?string {
+		return match ( $lineno ) {
+			// del() with mixed negative/positive indices and slices — not yet fixed;
+			// see also https://github.com/jqlang/jq/issues/3538
+			27, 32, 37, 42, 47, 57, 62 => 'delPath not fixed yet',
+			default => null,
+		};
 	}
 
 	// Use a similar format for local tests, but these should never fail
 	// nor need error normalization.
 	public static function localTestProvider(): iterable {
 		foreach ( JQGrammarTest::loadTests( __DIR__ . '/local.test' ) as $test ) {
-			$ln = $test['lineno'];
 			yield "local.test " . $test['label'] => [
 				$test['query'],
 				$test['input'],
 				$test['expected'],
 				static fn ( $v ) => $v,
-				$ln > 10 && $ln !== 40 ? "delPath not fixed yet" : null,
+				self::localSkipReason( $test['label'], $test['lineno'] ),
 			];
 		}
 	}
