@@ -9,7 +9,7 @@
 
 /* File-scope initializer */
 declare( strict_types = 1 );
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 use stdClass;
 

@@ -1,7 +1,7 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 // Generated file — do not edit directly. Regenerate with: composer build-stdenv
 

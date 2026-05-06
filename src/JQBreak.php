@@ -1,7 +1,7 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 /** Non-local exit thrown by break/$label, caught only by the matching label/$label node. */
 class JQBreak extends \RuntimeException {

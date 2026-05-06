@@ -1,12 +1,12 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest\Tests;
+namespace Wikimedia\ZestJQ\Tests;
 
-use Wikimedia\Zest\JQCmd;
+use Wikimedia\ZestJQ\JQCmd;
 
 /**
- * @covers \Wikimedia\Zest\JQCmd
+ * @covers \Wikimedia\ZestJQ\JQCmd
  */
 class JQCmdTest extends \PHPUnit\Framework\TestCase {
 
@@ -277,7 +277,7 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 	 *   U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000
 	 * (notably NOT U+0000 NUL, which PHP's trim() would strip but jq does not).
 	 *
-	 * @covers \Wikimedia\Zest\JQTopLevelEnv
+	 * @covers \Wikimedia\ZestJQ\JQTopLevelEnv
 	 */
 	public function testTrimUnicodeWhitespace(): void {
 		// One copy of every character in jvp_codepoint_is_whitespace, in order.

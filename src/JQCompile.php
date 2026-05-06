@@ -2,7 +2,7 @@
 // @phan-file-suppress PhanUnusedClosureParameter, PhanEmptyYieldFrom
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 use Closure;
 use Generator;

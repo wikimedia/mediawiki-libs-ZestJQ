@@ -4,7 +4,7 @@ declare( strict_types = 1 );
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Wikimedia\Zest\JQCmd;
+use Wikimedia\ZestJQ\JQCmd;
 
 $builtinPath = __DIR__ . '/../src/builtin.jq';
 $outPath     = __DIR__ . '/../src/JQBuiltin.php';
@@ -34,7 +34,7 @@ $content = <<<PHP
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 // Generated file — do not edit directly. Regenerate with: composer build-stdenv
 

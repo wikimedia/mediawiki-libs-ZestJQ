@@ -1,7 +1,7 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest;
+namespace Wikimedia\ZestJQ;
 
 /**
  * Runtime error thrown by JQ expressions (e.g. error/0, type errors).

@@ -1,15 +1,15 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest\Tests;
+namespace Wikimedia\ZestJQ\Tests;
 
 use Closure;
 use Throwable;
-use Wikimedia\Zest\JQCompile;
-use Wikimedia\Zest\JQEnv;
-use Wikimedia\Zest\JQError;
-use Wikimedia\Zest\JQGrammar;
-use Wikimedia\Zest\JQUtils;
+use Wikimedia\ZestJQ\JQCompile;
+use Wikimedia\ZestJQ\JQEnv;
+use Wikimedia\ZestJQ\JQError;
+use Wikimedia\ZestJQ\JQGrammar;
+use Wikimedia\ZestJQ\JQUtils;
 
 /**
  * JQ evaluation tests driven by the upstream jq test suite from
@@ -289,7 +289,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	/**
 	 * @dataProvider upstreamTestProvider
 	 * @dataProvider localTestProvider
-	 * @covers \Wikimedia\Zest\JQCompile
+	 * @covers \Wikimedia\ZestJQ\JQCompile
 	 */
 	public function testCompile( string $query, string $input, array $expected, Closure $normalizeFn, ?string $skip = null ): void {
 		if ( $skip === null ) {

@@ -1,15 +1,15 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest\Tests;
+namespace Wikimedia\ZestJQ\Tests;
 
 use LogicException;
-use Wikimedia\Zest\JQError;
-use Wikimedia\Zest\JQUtils;
+use Wikimedia\ZestJQ\JQError;
+use Wikimedia\ZestJQ\JQUtils;
 
 /**
  * Unit tests for JQUtils static helpers.
- * @covers \Wikimedia\Zest\JQUtils
+ * @covers \Wikimedia\ZestJQ\JQUtils
  */
 class JQUtilsTest extends \PHPUnit\Framework\TestCase {
 

@@ -15,12 +15,12 @@
 	],
 	"autoload": {
 		"psr-4": {
-			"Wikimedia\\Zest\\": "src/"
+			"Wikimedia\\ZestJQ\\": "src/"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Wikimedia\\Zest\\Tests\\": "tests/phpunit/"
+			"Wikimedia\\ZestJQ\\Tests\\": "tests/phpunit/"
 		}
 	},
 	"require": {

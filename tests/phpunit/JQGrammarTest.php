@@ -1,10 +1,10 @@
 <?php
 declare( strict_types = 1 );
 
-namespace Wikimedia\Zest\Tests;
+namespace Wikimedia\ZestJQ\Tests;
 
 use Error;
-use Wikimedia\Zest\JQGrammar;
+use Wikimedia\ZestJQ\JQGrammar;
 
 /**
  * Parse-only tests driven by the upstream jq test suite from
@@ -23,7 +23,7 @@ use Wikimedia\Zest\JQGrammar;
  *   - valid queries must parse without throwing
  *   - %%FAIL queries must throw an exception
  *
- * @covers \Wikimedia\Zest\JQGrammar
+ * @covers \Wikimedia\ZestJQ\JQGrammar
  */
 class JQGrammarTest extends \PHPUnit\Framework\TestCase {
 
