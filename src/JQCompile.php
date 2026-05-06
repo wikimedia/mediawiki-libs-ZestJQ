@@ -1298,15 +1298,7 @@ class JQCompile {
 					$toDelete[] = $path;
 				}
 			}
-			// Sort paths so higher/deeper paths are deleted first, preventing
-			// earlier deletions from shifting the positions of later ones.
-			// Reversed jq sort order (JQUtils::compare) correctly handles both
-			// sibling indices (higher first) and parent/child nesting (child first).
-			usort( $toDelete, static fn ( $a, $b ) => JQUtils::compare( $b, $a ) );
-			foreach ( $toDelete as $path ) {
-				$input = self::deleteAtPath( $input, $path, 0 );
-			}
-			yield $input;
+			yield self::deleteAtPaths( $input, $toDelete );
 		};
 	}
 
@@ -1436,6 +1428,25 @@ class JQCompile {
 			return array_values( $newArr );
 		}
 		return $container;
+	}
+
+	/**
+	 * Return $container with the slot at each $path in $paths removed.
+	 * Array elements are spliced out (later elements shift left); object keys are unset.
+	 * Non-existent paths are silently ignored.
+	 *
+	 * @param mixed $container
+	 * @param list<list<int|float|string|object>> $paths
+	 */
+	public static function deleteAtPaths( mixed $container, array $paths ): mixed {
+		// Process paths in reverse order so that deleting an array element
+		// by index doesn't shift the positions of later indices.
+		usort( $paths, static fn ( $a, $b ) => -JQUtils::compare( $a, $b ) );
+		$result = $container;
+		foreach ( $paths as $path ) {
+			$result = self::deleteAtPath( $result, $path, 0 );
+		}
+		return $result;
 	}
 
 	/**

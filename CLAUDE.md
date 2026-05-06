@@ -123,7 +123,7 @@ The root `JQPathEnv` created by `enterPathMode()` has `$pathParent = null` and `
 
 **Filter parameters across `def` boundaries.** Re-rooting (`leavePathMode()->maybeEnterPathMode($other)`) is O(1): it creates one new `JQPathEnv` node whose `$parent` is the current env's binding chain and whose `$pathParent` is `$other`'s path chain root. No loop over path segments is needed. This is the replacement for the old `getPath()` + loop + `appendPath()` pattern.
 
-**Slice paths.** `compileSlice` in path mode yields path keys of the form `(object)['start' => $from, 'end' => $to]` (raw unnormalized bounds). `deleteAtPath` recognises a `stdClass` key as a slice and calls `JQUtils::normalizeSliceIdx()` (now public) to resolve the bounds against the actual array length before splicing.
+**Slice paths.** `compileSlice` in path mode yields path keys of the form `(object)['start' => $from, 'end' => $to]` (raw unnormalized bounds). `deleteAtPaths` recognises a `stdClass` key as a slice and calls `JQUtils::normalizeSliceIdx()` to resolve the bounds against the actual array length before splicing.
 
 ### Error messages
 

@@ -454,14 +454,7 @@ class JQTopLevelEnv extends JQEnv {
 			return static function ( mixed $input, JQEnv $env ) use ( $pathsFn ): Generator {
 				foreach ( $pathsFn( $input, $env ) as $paths ) {
 					$paths = JQUtils::checkArray( 'delpaths', $paths );
-					// Process paths in reverse order so that deleting an array element
-					// by index doesn't shift the positions of later indices.
-					usort( $paths, static fn ( $a, $b ) => -JQUtils::compare( $a, $b ) );
-					$result = $input;
-					foreach ( $paths as $path ) {
-						$result = JQCompile::deleteAtPath( $result, (array)$path, 0 );
-					}
-					yield $result;
+					yield JQCompile::deleteAtPaths( $input, $paths );
 				}
 			};
 		};
