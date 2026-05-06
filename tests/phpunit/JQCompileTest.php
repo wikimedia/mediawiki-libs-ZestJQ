@@ -275,7 +275,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 	// Use a similar format for local tests, but these should never fail
 	// nor need error normalization.
 	public static function localTestProvider(): iterable {
-		foreach ( JQGrammarTest::loadTests( __DIR__ . '/local.test' ) as $test ) {
+		foreach ( JQGrammarTest::loadTests( __DIR__ . '/../local.test' ) as $test ) {
 			yield "local.test " . $test['label'] => [
 				$test['query'],
 				$test['input'],

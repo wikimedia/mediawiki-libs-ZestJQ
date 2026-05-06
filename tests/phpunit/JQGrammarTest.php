@@ -28,7 +28,7 @@ use Wikimedia\ZestJQ\JQGrammar;
 class JQGrammarTest extends \PHPUnit\Framework\TestCase {
 
 	private static function testFilePath(): string {
-		return __DIR__ . '/jq.test';
+		return __DIR__ . '/../jq.test';
 	}
 
 	/**
