@@ -1,9 +1,23 @@
 {
 	"private": true,
 	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^7.8.0",
+		"@typescript-eslint/parser": "^7.8.0",
+		"@wmde/eslint-config-wikimedia-typescript": "^0.2.14",
+		"eslint": "^8.57.1",
+		"eslint-config-wikimedia": "^0.32.3",
+		"jsdoc": "4.0.5",
+		"jsdoc-wmf-theme": "1.2.0",
+		"typescript": "^5.8",
+		"vitest": "^3.1",
 		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/34/1284734/3"
 	},
 	"scripts": {
+		"doc": "jsdoc -c jsdoc.json",
+		"test": "vitest run",
+		"lint": "eslint .",
+		"lint:fix": "eslint --fix .",
+		"regen-jq-parser": "npm run regen-jq-parser-php && npm run regen-jq-parser-js",
 		"regen-jq-parser-php": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar --php src/JQGrammar.peg src/JQGrammar.php",
 		"regen-jq-parser-js": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar src/JQGrammar.peg lib/JQGrammar.js"
 	}
