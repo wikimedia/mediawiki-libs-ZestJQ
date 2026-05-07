@@ -1,9 +1,10 @@
 {
 	"private": true,
 	"devDependencies": {
-		"wikipeg": "^6.1.1"
+		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/34/1284734/3"
 	},
 	"scripts": {
-		"regen-jq-parser": "node node_modules/wikipeg/bin/wikipeg --php --class-name JQGrammar src/JQGrammar.pegphp src/JQGrammar.php"
+		"regen-jq-parser-php": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar --php src/JQGrammar.peg src/JQGrammar.php",
+		"regen-jq-parser-js": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar src/JQGrammar.peg lib/JQGrammar.js"
 	}
 }

@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Regenerate src/JQGrammar.php, needed after every change to src/JQGrammar.pegphp
+# Regenerate src/JQGrammar.php, needed after every change to src/JQGrammar.peg
 composer regen-jq-parser
 
 # Run full test suite (lint + phpunit + phan + style checks)
@@ -50,7 +50,7 @@ composer phan
 
 ### Files
 
-**`src/JQGrammar.pegphp`** — PEG grammar source. After any edit, regenerate with `composer regen-jq-parser` to update `src/JQGrammar.php`.
+**`src/JQGrammar.peg`** — PEG grammar source. After any edit, regenerate with `composer regen-jq-parser` to update `src/JQGrammar.php`.
 
 **`src/JQCompile.php`** — Walks the AST and returns a `Closure(mixed $input, JQEnv $env): Generator`. Each `compileXxx()` method handles one node type. The dispatch table is `compileNode()`. Node types `import`, `include`, and `module` are not yet implemented; everything else the grammar can produce is handled. Also contains the public static helpers `getAtPath`, `setAtPath`, `deleteAtPath`, and `arraySubarraySearch` used by builtins in `JQTopLevelEnv`.
 

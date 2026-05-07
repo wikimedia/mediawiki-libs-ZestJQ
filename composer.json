@@ -55,7 +55,12 @@
 			"minus-x fix ."
 		],
 		"update-history": "update-history patch",
-		"regen-jq-parser": "fresh-node -- npm install && fresh-node -- npm run regen-jq-parser",
+		"regen-jq-parser": [
+			"@regen-jq-parser-php",
+			"@regen-jq-parser-js"
+		],
+		"regen-jq-parser-php": "fresh-node -- npm install && fresh-node -- npm run regen-jq-parser-php",
+		"regen-jq-parser-js": "fresh-node -- npm install && fresh-node -- npm run regen-jq-parser-js",
 		"build-stdenv": [
 			"php tools/build-stdenv.php",
 			"minus-x fix . || true",
