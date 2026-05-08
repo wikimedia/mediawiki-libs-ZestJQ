@@ -13,8 +13,8 @@
 		"node_modules/jsdoc-wmf-theme/plugins/summarize"
 	],
 	"source": {
-		"include": [ "lib" ],
-		"exclude": [ ]
+		"include": [ "dist/" ],
+		"exclude": [ "dist/JQGrammar.js" ]
 	},
 	"templates": {
 		"cleverLinks": true,

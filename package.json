@@ -13,8 +13,9 @@
 		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/34/1284734/3"
 	},
 	"scripts": {
+		"build": "tsc -p tsconfig.build.json && cp lib/JQGrammar.js dist/JQGrammar.js",
 		"doc": "jsdoc -c jsdoc.json",
-		"test": "vitest run",
+		"test": "vitest run && npm run lint",
 		"lint": "eslint .",
 		"lint:fix": "eslint --fix .",
 		"regen-jq-parser": "npm run regen-jq-parser-php && npm run regen-jq-parser-js",

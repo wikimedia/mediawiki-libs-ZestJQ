@@ -5,6 +5,7 @@
 		"node": true
 	},
 	"ignorePatterns": [
+		"dist/",
 		"lib/JQGrammar.js",
 		"src/",
 		"node_modules/",
