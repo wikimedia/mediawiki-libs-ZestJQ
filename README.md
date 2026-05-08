@@ -3,23 +3,27 @@
 ZestJQ
 ======
 
-A PHP implementation of the [`jq`](https://jqlang.org/) JSON query language.
-Provides both a library API and a `zestjq` command-line tool.
-`ZestJQ` uses the same license as the original `jq` code (MIT).
-We implement `jq` version 1.8.
+A PHP and TypeScript implementation of the [`jq`](https://jqlang.org/)
+JSON query language.  Provides both a library API and a `zestjq`
+command-line tool.  `ZestJQ` uses the same license as the original
+`jq` code (MIT).  We implement `jq` version 1.8.x (validated against
+upstream test cases as of May 2026).
 
 This is not a port of the original C codebase, but a reimplementation
 using the manual and the extensive `jq.test` file as a guide.
 Claude Sonnet 4.6 was used to speed portions of the implementation
 but every line in this code was manually reviewed and I performed
 extensive clean up and refactoring on Claude's output.  (Claude
-became confused and calls me "the linter" because I was always
+became confused and began to call me "the linter" because I was always
 altering what it output.)
 
 Claude was a big help porting the numerous built-in functions in the
 `jq` standard library.  The date-parsing and other related functions
 imported from C would not be nearly as complete if I had to port these
-entirely by hand.
+entirely by hand.  After the PHP implementation was substantially
+complete, Claude was used to assist the mostly-mechanical transformation
+from PHP to TypeScript, although again I reviewed every line and
+made numerous refinements.
 
 This implementation passes the upstream jq test suite (524 tests) with
 the following exceptions:
@@ -53,8 +57,8 @@ Additional documentation can be found on
 [mediawiki.org](https://www.mediawiki.org/wiki/ZestJQ).
 
 
-Installation
-------------
+PHP installation
+----------------
 
 ```
 composer require wikimedia/zest-jq
@@ -63,8 +67,8 @@ composer require wikimedia/zest-jq
 PHP ≥ 8.1 is required. `ext-mbstring` must be enabled.
 
 
-Library usage
--------------
+PHP library usage
+-----------------
 
 ### Evaluate a filter against a JSON string
 
@@ -135,6 +139,39 @@ foreach ( JQ::eval( 5, 'double', null, $env ) as $val ) {
 }
 ```
 
+Running PHP tests
+-----------------
+
+```
+composer install
+composer test
+```
+
+Individual test commands:
+
+```bash
+# PHPUnit only
+vendor/bin/phpunit
+
+# Single test file
+vendor/bin/phpunit tests/phpunit/JQCompileTest.php
+
+# Fix code style
+composer fix
+```
+
+TypeScript installation
+-----------------------
+
+TypeScript library usage (node)
+-------------------------------
+
+TypeScript library usage (browser)
+----------------------------------
+
+Running TypeScript tests
+------------------------
+
 
 Command-line tool
 -----------------
@@ -176,28 +213,6 @@ echo 'null' | zestjq -n '1, 2, 3'
 # → 1
 # → 2
 # → 3
-```
-
-
-Running tests
--------------
-
-```
-composer install
-composer test
-```
-
-Individual test commands:
-
-```bash
-# PHPUnit only
-vendor/bin/phpunit
-
-# Single test file
-vendor/bin/phpunit tests/phpunit/JQCompileTest.php
-
-# Fix code style
-composer fix
 ```
 
 
