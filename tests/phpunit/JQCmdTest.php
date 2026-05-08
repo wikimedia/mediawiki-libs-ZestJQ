@@ -16,16 +16,14 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 	 */
 	private function runMain( array $args ): array {
 		JQCmd::$runningTests = true;
-		JQCmd::$err = '';
 		ob_start();
 		try {
 			$exitCode = JQCmd::main(
-				count( $args ) + 1, [ 'zestjq', ...$args ]
+				count( $args ), $args
 			);
 		} finally {
 			$stdout = ob_get_clean();
 			$stderr = JQCmd::$err;
-			JQCmd::$err = '';
 			JQCmd::$runningTests = false;
 		}
 		return [ $exitCode, $stdout, $stderr ];
@@ -106,7 +104,7 @@ class JQCmdTest extends \PHPUnit\Framework\TestCase {
 	public function testStdinInput(): void {
 		// phpcs:ignore MediaWiki.Usage.ForbiddenFunctions.proc_open
 		$proc = proc_open(
-			[ PHP_BINARY, 'bin/zestjq', '. + 1' ],
+			[ PHP_BINARY, 'bin/zestjq.php', '. + 1' ],
 			[ 0 => [ 'pipe', 'r' ], 1 => [ 'pipe', 'w' ], 2 => [ 'pipe', 'w' ] ],
 			$pipes,
 			dirname( dirname( __DIR__ ) )

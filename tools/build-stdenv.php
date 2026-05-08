@@ -16,7 +16,7 @@ if ( $src === false ) {
 }
 
 ob_start();
-$exitCode = JQCmd::main( 4, [ 'build-stdenv', '-n', '--ast', $src . "\n__env__" ] );
+$exitCode = JQCmd::main( 3, [ '-n', '--ast', $src . "\n__env__" ] );
 $astJson = ob_get_clean();
 if ( $exitCode !== 0 || $astJson === false ) {
 	fwrite( STDERR, "Error: could not parse builtin.jq (exit $exitCode)\n" );

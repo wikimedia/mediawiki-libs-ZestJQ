@@ -6,7 +6,8 @@
     "strict": true,
     "esModuleInterop": true,
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node"]
   },
   "include": ["lib/**/*.ts", "tests/js/**/*.ts"]
 }

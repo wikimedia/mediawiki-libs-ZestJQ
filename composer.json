@@ -44,7 +44,8 @@
 			"covers-validator",
 			"@phpcs",
 			"@phan",
-			"minus-x check ."
+			"minus-x check .",
+			"fresh-node -- npm test"
 		],
 		"phan": "phan --allow-polyfill-parser",
 		"phpcs": "phpcs -sp",
@@ -52,9 +53,15 @@
 		"cover": "phpunit --coverage-html coverage",
 		"fix": [
 			"phpcbf",
-			"minus-x fix ."
+			"minus-x fix .",
+			"fresh-node -- npm run lint:fix"
 		],
 		"update-history": "update-history patch",
+		"build": [
+			"@regen-jq-parser",
+			"@build-stdenv",
+			"fresh-node -- npm run build"
+		],
 		"regen-jq-parser": [
 			"@regen-jq-parser-php",
 			"@regen-jq-parser-js"

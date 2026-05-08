@@ -11,10 +11,16 @@ use Wikimedia\WikiPEG\SyntaxError;
  */
 class JQCmd {
 
-	/** When true, stderr output is accumulated in $err instead of written to STDERR. */
+	/**
+	 * When true, stderr output is accumulated in $err instead of
+	 * written to STDERR.
+	 */
 	public static bool $runningTests = false;
 
-	/** Accumulated stderr output in test mode; reset before each main() call. */
+	/**
+	 * Accumulated stderr output in test mode; it is reset by each
+	 * main() call.
+	 */
 	public static string $err = '';
 
 	private static function err( string $msg ): void {
@@ -25,26 +31,35 @@ class JQCmd {
 		}
 	}
 
+	// Script name has been trimmed from the argument array.
 	public static function main( int $argc, array $argv ): int {
+		self::$err = '';
 		// Parse flags and positional args (minimal jq-compatible subset)
-		$nullInput   = false;
-		$rawOutput   = false;
-		$compactOutput = false;
-		$astOutput   = false;
+		/** @var array{nullInput: bool, rawOutput: bool, compactOutput: bool, astOutput: bool, showHelp: bool} */
+		$options = [
+			'nullInput'     => false,
+			'rawOutput'     => false,
+			'compactOutput' => false,
+			'astOutput'     => false,
+			'showHelp'      => false,
+		];
+
 		$args = [];
-		for ( $i = 1; $i < $argc; $i++ ) {
+		for ( $i = 0; $i < $argc; $i++ ) {
 			$arg = $argv[$i];
 			if ( $arg === '--' ) {
-				$args = array_merge( $args, array_slice( $argv, $i + 1 ) );
+				$args = [ ...$args, ...array_slice( $argv, $i + 1 ) ];
 				break;
 			} elseif ( $arg === '-n' || $arg === '--null-input' ) {
-				$nullInput = true;
+				$options['nullInput'] = true;
 			} elseif ( $arg === '-r' || $arg === '--raw-output' ) {
-				$rawOutput = true;
+				$options['rawOutput'] = true;
 			} elseif ( $arg === '-c' || $arg === '--compact-output' ) {
-				$compactOutput = true;
+				$options['compactOutput'] = true;
+			} elseif ( $arg === '-h' || $arg === '--help' ) {
+				$options['showHelp'] = true;
 			} elseif ( $arg === '--ast' ) {
-				$astOutput = true;
+				$options['astOutput'] = true;
 			} elseif ( $arg[0] === '-' ) {
 				self::err( "zestjq: unknown option: $arg\n" );
 				return 2;
@@ -53,7 +68,7 @@ class JQCmd {
 			}
 		}
 
-		if ( count( $args ) < 1 ) {
+		if ( count( $args ) < 1 || $options['showHelp'] ) {
 			self::err( "Usage: zestjq [-n] [-r] [-c] [--ast] <filter> [file...]\n" );
 			return 2;
 		}
@@ -70,36 +85,37 @@ class JQCmd {
 			return 3;
 		}
 
-		// If we support IOContexts in the future, we'd create a new
-		// JQIOEnv here with the user's IOContext and the
-		// JQEnv::getStdEnv() as its parent, in order to evaluate the
-		// code, ensuring that the user IOContext is separate from the
-		// 'no op'/'no user input' IO context used to evaluate the
-		// standard environment.
-		$filter = JQCompile::compile( $ast, JQEnv::getStdEnv() );
-
 		$exitCode = 0;
 		try {
-			if ( $astOutput ) {
-				echo self::encodeOutput( $ast, $rawOutput, $compactOutput ) . "\n";
-			} elseif ( $nullInput ) {
-				$exitCode = self::runFilter( $filter, null, $rawOutput, $compactOutput );
+			// If we support IOContexts in the future, we'd create a new
+			// JQIOEnv here with the user's IOContext and the
+			// JQEnv::getStdEnv() as its parent, in order to evaluate the
+			// code, ensuring that the user IOContext is separate from the
+			// 'no op'/'no user input' IO context used to evaluate the
+			// standard environment.
+			$filter = JQCompile::compile( $ast, JQEnv::getStdEnv() );
+			if ( $options['astOutput'] ) {
+				echo self::encodeOutput( $ast, $options ) . "\n";
+			} elseif ( $options['nullInput'] ) {
+				$exitCode = self::runFilter( $filter, null, $options );
 			} elseif ( count( $files ) > 0 ) {
 				foreach ( $files as $file ) {
 					$raw = file_get_contents( $file );
 					if ( $raw === false ) {
 						self::err( "zestjq: cannot read file: $file\n" );
-						$exitCode = 2;
+						$exitCode = max( $exitCode, 2 );
 						continue;
 					}
 					try {
 						$input = JQUtils::jsonDecode( $raw );
 					} catch ( JQError ) {
 						self::err( "zestjq: invalid JSON in file: $file\n" );
-						$exitCode = 2;
+						$exitCode = max( $exitCode, 2 );
 						continue;
 					}
-					$exitCode = max( $exitCode, self::runFilter( $filter, $input, $rawOutput, $compactOutput ) );
+					$exitCode = max( $exitCode,
+						self::runFilter( $filter, $input, $options )
+					);
 				}
 			} else {
 				$raw = stream_get_contents( STDIN );
@@ -113,7 +129,7 @@ class JQCmd {
 					self::err( "zestjq: invalid JSON in stdin\n" );
 					return 2;
 				}
-				$exitCode = self::runFilter( $filter, $input, $rawOutput, $compactOutput );
+				$exitCode = self::runFilter( $filter, $input, $options );
 			}
 		} catch ( JQHaltException $e ) {
 			if ( $e->getMessage() !== '' ) {
@@ -125,12 +141,17 @@ class JQCmd {
 		return $exitCode;
 	}
 
-	private static function encodeOutput( mixed $val, bool $rawOutput, bool $compactOutput ): string {
-		if ( $rawOutput && is_string( $val ) ) {
+	/**
+	 * @param mixed $val
+	 * @param array{rawOutput: bool, compactOutput: bool} $options
+	 * @return string JSON-encoded output
+	 */
+	private static function encodeOutput( mixed $val, array $options ): string {
+		if ( $options['rawOutput'] && is_string( $val ) ) {
 			return $val;
 		}
 		$flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-		if ( !$compactOutput ) {
+		if ( !$options['compactOutput'] ) {
 			$flags |= JSON_PRETTY_PRINT;
 		}
 		// Match the JavaScript behavior of converting NaN/INF to `null`
@@ -139,10 +160,16 @@ class JQCmd {
 		return ( $result === false ) ? '<json_encode failed>' : $result;
 	}
 
-	private static function runFilter( Closure $filter, mixed $input, bool $rawOutput, bool $compactOutput ): int {
+	/**
+	 * @param Closure $filter
+	 * @param mixed $input
+	 * @param array{rawOutput: bool, compactOutput: bool} $options
+	 * @return int Exit code
+	 */
+	private static function runFilter( Closure $filter, mixed $input, array $options ): int {
 		try {
 			foreach ( $filter( $input ) as $output ) {
-				echo self::encodeOutput( $output, $rawOutput, $compactOutput ) . "\n";
+				echo self::encodeOutput( $output, $options ) . "\n";
 			}
 		} catch ( JQError $e ) {
 			self::err( "zestjq: " . $e->getMessage() . "\n" );

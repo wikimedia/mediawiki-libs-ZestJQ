@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+# Thin wrapper shell, since composer can't rename binaries on install
+require __DIR__ . '/../bin/zestjq.php';

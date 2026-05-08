@@ -1,6 +1,7 @@
 {
 	"private": true,
 	"devDependencies": {
+		"@types/node": "^25.6.2",
 		"@typescript-eslint/eslint-plugin": "^7.8.0",
 		"@typescript-eslint/parser": "^7.8.0",
 		"@wmde/eslint-config-wikimedia-typescript": "^0.2.14",
@@ -11,6 +12,9 @@
 		"typescript": "^5.8",
 		"vitest": "^3.1",
 		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/34/1284734/3"
+	},
+	"bin": {
+		"zestjq": "./bin/zestjq.js"
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json && cp lib/JQGrammar.js dist/JQGrammar.js",
