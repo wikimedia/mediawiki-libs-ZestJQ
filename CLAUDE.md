@@ -4,8 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+### PHP
+
 ```bash
-# Regenerate src/JQGrammar.php, needed after every change to src/JQGrammar.peg
+# Regenerate src/JQGrammar.php and lib/JQGrammar.js, needed after every change to src/JQGrammar.peg
 composer regen-jq-parser
 
 # Run full test suite (lint + phpunit + phan + style checks)
@@ -25,6 +27,31 @@ composer fix
 
 # Static analysis only
 composer phan
+```
+
+### JavaScript / TypeScript
+
+**IMPORTANT**: Never run `node`, `npm`, or `npx` directly. Always use the
+`fresh-node --` prefix (security, plus version compatibility on host).
+
+```bash
+# Run full JS test suite (vitest + eslint + tsc)
+fresh-node -- npm test
+
+# Run only vitest tests
+fresh-node -- npx vitest run
+
+# Run a single test file
+fresh-node -- npx vitest run tests/js/JQCompileTest.ts
+
+# Auto-fix lint issues
+fresh-node -- npm run lint:fix
+
+# Type-check only
+fresh-node -- npm run typecheck
+
+# Regenerate lib/JQGrammar.js and src/JQGrammar.php after changes to src/JQGrammar.peg
+fresh-node -- npm run regen-jq-parser
 ```
 
 ## Architecture
@@ -50,7 +77,9 @@ composer phan
 
 ### Files
 
-**`src/JQGrammar.peg`** — PEG grammar source. After any edit, regenerate with `composer regen-jq-parser` to update `src/JQGrammar.php`.
+**`src/JQGrammar.peg`** — PEG grammar source. After any edit,
+regenerate with `composer regen-jq-parser` to update
+`src/JQGrammar.php` and `lib/JQGrammar.js`.
 
 **`src/JQCompile.php`** — Walks the AST and returns a `Closure(mixed $input, JQEnv $env): Generator`. Each `compileXxx()` method handles one node type. The dispatch table is `compileNode()`. Node types `import`, `include`, and `module` are not yet implemented; everything else the grammar can produce is handled. Also contains the public static helpers `getAtPath`, `setAtPath`, `deleteAtPath`, and `arraySubarraySearch` used by builtins in `JQTopLevelEnv`.
 
@@ -189,6 +218,91 @@ before the next blocked comment.
 
 - **Pure JQ evaluation** (filter + input → one or more JSON outputs, no error expected): add to `tests/local.test`.
 - **CLI-specific behavior** (exit codes, error messages, flags like `-r`/`--ast`, stdin handling, `halt`/`halt_error`): add to `tests/JQCmdTest.php`.
+
+## TypeScript port
+
+The JQ evaluation engine has been ported to TypeScript in `lib/`. The parser
+(`lib/JQGrammar.js`) is generated from the same PEG grammar source as the PHP
+parser (`src/JQGrammar.peg`). The code in the PHP implementation
+(`src/`) and the TypeScript port (`lib/`) should be kept parallel as
+much as possible to reduce drift between the implementations and ease
+maintenance and future development.  This extends to comments,
+variable names, and method ordering, which should be the same in the
+PHP and TypeScript implementations as much as possible.
+
+### Files
+
+**`lib/JQGrammar.js`** — Generated JS parser. Do not edit; regenerate with
+`fresh-node -- npm run regen-jq-parser-js` after any change to `src/JQGrammar.peg`.
+
+**`lib/JQValue.ts`** — Type alias for the JQ value domain
+(`null | boolean | number | string | JQValue[] | { [key: string]: JQValue }`).
+Also exports `FilterFn`, `FilterFactory`, `CompiledFilter`, and `JQValueOrPath`.
+
+**`lib/JQError.ts`** — `JQError extends Error`; carries a `.jqValue` field for
+try-catch error propagation. Mirrors `src/JQError.php`.
+
+**`lib/JQBreak.ts`** / **`lib/JQHaltException.ts`** — Internal
+control-flow exceptions; mirrors `src/JQBreak.php` and `src/JQHaltException.php`.
+
+**`lib/JQEnv.ts`** — Environment chain. Contains `JQEnv` (base, normal mode),
+`JQPathEnv` (path mode, same design as PHP's `JQPathEnv`), and `JQBindEnv`
+(single-binding node). `JQEnv.getStdEnv()` returns the standard environment
+backed by `JQTopLevelEnv`. This file combines the classes found in
+`src/JQEnv.php`, `src/JQPathEnv.php`, `src/JQBindEnv.php` and
+`src/JQLazyEnv.php` in order to manage circular dependencies.
+
+**`lib/JQUtils.ts`** — Shared helpers: `checkString`, `checkNumber`, `checkArray`,
+`typeName`, `toBoolean`, `isNumber`, `jsonEncode`, `jsonDecode`, `add`, `subtract`,
+`multiply`, `divide`, `compare`, `slice`, `formatterFor`. Mirrors `src/JQUtils.php`.
+
+**`lib/JQCompile.ts`** — Compiler/evaluator; mirrors `src/JQCompile.php`. Walks the
+AST and returns a `CompiledFilter`. Each `compileXxx()` method handles one AST node
+type. Node types `import`, `include`, and `module` are not yet implemented.
+
+**`lib/JQTopLevelEnv.ts`** — Native TS builtins; mirrors `src/JQTopLevelEnv.php`.
+Add new builtins here, not to `builtin.jq`.
+
+**`lib/JQ.ts`** — Public API: `JQ.compile(filter, options?)`. Mirrors `src/JQ.php`.
+
+**`lib/JQCmd.ts`** — CLI implementation; mirrors `src/JQCmd.php`.
+
+**`lib/UnreachableError.ts`** — Helper for exhaustiveness checking.
+
+### JS representation of JQ types
+
+| JQ type | TypeScript type |
+|---------|-----------------|
+| null | `null` |
+| boolean | `boolean` |
+| number | `number` (IEEE 754 double) |
+| string | `string` |
+| array | `JQValue[]` (plain JS array) |
+| object | `{ [key: string]: JQValue }` (plain JS object, key order preserved) |
+
+Key differences from PHP:
+- Arrays are plain JS arrays; no `assertIsList()` equivalent needed.
+- Objects are plain JS objects (not `stdClass`). Distinguish with
+  `JQUtils.isObject`.
+- Numbers are always IEEE 754 doubles; no separate `int`/`float` distinction.
+- Slice path keys are plain objects `{ start: from, end: to }` cast via
+  `as unknown as JQValue`.
+
+### Test coverage
+
+**`tests/js/JQGrammarTest.ts`** — Grammar tests; mirrors `tests/phpunit/JQGrammarTest.php`.
+
+**`tests/js/JQCompileTest.ts`** — Evaluation tests; mirrors `tests/phpunit/JQCompileTest.php`.
+Driven by `tests/jq.test` and
+`tests/local.test`. `upstreamSkipReason(lineno)` enumerates line
+numbers of failing tests; this should generally match
+`upstreamSkipReason()` in `tests/phpunit/JQCompileTest.php` except for
+a few minor differences between the PHP and TypeScript implementation.
+If a skipped test unexpectedly passes, the suite fails with "Expected
+to be skipped, but test passed" and the line number should be removed
+from `upstreamSkipReason(lineno)`.
+
+**`tests/js/JQUtilsTest.ts`** — Unit tests for `JQUtils`.
 
 ## Dependency notes
 
