@@ -51,7 +51,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 			// Below this point we list tests not yet implemented.
 		case 39:
 		case 187:
-		case 195:
 		case 200:
 		case 213:
 		case 217:
@@ -64,13 +63,7 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 307:
 		case 311:
 		case 329:
-		case 333:
 		case 337:
-		case 341:
-		case 345:
-		case 349:
-		case 353:
-		case 357:
 		case 361:
 		case 365:
 		case 369:
@@ -92,8 +85,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 445:
 		case 450:
 		case 455:
-		case 466:
-		case 470:
 		case 474:
 		case 478:
 		case 490:
@@ -105,13 +96,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 771:
 		case 775:
 		case 838:
-		case 899:
-		case 903:
-		case 907:
-		case 911:
-		case 915:
-		case 919:
-		case 924:
 		case 1045:
 		case 1049:
 		case 1053:
@@ -182,7 +166,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1601:
 		case 1605:
 		case 1609:
-		case 1633:
 		case 1653:
 		case 1657:
 		case 1677:
@@ -245,8 +228,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 2262:
 		case 2267:
 		case 2285:
-		case 2289:
-		case 2297:
 		case 2372:
 		case 2377:
 		case 2382:
@@ -274,7 +255,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 2509:
 		case 2516:
 		case 2523:
-		case 2538:
 		case 2573:
 		case 2577:
 		case 2581:
@@ -449,7 +429,6 @@ function normalizeErrorFn( lineno: number ): ( ( v: JQValue ) => JQValue ) | nul
 // Same for tests/local.test.
 function localSkipReason( lineno: number ): string | null {
 	switch ( lineno ) {
-		case 13:
 		case 27:
 		case 32:
 		case 37:
@@ -498,11 +477,6 @@ function localSkipReason( lineno: number ): string | null {
 		case 316:
 		case 322:
 		case 327:
-		case 332:
-		case 338:
-		case 349:
-		case 360:
-		case 366:
 			return 'not implemented yet';
 
 		default: return null;

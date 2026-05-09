@@ -4,7 +4,7 @@ import { JQUtils, JQEnv, JQError, JQBreak, assertNever } from './internal.js';
 const {
 	assertNotPath,
 	checkArray, checkNumber, checkObject, checkString, isNumber, adjustIndex,
-	normalizeSliceIdx, MAX_SIZE, toBoolean, typeName, typeNameAndValue,
+	normalizeSliceIdx, slice, MAX_SIZE, toBoolean, typeName, typeNameAndValue,
 	equal, compare, add, subtract, multiply, divide, modulo,
 	formatterFor,
 } = JQUtils;
@@ -65,6 +65,9 @@ export class JQCompile {
 			case 'iter': return this.compileIter( node );
 			case 'alternative': return this.compileAlternative( node );
 			case 'try': return this.compileTryCatch( node );
+			case 'reduce': return this.compileReduce( node );
+			case 'foreach': return this.compileForeach( node );
+			case 'slice': return this.compileSlice( node );
 			case 'field': return this.compileField( node );
 			case 'index': return this.compileIndex( node );
 			case 'string': return this.compileString( node );
@@ -1050,6 +1053,119 @@ export class JQCompile {
 					// The catch handler receives the error value, not a path;
 					// always run it in normal mode.
 					yield* catchFn( e.jqValue as JQValue, env.leavePathMode() );
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile a reduce node (reduce src as $pat (init; update)).
+	 * Iterates over all outputs of src; for each output, matches the pattern
+	 * and evaluates update with the current accumulator as input in the
+	 * extended env. Yields the final accumulator value.
+	 *
+	 * @param {ASTNode} node Node with 'src', 'pattern', 'init', and 'update' keys
+	 * @return {FilterFn}
+	 */
+	private compileReduce( node: ASTNode ): FilterFn {
+		const srcFn = this.compileNode( node.src as ASTNode );
+		const initFn = this.compileNode( node.init as ASTNode );
+		const updateFn = this.compileNode( node.update as ASTNode );
+		const patFn = this.compilePattern( node.pattern as ASTNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( let acc of initFn( input, plainEnv ) ) {
+				for ( const val of srcFn( input, plainEnv ) ) {
+					for ( const boundEnv of patFn( val as JQValue, plainEnv ) ) {
+						for ( const newAcc of updateFn( acc as JQValue, boundEnv ) ) {
+							acc = newAcc;
+							// no break: use the last update value as the new acc
+						}
+						// no break: chain all pattern bindings through the acc
+					}
+				}
+				yield assertNotPath( acc, env );
+			}
+		};
+	}
+
+	/**
+	 * Compile a foreach node (foreach src as $pat (init; update[; extract])).
+	 * Like reduce but yields the accumulator (or extract output) after each step.
+	 *
+	 * @param {ASTNode} node Node with 'src', 'pattern', 'init', 'update',
+	 *   and nullable 'extract' keys
+	 * @return {FilterFn}
+	 */
+	private compileForeach( node: ASTNode ): FilterFn {
+		const srcFn = this.compileNode( node.src as ASTNode );
+		const initFn = this.compileNode( node.init as ASTNode );
+		const updateFn = this.compileNode( node.update as ASTNode );
+		const patFn = this.compilePattern( node.pattern as ASTNode );
+		const extractFn = node.extract ? this.compileNode( node.extract as ASTNode ) : null;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( let acc of initFn( input, plainEnv ) ) {
+				for ( const val of srcFn( input, plainEnv ) ) {
+					for ( const boundEnv of patFn( val as JQValue, plainEnv ) ) {
+						// Yield each update value (or its extract); use the last as the
+						// new acc.  If update is empty, acc is unchanged and nothing is
+						// yielded for this step.  Multiple pattern bindings per source
+						// value chain through the accumulator in order.
+						for ( const newAcc of updateFn( acc as JQValue, boundEnv ) ) {
+							acc = newAcc;
+							if ( extractFn !== null ) {
+								for ( const extracted of extractFn( acc as JQValue, boundEnv ) ) {
+									yield assertNotPath( extracted, env );
+								}
+							} else {
+								yield assertNotPath( acc, env );
+							}
+						}
+					}
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile a slice node (expr[from:to] or expr[from:to]?).
+	 * Applies to arrays (returns subarray) and strings (returns substring).
+	 * Null input yields null; other types throw JQError (suppressed when opt).
+	 * In path mode, yields a slice-path key alongside the sliced value.
+	 *
+	 * @param {ASTNode} node Node with 'expr', 'from', 'to', and 'opt' keys
+	 * @return {FilterFn}
+	 */
+	private compileSlice( node: ASTNode ): FilterFn {
+		const exprFn = this.compileNode( node.expr as ASTNode );
+		const nullFn = this.compileLiteral( { type: 'literal', value: null } as ASTNode );
+		const fromFn = node.from ?
+			this.compileNode( node.from as ASTNode ) : nullFn;
+		const toFn = node.to ?
+			this.compileNode( node.to as ASTNode ) : nullFn;
+		const opt = node.opt as boolean;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			for ( const item of exprFn( input, env ) ) {
+				const [ baseEnv, base ] = env.maybeUnwrapPath( item );
+				// from/to bounds are not part of the path; evaluate in normal mode.
+				const normalEnv = env.leavePathMode();
+				for ( const from of fromFn( input, normalEnv ) ) {
+					for ( const to of toFn( input, normalEnv ) ) {
+						// In path mode yield the slice-path key alongside the
+						// sliced value so that downstream ops (and delpaths) work.
+						const sliceKey = {
+							start: from as JQValue,
+							end: to as JQValue,
+						};
+						for (
+							const sliceVal of
+							slice( base, sliceKey.start, sliceKey.end, opt )
+						) {
+							yield baseEnv.appendPath( sliceKey as JQValue )
+								.maybeWithPath( sliceVal );
+						}
+					}
 				}
 			}
 		};

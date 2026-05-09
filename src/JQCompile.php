@@ -1095,15 +1095,13 @@ class JQCompile {
 						// no break: chain all pattern bindings through the acc
 					}
 				}
-				JQUtils::assertNotPath( $acc, $env );
-				yield $acc;
+				yield JQUtils::assertNotPath( $acc, $env );
 			}
 		};
 	}
 
 	/**
-	 * Compile a foreach node (foreach src as $pat (init; update) or
-	 * foreach src as $pat (init; update; extract)).
+	 * Compile a foreach node (foreach src as $pat (init; update[; extract])).
 	 * Like reduce but yields the accumulator (or extract output) after each step.
 	 *
 	 * @param array $node Node with 'src', 'pattern', 'init', 'update', and nullable 'extract' keys
@@ -1114,7 +1112,7 @@ class JQCompile {
 		$initFn    = $this->compileNode( $node['init'] );
 		$updateFn  = $this->compileNode( $node['update'] );
 		$patFn     = $this->compilePattern( $node['pattern'] );
-		$extractFn = $node['extract'] !== null ? $this->compileNode( $node['extract'] ) : null;
+		$extractFn = $node['extract'] ? $this->compileNode( $node['extract'] ) : null;
 		return static function ( mixed $input, JQEnv $env ) use ( $srcFn, $initFn, $updateFn, $patFn, $extractFn ): Generator {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $initFn( $input, $plainEnv ) as $acc ) {
@@ -1128,12 +1126,10 @@ class JQCompile {
 							$acc = $newAcc;
 							if ( $extractFn !== null ) {
 								foreach ( $extractFn( $acc, $boundEnv ) as $extracted ) {
-									JQUtils::assertNotPath( $extracted, $env );
-									yield $extracted;
+									yield JQUtils::assertNotPath( $extracted, $env );
 								}
 							} else {
-								JQUtils::assertNotPath( $acc, $env );
-								yield $acc;
+								yield JQUtils::assertNotPath( $acc, $env );
 							}
 						}
 					}
@@ -1146,6 +1142,7 @@ class JQCompile {
 	 * Compile a slice node (expr[from:to] or expr[from:to]?).
 	 * Applies to arrays (returns subarray) and strings (returns substring).
 	 * Null input yields null; other types throw JQError (suppressed when opt).
+	 * In path mode, yields a slice-path key alongside the sliced value.
 	 *
 	 * @param array $node Node with 'expr', 'from', 'to', and 'opt' keys
 	 * @return Closure(mixed,JQEnv):Generator a Filter
