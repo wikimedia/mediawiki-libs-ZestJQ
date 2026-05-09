@@ -167,8 +167,10 @@ class JQTopLevelEnv extends JQEnv {
 			$toFn   = $argFns[1];
 			return static function ( mixed $input, JQEnv $env ) use ( $fromFn, $toFn ): Generator {
 				foreach ( $fromFn( $input, $env ) as $from ) {
+					$f = JQUtils::checkNumber( 'range', $from );
 					foreach ( $toFn( $input, $env ) as $to ) {
-						for ( $i = $from; $i < $to; $i++ ) {
+						$t = JQUtils::checkNumber( 'range', $to );
+						for ( $i = $f; $i < $t; $i++ ) {
 							yield $i;
 						}
 					}
@@ -206,7 +208,7 @@ class JQTopLevelEnv extends JQEnv {
 			} elseif ( $input === 'false' ) {
 				yield false;
 			} else {
-				$repr = JQUtils::typeName( $input ) . ' (' . JQUtils::jsonEncode( $input ) . ')';
+				$repr = JQUtils::typeNameAndValue( $input );
 				throw new JQError( "{$repr} cannot be parsed as a boolean" );
 			}
 		};
@@ -214,7 +216,7 @@ class JQTopLevelEnv extends JQEnv {
 		// utf8bytelength/0 — byte length of a UTF-8 string
 		$defs['utf8bytelength/0'] = static function ( mixed $input, JQEnv $env ): Generator {
 			if ( !is_string( $input ) ) {
-				$repr = JQUtils::typeName( $input ) . ' (' . JQUtils::jsonEncode( $input ) . ')';
+				$repr = JQUtils::typeNameAndValue( $input );
 				throw new JQError( "{$repr} only strings have UTF-8 byte length" );
 			}
 			yield strlen( $input );
@@ -389,7 +391,10 @@ class JQTopLevelEnv extends JQEnv {
 						$input !== null ? JQUtils::toString( $input ) : ''
 					);
 				}
-				throw new JQHaltException( 0 );
+				throw new JQHaltException(
+					0,
+					$input !== null ? JQUtils::toString( $input ) : ''
+				);
 			};
 		};
 
@@ -496,124 +501,111 @@ class JQTopLevelEnv extends JQEnv {
 		};
 
 		// min/0, max/0 — null for empty array, otherwise the extreme value
-		$defs['min/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			$arr = JQUtils::checkArray( 'min', $input );
+		$minmax = static fn ( $name, $cmp ) => ( static function ( mixed $input, JQEnv $env ) use ( $name, $cmp ): Generator {
+			$arr = JQUtils::checkArray( $name, $input );
 			$best = $arr[0] ?? null;
 			$len = count( $arr );
 			for ( $i = 1; $i < $len; $i++ ) {
-				if ( JQUtils::compare( $arr[$i], $best ) < 0 ) {
+				if ( $cmp( $arr[$i], $best ) ) {
 					$best = $arr[$i];
 				}
 			}
 			yield $best;
-		};
-		$defs['max/0'] = static function ( mixed $input, JQEnv $env ): Generator {
-			$arr = JQUtils::checkArray( 'max', $input );
-			$best = $arr[0] ?? null;
-			$len = count( $arr );
-			for ( $i = 1; $i < $len; $i++ ) {
-				if ( JQUtils::compare( $arr[$i], $best ) > 0 ) {
-					$best = $arr[$i];
+		} );
+		$mincmp = static fn ( $el, $best ) => JQUtils::compare( $el, $best ) < 0;
+		// On ties, max/max_by keeps last element
+		$maxcmp = static fn ( $el, $best ) => JQUtils::compare( $el, $best ) >= 0;
+		$defs['min/0'] = $minmax( 'min', $mincmp );
+		$defs['max/0'] = $minmax( 'max', $maxcmp );
+
+		// _min_by_impl/1 and _max_by_impl/1 — cores of min_by/1 and max_by/1.
+		// Empty array yields null; otherwise a single linear scan finds the extremum.
+		$minmax_by = static fn ( $name, $cmp ) => ( static function ( array $argFns ) use ( $name, $cmp ): Closure {
+			$keysFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $name, $cmp, $keysFn ): Generator {
+				$arr = JQUtils::checkArray( $name, $input );
+				foreach ( $keysFn( $input, $env ) as $keys ) {
+					$keys = JQUtils::checkArray( $name, $keys );
+					$bestVal = $arr[0] ?? null;
+					$bestKey = $keys[0] ?? null;
+					for ( $i = 1, $n = count( $arr ); $i < $n; $i++ ) {
+						if ( $cmp( $keys[$i], $bestKey ) ) {
+							$bestVal = $arr[$i];
+							$bestKey = $keys[$i];
+						}
+					}
+					yield $bestVal;
 				}
-			}
-			yield $best;
-		};
+			};
+		} );
+		$defs['_min_by_impl/1'] = $minmax_by( '_min_by_impl', $mincmp );
+		$defs['_max_by_impl/1'] = $minmax_by( '_max_by_impl', $maxcmp );
 
 		// _sort_by_impl/1 — core of sort_by/1.
 		// Called as _sort_by_impl(map([f])): receives input array and a pre-mapped
 		// array of key-arrays (one per element); returns input sorted by those keys.
 		$defs['_sort_by_impl/1'] = static function ( array $argFns ): Closure {
-			return static function ( mixed $input, JQEnv $env ) use ( $argFns ): Generator {
-				$arr  = JQUtils::checkArray( '_sort_by_impl', $input );
-				$keys = self::firstResult( $argFns[0], $input, $env );
-				$keys = JQUtils::checkArray( '_sort_by_impl', $keys );
-				// pair each value with its key, sort by key, extract values
-				$pairs = array_map( null, $arr, $keys );
-				usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
-				yield array_column( $pairs, 0 );
+			$keysFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $keysFn ): Generator {
+				$arr = JQUtils::checkArray( '_sort_by_impl', $input );
+				foreach ( $keysFn( $input, $env ) as $keys ) {
+					$keys = JQUtils::checkArray( '_sort_by_impl', $keys );
+					// pair each value with its key, sort by key, extract values
+					$pairs = array_map( null, $arr, $keys );
+					usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
+					yield array_column( $pairs, 0 );
+				}
 			};
 		};
 
 		// _unique_by_impl/1 — core of unique_by/1.
 		// Sort by keys then keep only the first element of each run of equal keys.
 		$defs['_unique_by_impl/1'] = static function ( array $argFns ): Closure {
-			return static function ( mixed $input, JQEnv $env ) use ( $argFns ): Generator {
-				$arr  = JQUtils::checkArray( '_unique_by_impl', $input );
-				$keys = self::firstResult( $argFns[0], $input, $env );
-				$keys = JQUtils::checkArray( '_unique_by_impl', $keys );
-				$pairs = array_map( null, $arr, $keys );
-				usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
-				$result  = [];
-				$prevKey = null;
-				foreach ( $pairs as [ $val, $key ] ) {
-					if ( $result === [] || JQUtils::compare( $key, $prevKey ) !== 0 ) {
-						$result[] = $val;
-						$prevKey  = $key;
+			$keysFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $keysFn ): Generator {
+				$arr = JQUtils::checkArray( '_unique_by_impl', $input );
+				foreach ( $keysFn( $input, $env ) as $keys ) {
+					$keys = JQUtils::checkArray( '_unique_by_impl', $keys );
+					$pairs = array_map( null, $arr, $keys );
+					usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
+					$result  = [];
+					$prevKey = null;
+					foreach ( $pairs as [ $val, $key ] ) {
+						if ( $result === [] || JQUtils::compare( $key, $prevKey ) !== 0 ) {
+							$result[] = $val;
+							$prevKey  = $key;
+						}
 					}
+					yield $result;
 				}
-				yield $result;
-			};
-		};
-
-		// _min_by_impl/1 and _max_by_impl/1 — cores of min_by/1 and max_by/1.
-		// Empty array yields null; otherwise a single linear scan finds the extremum.
-		$defs['_min_by_impl/1'] = static function ( array $argFns ): Closure {
-			return static function ( mixed $input, JQEnv $env ) use ( $argFns ): Generator {
-				$arr  = JQUtils::checkArray( '_min_by_impl', $input );
-				$keys = self::firstResult( $argFns[0], $input, $env );
-				$keys = JQUtils::checkArray( '_min_by_impl', $keys );
-				$bestVal = $arr[0] ?? null;
-				$bestKey = $keys[0] ?? null;
-				for ( $i = 1, $n = count( $arr ); $i < $n; $i++ ) {
-					if ( JQUtils::compare( $keys[$i], $bestKey ) < 0 ) {
-						$bestVal = $arr[$i];
-						$bestKey = $keys[$i];
-					}
-				}
-				yield $bestVal;
-			};
-		};
-		$defs['_max_by_impl/1'] = static function ( array $argFns ): Closure {
-			return static function ( mixed $input, JQEnv $env ) use ( $argFns ): Generator {
-				$arr  = JQUtils::checkArray( '_max_by_impl', $input );
-				$keys = self::firstResult( $argFns[0], $input, $env );
-				$keys = JQUtils::checkArray( '_max_by_impl', $keys );
-				$bestVal = $arr[0] ?? null;
-				$bestKey = $keys[0] ?? null;
-				// >= 0: on ties, keep the last element (matches jq's _max_by_impl behavior)
-				for ( $i = 1, $n = count( $arr ); $i < $n; $i++ ) {
-					if ( JQUtils::compare( $keys[$i], $bestKey ) >= 0 ) {
-						$bestVal = $arr[$i];
-						$bestKey = $keys[$i];
-					}
-				}
-				yield $bestVal;
 			};
 		};
 
 		// _group_by_impl/1 — core of group_by/1.
 		// Same calling convention as _sort_by_impl; returns array of groups.
 		$defs['_group_by_impl/1'] = static function ( array $argFns ): Closure {
-			return static function ( mixed $input, JQEnv $env ) use ( $argFns ): Generator {
-				$arr  = JQUtils::checkArray( '_group_by_impl', $input );
-				$keys = self::firstResult( $argFns[0], $input, $env );
-				$keys = JQUtils::checkArray( '_group_by_impl', $keys );
-				$pairs = array_map( null, $arr, $keys );
-				usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
-				$groups     = [];
-				$curGroup   = [ $pairs[0][0] ];
-				$curKey     = $pairs[0][1];
-				for ( $i = 1, $n = count( $pairs ); $i < $n; $i++ ) {
-					if ( JQUtils::compare( $pairs[$i][1], $curKey ) === 0 ) {
-						$curGroup[] = $pairs[$i][0];
-					} else {
-						$groups[] = $curGroup;
-						$curGroup = [ $pairs[$i][0] ];
-						$curKey   = $pairs[$i][1];
+			$keysFn = $argFns[0];
+			return static function ( mixed $input, JQEnv $env ) use ( $keysFn ): Generator {
+				$arr = JQUtils::checkArray( '_group_by_impl', $input );
+				foreach ( $keysFn( $input, $env ) as $keys ) {
+					$keys = JQUtils::checkArray( '_group_by_impl', $keys );
+					$pairs = array_map( null, $arr, $keys );
+					usort( $pairs, static fn ( $a, $b ) => JQUtils::compare( $a[1], $b[1] ) );
+					$groups     = [];
+					$curGroup   = [ $pairs[0][0] ];
+					$curKey     = $pairs[0][1];
+					for ( $i = 1, $n = count( $pairs ); $i < $n; $i++ ) {
+						if ( JQUtils::compare( $pairs[$i][1], $curKey ) === 0 ) {
+							$curGroup[] = $pairs[$i][0];
+						} else {
+							$groups[] = $curGroup;
+							$curGroup = [ $pairs[$i][0] ];
+							$curKey   = $pairs[$i][1];
+						}
 					}
+					$groups[] = $curGroup;
+					yield $groups;
 				}
-				$groups[] = $curGroup;
-				yield $groups;
 			};
 		};
 
@@ -764,23 +756,6 @@ class JQTopLevelEnv extends JQEnv {
 
 		return $defs;
 	}
-
-	/** Drive $fn($input, $env) and return its first yielded value. */
-	private static function firstResult( Closure $fn, mixed $input, JQEnv $env ): mixed {
-		foreach ( $fn( $input, $env ) as $v ) {
-			return $v;
-		}
-		return null;
-	}
-
-	/**
-	 * Recursive JQ containment check used by contains/1 and inside/1.
-	 *
-	 * - strings: substring containment
-	 * - lists: every element of $b has a "contained" element in $a
-	 * - objects: every key of $b exists in $a with a contained value
-	 * - scalars: structural equality
-	 */
 
 	/**
 	 * Build a arity-0 Filter that applies a unary PHP math function to a
@@ -944,6 +919,14 @@ class JQTopLevelEnv extends JQEnv {
 	// Other helpers
 	// -----------------------------------------------------------------------
 
+	/**
+	 * Recursive JQ containment check used by contains/1 and inside/1.
+	 *
+	 * - strings: substring containment
+	 * - lists: every element of $b has a "contained" element in $a
+	 * - objects: every key of $b exists in $a with a contained value
+	 * - scalars: structural equality
+	 */
 	private static function jqContains( mixed $a, mixed $b ): bool {
 		if ( is_string( $a ) && is_string( $b ) ) {
 			return str_contains( $a, $b );

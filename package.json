@@ -8,6 +8,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^25.6.2",
+		"@types/d3-time-format": "^4.0.3",
 		"@typescript-eslint/eslint-plugin": "^7.8.0",
 		"@typescript-eslint/parser": "^7.8.0",
 		"@wmde/eslint-config-wikimedia-typescript": "^0.2.14",
@@ -33,5 +34,8 @@
 		"regen-jq-parser": "npm run regen-jq-parser-php && npm run regen-jq-parser-js",
 		"regen-jq-parser-php": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar --php src/JQGrammar.peg src/JQGrammar.php",
 		"regen-jq-parser-js": "node node_modules/wikipeg/bin/wikipeg --common-lang --esm src/JQGrammar.peg lib/JQGrammar.js"
+	},
+	"peerDependencies": {
+		"d3-time-format": "^4.1.0"
 	}
 }

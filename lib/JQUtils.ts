@@ -78,6 +78,10 @@ export function checkStrings( who: string, ...vals: JQValueOrPath[] ): string[] 
 	return vals.map( ( val ) => checkString( who, val ) );
 }
 
+export function isObject( v: JQValue ): v is number {
+	return v !== null && typeof v === 'object' && !Array.isArray( v );
+}
+
 // Assert that val is an object and return it; throw JQError otherwise.
 // who names the operation for the error message (e.g. 'field').
 export function checkObject( who: string, val: JQValueOrPath ): Record<string, JQValue> {
