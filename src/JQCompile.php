@@ -1055,7 +1055,7 @@ class JQCompile {
 	 */
 	private function compileTryCatch( array $node ): Closure {
 		$bodyFn  = $this->compileNode( $node['body'] );
-		$catchFn = $node['catch'] !== null ? $this->compileNode( $node['catch'] ) : null;
+		$catchFn = $node['catch'] ? $this->compileNode( $node['catch'] ) : null;
 		return static function ( mixed $input, JQEnv $env ) use ( $bodyFn, $catchFn ): Generator {
 			try {
 				yield from $bodyFn( $input, $env );

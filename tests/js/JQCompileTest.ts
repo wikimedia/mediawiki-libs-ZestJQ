@@ -50,30 +50,19 @@ function upstreamSkipReason( lineno: number ): string | null {
 
 			// Below this point we list tests not yet implemented.
 		case 39:
-		case 106:
-		case 179:
-		case 183:
 		case 187:
-		case 191:
 		case 195:
 		case 200:
-		case 205:
 		case 213:
 		case 217:
 		case 221:
 		case 225:
 		case 229:
-		case 237:
-		case 265:
-		case 269:
-		case 273:
 		case 295:
 		case 299:
 		case 303:
 		case 307:
 		case 311:
-		case 315:
-		case 319:
 		case 329:
 		case 333:
 		case 337:
@@ -108,26 +97,14 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 474:
 		case 478:
 		case 490:
-		case 502:
-		case 534:
-		case 701:
 		case 705:
-		case 709:
-		case 720:
-		case 725:
-		case 737:
-		case 745:
 		case 750:
 		case 758:
 		case 762:
 		case 766:
 		case 771:
 		case 775:
-		case 830:
-		case 834:
 		case 838:
-		case 878:
-		case 889:
 		case 899:
 		case 903:
 		case 907:
@@ -135,23 +112,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 915:
 		case 919:
 		case 924:
-		case 938:
-		case 945:
-		case 949:
-		case 953:
-		case 957:
-		case 961:
-		case 968:
-		case 975:
-		case 982:
-		case 989:
-		case 996:
-		case 1003:
-		case 1010:
-		case 1017:
-		case 1024:
-		case 1031:
-		case 1038:
 		case 1045:
 		case 1049:
 		case 1053:
@@ -175,7 +135,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1143:
 		case 1153:
 		case 1159:
-		case 1173:
 		case 1177:
 		case 1184:
 		case 1188:
@@ -188,7 +147,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1225:
 		case 1229:
 		case 1233:
-		case 1241:
 		case 1245:
 		case 1249:
 		case 1253:
@@ -202,29 +160,11 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1294:
 		case 1298:
 		case 1302:
-		case 1314:
-		case 1318:
-		case 1366:
-		case 1370:
 		case 1374:
-		case 1378:
-		case 1385:
 		case 1448:
-		case 1452:
-		case 1456:
-		case 1460:
 		case 1464:
 		case 1468:
-		case 1473:
-		case 1477:
-		case 1481:
-		case 1485:
-		case 1489:
-		case 1493:
 		case 1499:
-		case 1504:
-		case 1508:
-		case 1512:
 		case 1520:
 		case 1524:
 		case 1528:
@@ -233,10 +173,7 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1540:
 		case 1544:
 		case 1548:
-		case 1553:
-		case 1557:
 		case 1563:
-		case 1575:
 		case 1581:
 		case 1585:
 		case 1589:
@@ -245,14 +182,7 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1601:
 		case 1605:
 		case 1609:
-		case 1613:
-		case 1617:
-		case 1621:
-		case 1625:
 		case 1633:
-		case 1641:
-		case 1645:
-		case 1649:
 		case 1653:
 		case 1657:
 		case 1677:
@@ -281,26 +211,13 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 1815:
 		case 1819:
 		case 1823:
-		case 1839:
-		case 1868:
-		case 1872:
-		case 1876:
-		case 1881:
-		case 1885:
 		case 1895:
-		case 1997:
-		case 2001:
 		case 2005:
 		case 2018:
 		case 2022:
 		case 2029:
 		case 2034:
 		case 2038:
-		case 2046:
-		case 2050:
-		case 2054:
-		case 2058:
-		case 2062:
 		case 2067:
 		case 2071:
 		case 2086:
@@ -322,7 +239,6 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 2169:
 		case 2190:
 		case 2236:
-		case 2241:
 		case 2250:
 		case 2254:
 		case 2258:
@@ -331,19 +247,12 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 2285:
 		case 2289:
 		case 2297:
-		case 2346:
-		case 2350:
-		case 2354:
-		case 2359:
-		case 2363:
-		case 2367:
 		case 2372:
 		case 2377:
 		case 2382:
 		case 2386:
 		case 2390:
 		case 2395:
-		case 2411:
 		case 2416:
 		case 2420:
 		case 2425:
@@ -361,14 +270,10 @@ function upstreamSkipReason( lineno: number ): string | null {
 		case 2475:
 		case 2479:
 		case 2483:
-		case 2487:
-		case 2494:
-		case 2498:
 		case 2504:
 		case 2509:
 		case 2516:
 		case 2523:
-		case 2533:
 		case 2538:
 		case 2573:
 		case 2577:

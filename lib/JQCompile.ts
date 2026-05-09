@@ -62,6 +62,9 @@ export class JQCompile {
 			case 'and': return this.compileAnd( node );
 			case 'or': return this.compileOr( node );
 			case 'neg': return this.compileNeg( node );
+			case 'iter': return this.compileIter( node );
+			case 'alternative': return this.compileAlternative( node );
+			case 'try': return this.compileTryCatch( node );
 			case 'field': return this.compileField( node );
 			case 'index': return this.compileIndex( node );
 			case 'string': return this.compileString( node );
@@ -743,6 +746,45 @@ export class JQCompile {
 	}
 
 	/**
+	 * Compile an iterator node (.[] or expr[]?).
+	 * Iterates over arrays (yielding each element) and objects (yielding each
+	 * value in insertion order). null and other non-iterable types throw
+	 * JQError, suppressed to empty output when opt is true.
+	 *
+	 * @param {ASTNode} node Node with 'expr' and 'opt' keys
+	 * @return {FilterFn}
+	 */
+	private compileIter( node: ASTNode ): FilterFn {
+		const exprFn = this.compileNode( node.expr as ASTNode );
+		const opt = node.opt as boolean;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			for ( const item of exprFn( input, env ) ) {
+				const [ baseEnv, base ] = env.maybeUnwrapPath( item );
+				try {
+					if ( JQUtils.isObject( base ) ) {
+						for (
+							const [ k, v ] of
+							Object.entries( base as unknown as Record<string, JQValue> )
+						) {
+							yield baseEnv.appendPath( k ).maybeWithPath( v );
+						}
+					} else if ( Array.isArray( base ) ) {
+						for ( let k = 0; k < base.length; k++ ) {
+							yield baseEnv.appendPath( k ).maybeWithPath( base[ k ] );
+						}
+					} else {
+						throw new JQError( `Cannot iterate over ${typeNameAndValue( base )}` );
+					}
+				} catch ( e ) {
+					if ( !( opt && ( e instanceof JQError ) ) ) {
+						throw e;
+					}
+				}
+			}
+		};
+	}
+
+	/**
 	 * Compile a unary negation node (-expr).
 	 * Yields -v for each numeric value yielded by the inner expression;
 	 * throws JQError for non-numeric values.
@@ -954,6 +996,60 @@ export class JQCompile {
 			for ( const rv of rightFn( input, plainEnv ) ) {
 				for ( const lv of leftFn( input, plainEnv ) ) {
 					yield assertNotPath( op( lv as JQValue, rv as JQValue ), env );
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile an alternative node (left // right).
+	 * Evaluates left; yields all non-false/non-null outputs. If none were
+	 * yielded, evaluates right and yields all its outputs instead.
+	 *
+	 * @param {ASTNode} node Node with 'left' and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileAlternative( node: ASTNode ): FilterFn {
+		const leftFn = this.compileNode( node.left as ASTNode );
+		const rightFn = this.compileNode( node.right as ASTNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			let found = false;
+			for ( const item of leftFn( input, env ) ) {
+				const [ itemEnv, val ] = env.maybeUnwrapPath( item );
+				if ( toBoolean( val ) ) {
+					yield itemEnv.maybeWithPath( val );
+					found = true;
+				}
+			}
+			if ( !found ) {
+				yield* rightFn( input, env );
+			}
+		};
+	}
+
+	/**
+	 * Compile a try-catch node (try body catch handler).
+	 * Evaluates body; if a JQError is thrown, catches it and either
+	 * evaluates handler with the error message as input, or produces no
+	 * output if there is no catch clause.
+	 *
+	 * @param {ASTNode} node Node with 'body' and nullable 'catch' keys
+	 * @return {FilterFn}
+	 */
+	private compileTryCatch( node: ASTNode ): FilterFn {
+		const bodyFn = this.compileNode( node.body as ASTNode );
+		const catchFn = node.catch ? this.compileNode( node.catch as ASTNode ) : null;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			try {
+				yield* bodyFn( input, env );
+			} catch ( e ) {
+				if ( !( e instanceof JQError ) ) {
+					throw e;
+				}
+				if ( catchFn !== null ) {
+					// The catch handler receives the error value, not a path;
+					// always run it in normal mode.
+					yield* catchFn( e.jqValue as JQValue, env.leavePathMode() );
 				}
 			}
 		};
