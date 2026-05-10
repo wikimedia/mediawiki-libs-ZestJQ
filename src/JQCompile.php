@@ -1257,8 +1257,8 @@ class JQCompile {
 	/**
 	 * Compile "pathNode |= updateFn" — apply updateFn to every slot produced by
 	 * pathNode and write the result back.  Slots for which updateFn yields nothing
-	 * are deleted (jq |= empty semantics).  Array deletions are applied in reverse
-	 * index order to preserve correct positions.
+	 * are deleted (jq |= empty semantics).  Array deletions
+	 * preserve correct positions.
 	 *
 	 * @param array $pathNode AST path node
 	 * @param Closure(mixed,mixed,JQEnv):Generator $updateFn

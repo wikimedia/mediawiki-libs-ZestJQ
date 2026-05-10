@@ -13,6 +13,11 @@ const {
 // Type mismatches should throw JQError so that alt_pattern can catch and retry.
 type Matcher = ( val: JQValue, env: JQEnv ) => Generator<JQEnv>;
 
+// UpdateFn: used in compileAssign and compileAssignUpdate
+// updateFn receives (outerInput, currentPathValue, env) and yields the
+// replacement value
+type UpdateFn = ( input: JQValue, current: JQValue, env: JQEnv ) => Generator<JQValueOrPath>;
+
 // Tombstone sentinel for deleteAtPaths — a unique object that cannot be
 // produced by JSON.parse, so it cannot alias any user-supplied JQ value.
 const TOMB: JQValue = Object.freeze( Object.create( null ) as Record<string, JQValue> );
@@ -68,6 +73,7 @@ export class JQCompile {
 			case 'reduce': return this.compileReduce( node );
 			case 'foreach': return this.compileForeach( node );
 			case 'slice': return this.compileSlice( node );
+			case 'assign': return this.compileAssign( node );
 			case 'field': return this.compileField( node );
 			case 'index': return this.compileIndex( node );
 			case 'string': return this.compileString( node );
@@ -1168,6 +1174,153 @@ export class JQCompile {
 					}
 				}
 			}
+		};
+	}
+
+	/**
+	 * Compile an assign node (lhs = rhs, lhs |= f, or lhs op= rhs).
+	 *
+	 * For plain =:  evaluate rhs against input, then set lhs to each result.
+	 * For |=:       get the current value at lhs, apply rhs as an update fn, set back.
+	 * For op= (+=, -=, *=, /=, %=, //=): the RHS is evaluated on the OUTER input
+	 *   (the input at the time of evaluation), not on the current path value.
+	 *   "A op= B" means: for each path p in A, set p to (value-at-p) op ($outer | B).
+	 *   This differs from "A |= . op B" when B references the outer object/array
+	 *   (e.g. ".foo += .foo" must read .foo from the original input, not from the
+	 *   scalar value 2 that is the current .foo).
+	 *
+	 * @param {ASTNode} node Node with 'op', 'left', and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileAssign( node: ASTNode ): FilterFn {
+		const op = node.op as string;
+		const lhsNode = node.left as ASTNode;
+		const rhsFn = this.compileNode( node.right as ASTNode );
+
+		if ( op === '=' ) {
+			return this.compileAssignSet( lhsNode, rhsFn );
+		}
+
+		// Compound op= : the RHS is evaluated on the outer input, not the
+		// path value, so use a special form for $updateFn which can take
+		// the outer input, *and* the current value at the path, and yield
+		// a result (which will be written back).
+
+		let binaryOp: null|( ( a: JQValue, b: JQValue ) => JQValue );
+		switch ( op ) {
+			case '+=':
+				binaryOp = add;
+				break;
+			case '-=':
+				binaryOp = subtract;
+				break;
+			case '*=':
+				binaryOp = multiply;
+				break;
+			case '/=':
+				binaryOp = divide;
+				break;
+			case '%=':
+				binaryOp = modulo;
+				break;
+			default:
+				binaryOp = null;
+				break;
+		}
+
+		let updateFn: UpdateFn;
+
+		switch ( op ) {
+			case '|=':
+				updateFn = function* ( _input, current, env ) {
+					yield* rhsFn( current, env );
+				};
+				break;
+			case '//=':
+				updateFn = function* ( input, current, env ) {
+					if ( toBoolean( current ) ) {
+						yield current;
+					} else {
+						yield* rhsFn( input, env );
+					}
+				};
+				break;
+			default:
+				if ( binaryOp === null ) {
+					assertNever( `Unknown compound assignment operator: ${op}` );
+				}
+				updateFn = function* ( input, current, env ) {
+					for ( const r of rhsFn( input, env ) ) {
+						yield binaryOp( current, assertNotPath( r, env ) );
+					}
+				};
+				break;
+		}
+		return this.compileAssignUpdate( lhsNode, updateFn );
+	}
+
+	/**
+	 * Compile "pathNode = rhsFn": for each value produced by rhsFn, set every
+	 * path produced by pathNode to that value and yield the updated input.
+	 *
+	 * @param {ASTNode} pathNode AST path node (the LHS)
+	 * @param {FilterFn} rhsFn compiled RHS expression
+	 * @return {FilterFn}
+	 */
+	private compileAssignSet( pathNode: ASTNode, rhsFn: FilterFn ): FilterFn {
+		const pathFn = this.compileNode( pathNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			assertNotPath( input, env );
+			const pathEnv = env.enterPathMode();
+			for ( const newVal of rhsFn( input, env ) ) {
+				let result = input;
+				for ( const item of pathFn( input, pathEnv ) ) {
+					result = JQCompile.setAtPath(
+						result,
+						pathEnv.extractPath( item ),
+						0,
+						assertNotPath( newVal, env ),
+					);
+				}
+				yield result;
+			}
+		};
+	}
+
+	/**
+	 * Compile "pathNode |= updateFn": apply updateFn to every slot produced by
+	 * pathNode and write the result back. Slots where updateFn yields nothing
+	 * are deleted (jq `|= empty` semantics). Array deletions
+	 * preserve correct positions.
+	 *
+	 * @param {ASTNode} pathNode AST path node (the LHS)
+	 * @param {Function} updateFn takes (outerInput, currentValue, env), yields replacement
+	 * @return {FilterFn}
+	 */
+	private compileAssignUpdate(
+		pathNode: ASTNode,
+		updateFn: UpdateFn,
+	): FilterFn {
+		const pathFn = this.compileNode( pathNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			assertNotPath( input, env );
+			const pathEnv = env.enterPathMode();
+			const toDelete: JQValue[] = [];
+			for ( const item of pathFn( input, pathEnv ) ) {
+				const path = pathEnv.extractPath( item );
+				const current = JQCompile.getAtPath( input, path, 0 );
+				let hasOutput = false;
+				// eslint-disable-next-line no-unreachable-loop
+				for ( const newVal of updateFn( input, current, env ) ) {
+					input = JQCompile.setAtPath( input, path, 0, assertNotPath( newVal, env ) );
+					hasOutput = true;
+					break;
+				}
+				if ( !hasOutput ) {
+					toDelete.push( path as JQValue );
+				}
+			}
+			yield JQCompile.deleteAtPaths( input, toDelete );
 		};
 	}
 
