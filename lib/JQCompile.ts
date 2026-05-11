@@ -1,5 +1,5 @@
 import type { ASTNode, JQFilter, JQValue, FilterFn, FilterFactory, JQValueOrPath } from './internal.js';
-import { JQEnv, JQError, JQBreak, assertNever, assertNotPath } from './internal.js';
+import { JQUtils, JQEnv, JQError, JQBreak, assertNever, assertNotPath } from './internal.js';
 
 export class JQCompile {
 	public static compile( ast: ASTNode, env: JQEnv ): JQFilter {
@@ -37,6 +37,8 @@ export class JQCompile {
 			case 'variable': return this.compileVariable( node );
 			case 'def': return this.compileDef( node );
 			case 'call': return this.compileCall( node );
+			case 'array': return this.compileArray( node );
+			case 'object': return this.compileObject( node );
 			default:
 				assertNever( `unimplemented: ${node.type}` );
 		}
@@ -278,6 +280,72 @@ export class JQCompile {
 				throw new JQError( `${name}/${arity} is not defined` );
 			}
 			yield* factory( argFns )( input, env );
+		};
+	}
+
+	/**
+	 * Compile an array constructor node ([expr]).
+	 * Collects every output of the inner expression into a single JS array.
+	 * [empty_expr] produces an empty array.
+	 *
+	 * @param {ASTNode} node Node with nullable 'expr' key
+	 * @return {FilterFn}
+	 */
+	private compileArray( node: ASTNode ): FilterFn {
+		if ( node.expr === null ) {
+			return function* ( _input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+				yield assertNotPath( [], env );
+			};
+		}
+		const exprFn = this.compileNode( node.expr as ASTNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			// Array construction always produces a new value, never a path extension.
+			const items: JQValue[] = [];
+			for ( const val of exprFn( input, env.leavePathMode() ) ) {
+				items.push( val as JQValue );
+			}
+			yield assertNotPath( items, env );
+		};
+	}
+
+	/**
+	 * Compile an object constructor node ({k1: v1, k2: v2, ...}).
+	 *
+	 * Each key and value is an arbitrary filter. Multiple outputs from a key
+	 * or value expression multiply the number of output objects (Cartesian
+	 * product over pairs, evaluated left-to-right). An empty pair list yields
+	 * a single empty object.
+	 *
+	 * @param {ASTNode} node Node with 'pairs' key (array of {key, value} nodes)
+	 * @return {FilterFn}
+	 */
+	private compileObject( node: ASTNode ): FilterFn {
+		const pairs = node.pairs as { key: ASTNode; value: ASTNode }[];
+		const pairFns: [ FilterFn, FilterFn ][] = pairs.map( ( pair ) => [
+			this.compileNode( pair.key ), this.compileNode( pair.value ),
+		] );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			let objects: Record<string, JQValue>[] = [ {} ];
+			for ( const [ keyFn, valFn ] of pairFns ) {
+				const next: Record<string, JQValue>[] = [];
+				for ( const obj of objects ) {
+					for ( const key of keyFn( input, plainEnv ) ) {
+						for ( const val of valFn( input, plainEnv ) ) {
+							if ( typeof key !== 'string' && typeof key !== 'number' ) {
+								throw new JQError(
+									`Cannot use ${JQUtils.typeName( key as JQValue )} as object key`,
+								);
+							}
+							next.push( { ...obj, [ String( key ) ]: val as JQValue } );
+						}
+					}
+				}
+				objects = next;
+			}
+			for ( const obj of objects ) {
+				yield assertNotPath( obj, env );
+			}
 		};
 	}
 

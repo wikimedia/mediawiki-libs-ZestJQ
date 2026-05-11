@@ -452,7 +452,7 @@ class JQCompile {
 	 * Each key and value is an arbitrary filter. Multiple outputs from a key
 	 * or value expression multiply the number of output objects (Cartesian
 	 * product over pairs, evaluated left-to-right). An empty pair list yields
-	 * a single empty associative array.
+	 * a single empty object.
 	 *
 	 * @param array $node Node with 'pairs' key (array of {key, value} nodes)
 	 * @return Closure(mixed,JQEnv):Generator a Filter
