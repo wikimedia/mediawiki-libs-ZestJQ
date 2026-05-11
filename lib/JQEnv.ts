@@ -4,8 +4,15 @@ import { JQ, JQUtils, JQError, IOContext, JQCompile, JQBuiltin, assertNever } fr
 // runtime.
 import { JQTopLevelEnv } from './internal.js';
 
+// Path-mode pair: [pathEnv, value] yielded by structural ops when in path mode.
 // eslint-disable-next-line no-use-before-define
-export function assertNotPath( value: JQValue, env: JQEnv ): JQValue {
+export type JQPathValue = [ JQPathEnv, JQValue ];
+
+// Value type visible inside the evaluation engine (includes path-mode pairs).
+export type JQValueOrPath = JQValue | JQPathValue;
+
+// eslint-disable-next-line no-use-before-define
+export function assertNotPath( value: JQValueOrPath, env: JQEnv ): JQValue {
 	if ( env.isPathMode() ) {
 		throw new JQError( 'Invalid path expression' );
 	}
@@ -15,7 +22,7 @@ export function assertNotPath( value: JQValue, env: JQEnv ): JQValue {
 // Inner filter: input is always a plain JQValue (the pipe unwraps path pairs
 // before each call), but outputs may be JQPathValue pairs when in path mode.
 // eslint-disable-next-line no-use-before-define
-export type FilterFn = ( input: JQValue, env: JQEnv ) => Generator<JQValue>;
+export type FilterFn = ( input: JQValue, env: JQEnv ) => Generator<JQValueOrPath>;
 
 // Filter factory for n-arity functions: takes arg filters, returns a FilterFn
 export type FilterFactory = ( args: FilterFn[] ) => FilterFn;
@@ -228,9 +235,9 @@ export abstract class JQEnv {
 	 * Used at the yield site in every structural compile* method.
 	 *
 	 * @param {JQValue} value
-	 * @return {JQValue}
+	 * @return {JQValueOrPath}
 	 */
-	public maybeWithPath( value: JQValue ): JQValue {
+	public maybeWithPath( value: JQValue ): JQValueOrPath {
 		return value;
 	}
 
@@ -242,11 +249,11 @@ export abstract class JQEnv {
 	 *
 	 * Used in compilePipe to thread the path env into the right-hand side.
 	 *
-	 * @param {JQValue} item
+	 * @param {JQValueOrPath} item
 	 * @return {Array}
 	 */
-	public maybeUnwrapPath( item: JQValue ): [ JQEnv, JQValue ] {
-		return [ this, item ];
+	public maybeUnwrapPath( item: JQValueOrPath ): [ JQEnv, JQValue ] {
+		return [ this, item as JQValue ];
 	}
 
 	/**
@@ -254,11 +261,11 @@ export abstract class JQEnv {
 	 * item must be a [pathEnv, value] pair produced by maybeWithPath().
 	 * Only meaningful when in path mode; used exclusively by path/1.
 	 *
-	 * @param {JQValue} item
+	 * @param {JQValueOrPath} item
 	 * @return {JQValue[]}
 	 */
-	public extractPath( item: JQValue ): JQValue[] {
-		return ( item as unknown as [ JQEnv, JQValue ] )[ 0 ].getPath();
+	public extractPath( item: JQValueOrPath ): JQValue[] {
+		return ( item as JQPathValue )[ 0 ].getPath();
 	}
 
 }
@@ -403,24 +410,23 @@ export class JQPathEnv extends JQEnv {
 	 * Wrap value as a [this, value] pair for downstream path tracking.
 	 *
 	 * @param {JQValue} value
-	 * @return {JQValue}
+	 * @return {JQValueOrPath}
 	 */
-	public override maybeWithPath( value: JQValue ): JQValue {
-		return [ this, value ] as unknown as JQValue;
+	public override maybeWithPath( value: JQValue ): JQValueOrPath {
+		return [ this, value ];
 	}
 
 	/**
 	 * Unwrap a [JQPathEnv, value] pair; throws if item is not a valid path output.
 	 *
-	 * @param {JQValue} item
+	 * @param {JQValueOrPath} item
 	 * @return {Array}
 	 */
-	public override maybeUnwrapPath( item: JQValue ): [ JQEnv, JQValue ] {
-		const pair = item as unknown as [ unknown, JQValue ];
-		if ( !Array.isArray( pair ) || !( pair[ 0 ] instanceof JQPathEnv ) ) {
-			throw new JQError( `Invalid path expression with result ${JQUtils.jsonEncode( item )}` );
+	public override maybeUnwrapPath( item: JQValueOrPath ): [ JQEnv, JQValue ] {
+		if ( !Array.isArray( item ) || !( item[ 0 ] instanceof JQPathEnv ) ) {
+			throw new JQError( `Invalid path expression with result ${JQUtils.jsonEncode( item as JQValue )}` );
 		}
-		return [ pair[ 0 ] as JQPathEnv, pair[ 1 ] ];
+		return item as JQPathValue;
 	}
 }
 

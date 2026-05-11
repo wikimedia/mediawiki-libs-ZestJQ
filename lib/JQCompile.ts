@@ -1,11 +1,15 @@
-import type { ASTNode, JQFilter, JQValue, FilterFn } from './internal.js';
+import type { ASTNode, JQFilter, JQValue, FilterFn, JQValueOrPath } from './internal.js';
 import { JQEnv, assertNever, assertNotPath } from './internal.js';
 
 export class JQCompile {
 	public static compile( ast: ASTNode, env: JQEnv ): JQFilter {
 		const compiler = new JQCompile();
 		const fn = compiler.compileNode( ast );
-		return ( input: JQValue ) => fn( input, env );
+		return function* ( input: JQValue ): Generator<JQValue> {
+			for ( const v of fn( input, env ) ) {
+				yield v as JQValue;
+			}
+		};
 	}
 
 	private compileNode( node: ASTNode ): FilterFn {
@@ -20,7 +24,7 @@ export class JQCompile {
 
 	private compileLiteral( node: ASTNode ): FilterFn {
 		const value = node.value as JQValue;
-		return function* ( input: JQValue, env: JQEnv ): Generator<JQValue> {
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
 			assertNotPath( value, env );
 			yield value;
 		};
@@ -29,16 +33,17 @@ export class JQCompile {
 	private compilePipe( node: ASTNode ): FilterFn {
 		const leftFn = this.compileNode( node.left as ASTNode );
 		const rightFn = this.compileNode( node.right as ASTNode );
-		return function* ( input: JQValue, env: JQEnv ): Generator<JQValue> {
-			for ( const mid of leftFn( input, env ) ) {
-				yield* rightFn( mid, env );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			for ( const item of leftFn( input, env ) ) {
+				const [ nextEnv, mid ] = env.maybeUnwrapPath( item );
+				yield* rightFn( mid, env.leavePathMode().maybeEnterPathMode( nextEnv ) );
 			}
 		};
 	}
 
 	private compileIdentity(): FilterFn {
-		return function* ( input: JQValue, _env: JQEnv ): Generator<JQValue> {
-			yield input;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			yield env.maybeWithPath( input );
 		};
 	}
 }

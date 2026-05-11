@@ -1,4 +1,4 @@
-import type { Binding, JQValue } from './internal.js';
+import type { Binding, JQValue, JQValueOrPath } from './internal.js';
 import { JQEnv, IOContext, JQUtils } from './internal.js';
 
 /**
@@ -35,19 +35,19 @@ export class JQTopLevelEnv extends JQEnv {
 		// Used by bootstrapping code (JQEnv.buildStandardEnv) to extract
 		// the startup env after a sequence of def statements has been
 		// evaluated.
-		defs.set( '__env__/0', function* ( _input: JQValue, env: JQEnv ): Generator<JQValue> {
+		defs.set( '__env__/0', function* ( _input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
 			yield env as unknown as JQValue;
 		} );
 
 		// not/0 — JQ truthiness: null and false are falsy, everything else truthy
-		defs.set( 'not/0', function* ( input: JQValue ): Generator<JQValue> {
+		defs.set( 'not/0', function* ( input: JQValue ): Generator<JQValueOrPath> {
 			yield !JQUtils.toBoolean( input );
 		} );
 
 		// builtins/0 — list public native builtin names (no _ prefix; populated
 		// after the rest are defined so builtins/0 itself is excluded)
 		const names = [ ...defs.keys() ].filter( k => !k.startsWith( '_' ) ).sort();
-		defs.set( 'builtins/0', function* (): Generator<JQValue> {
+		defs.set( 'builtins/0', function* (): Generator<JQValueOrPath> {
 			yield names;
 		} );
 
