@@ -280,14 +280,14 @@ class JQCompile {
 
 		if ( $arity === 0 ) {
 			return static function ( mixed $input, JQEnv $env ) use ( $name, $bodyFn, $restFn ): Generator {
-				$defEnvRef = $env;  // placeholder; overwritten below before first use
-				$binding = static function ( mixed $in, JQEnv $e ) use ( $bodyFn, &$defEnvRef ): Generator {
+				$defEnvRef = $env; // mutable placeholder; overwritten below before first use
+				$binding = static function ( mixed $callInput, JQEnv $callEnv ) use ( $bodyFn, &$defEnvRef ): Generator {
 					// Propagate path mode from the call site into the body (same as
 					// n-arity defs) so that structural operations inside the def
 					// yield path-wrapped values when invoked inside path/1.
 					$effectiveEnv = $defEnvRef->leavePathMode()
-						->maybeEnterPathMode( $e );
-					yield from $bodyFn( $in, $effectiveEnv );
+						->maybeEnterPathMode( $callEnv );
+					yield from $bodyFn( $callInput, $effectiveEnv );
 				};
 				$newEnv = $env->bind( $name, 0, $binding );
 				$defEnvRef = $newEnv;
@@ -298,20 +298,20 @@ class JQCompile {
 		// n-arity: store a FunctionFactory in the env
 		$filterNames = array_column( $params, 'name' );
 		return static function ( mixed $input, JQEnv $env ) use ( $name, $arity, $filterNames, $bodyFn, $restFn ): Generator {
-			$defEnvRef = $env;  // placeholder; overwritten below before first use
+			$defEnvRef = $env; // mutable placeholder; overwritten below before first use
 			$factory = static function ( array $argFns ) use ( $filterNames, $bodyFn, &$defEnvRef ): Closure {
-				return static function ( mixed $in, JQEnv $callEnv ) use ( $filterNames, $argFns, $bodyFn, &$defEnvRef ): Generator {
+				return static function ( mixed $callInput, JQEnv $callEnv ) use ( $filterNames, $argFns, $bodyFn, &$defEnvRef ): Generator {
 					// Start from the lexical (normal-mode) env where the def was created.
 					$bodyEnv = $defEnvRef->leavePathMode();
 					// Inject each filter param so it evaluates in the call-site env.
 					foreach ( $filterNames as $i => $pName ) {
 						$argFn = $argFns[$i];
 						$bodyEnv = $bodyEnv->bind( $pName, 0,
-							static function ( mixed $argIn, JQEnv $env ) use ( $argFn, $callEnv ): Generator {
+							static function ( mixed $argIn, JQEnv $argEnv ) use ( $argFn, $callEnv ): Generator {
 								$effectiveEnv = $callEnv->leavePathMode()
 									// Re-root: call-site bindings ($callEnv) with the
-									// path accumulated so far in the body ($env).
-									->maybeEnterPathMode( $env );
+									// path accumulated so far in the body ($argEnv).
+									->maybeEnterPathMode( $argEnv );
 								yield from $argFn( $argIn, $effectiveEnv );
 							}
 						);
@@ -319,7 +319,7 @@ class JQCompile {
 					// Propagate path mode from the call site into the body so that
 					// structural operations inside the def (identity, field, iter…)
 					// yield path-wrapped values when invoked inside path/1.
-					yield from $bodyFn( $in, $bodyEnv->maybeEnterPathMode( $callEnv ) );
+					yield from $bodyFn( $callInput, $bodyEnv->maybeEnterPathMode( $callEnv ) );
 				};
 			};
 			// @phan-suppress-next-line PhanTypeMismatchArgumentSuperType

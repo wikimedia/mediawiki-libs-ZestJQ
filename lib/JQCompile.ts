@@ -1,4 +1,4 @@
-import type { ASTNode, JQFilter, JQValue, FilterFn, JQValueOrPath } from './internal.js';
+import type { ASTNode, JQFilter, JQValue, FilterFn, FilterFactory, JQValueOrPath } from './internal.js';
 import { JQEnv, JQError, JQBreak, assertNever, assertNotPath } from './internal.js';
 
 export class JQCompile {
@@ -35,6 +35,8 @@ export class JQCompile {
 			case 'label': return this.compileLabel( node );
 			case 'break': return this.compileBreak( node );
 			case 'variable': return this.compileVariable( node );
+			case 'def': return this.compileDef( node );
+			case 'call': return this.compileCall( node );
 			default:
 				assertNever( `unimplemented: ${node.type}` );
 		}
@@ -149,6 +151,133 @@ export class JQCompile {
 				assertNotPath( val as JQValue, env );
 				yield val;
 			}
+		};
+	}
+
+	/**
+	 * Compile a def node (def name(params): body; rest).
+	 *
+	 * Value parameters ($x) are desugared at compile time:
+	 *   def f($x): body  =>  def f(x): x as $x | body
+	 * so that only filter parameters remain at runtime.
+	 *
+	 * Lexical scoping is achieved via a forward reference (defEnvRef):
+	 * the binding closure captures defEnvRef by reference, which is filled
+	 * in just before rest is evaluated. This also enables recursion, because
+	 * any recursive call in body or rest will find the function already bound.
+	 *
+	 * For 0-arity defs, the stored value is a plain FilterFn.
+	 * For n-arity defs, the stored value is a FilterFactory:
+	 *   (argFns: FilterFn[]) => FilterFn
+	 * The factory injects the arg closures as 0-arity filter-param bindings
+	 * into the lexical env, then returns the body filter. Filter args are
+	 * always evaluated in the call-site env, not the def-body env.
+	 *
+	 * @param {ASTNode} node Node with 'name', 'params', 'body', and 'rest' keys
+	 * @return {FilterFn}
+	 */
+	private compileDef( node: ASTNode ): FilterFn {
+		const name = node.name as string;
+		const params = node.params as { kind: string; name: string }[];
+		const arity = params.length;
+
+		// Desugar value params: wrap body (in reverse param order so the first
+		// param binds outermost): def f($x;$y): body → def f(x;y): x as $x | y as $y | body
+		let bodyAst = node.body as ASTNode;
+		for ( const param of [ ...params ].reverse() ) {
+			if ( param.kind === 'value' ) {
+				bodyAst = {
+					type: 'bind',
+					expr: { type: 'call', name: param.name, args: [] },
+					pattern: { type: 'var_pattern', name: param.name },
+					body: bodyAst,
+				};
+			}
+		}
+
+		const bodyFn = this.compileNode( bodyAst );
+		const restFn = this.compileNode( node.rest as ASTNode );
+
+		if ( arity === 0 ) {
+			return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+				let defEnvRef = env; // mutable placeholder; overwritten below before first use
+				const binding: FilterFn = function* ( callInput, callEnv ) {
+					// Propagate path mode from the call site into the body so that
+					// structural operations inside the def yield path-wrapped values
+					// when invoked inside path/1.
+					const effectiveEnv = defEnvRef.leavePathMode().maybeEnterPathMode( callEnv );
+					yield* bodyFn( callInput, effectiveEnv );
+				};
+				const newEnv = env.bind( name, 0, binding );
+				defEnvRef = newEnv;
+				yield* restFn( input, newEnv );
+			};
+		}
+
+		// n-arity: store a FilterFactory in the env
+		const filterNames = params.map( ( p ) => p.name );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			let defEnvRef = env; // mutable placeholder; overwritten below before first use
+			const factory: FilterFactory = ( argFns ) => function* ( callInput, callEnv ) {
+				const bodyEnv = filterNames.reduce(
+					( benv, pName, i ) => {
+						const argFn = argFns[ i ];
+						return benv.bind( pName, 0, function* ( argIn, argEnv ) {
+							// Inject each filter param so it evaluates in the call-site env.
+							yield* argFn( argIn, callEnv.leavePathMode()
+								// Re-root: call-site bindings (callEnv) with the path accumulated
+								// so far in the body (argEnv).
+								.maybeEnterPathMode( argEnv ) );
+						} );
+					},
+					// Start from the lexical (normal-mode) env where the def was created.
+					defEnvRef.leavePathMode(),
+				);
+				// Propagate path mode from the call site into the body so that
+				// structural operations inside the def (identity, field, iter…)
+				// yield path-wrapped values when invoked inside path/1.
+				yield* bodyFn( callInput, bodyEnv.maybeEnterPathMode( callEnv ) );
+			};
+			const newEnv = env.bind( name, arity, factory );
+			defEnvRef = newEnv;
+			yield* restFn( input, newEnv );
+		};
+	}
+
+	/**
+	 * Compile a call node (name or name(arg; ...)).
+	 *
+	 * Arg filters are compiled once here at compile time and captured in the
+	 * returned closure. At runtime:
+	 *  - 0-arity: the stored value is a plain FilterFn; call it directly.
+	 *  - n-arity: the stored value is a FilterFactory; pass the compiled arg
+	 *    closures to get a FilterFn, then run the FilterFn with the call-site env.
+	 *
+	 * @param {ASTNode} node Node with 'name' and 'args' keys
+	 * @return {FilterFn}
+	 */
+	private compileCall( node: ASTNode ): FilterFn {
+		const name = node.name as string;
+		const args = node.args as ASTNode[];
+		const arity = args.length;
+		const argFns = args.map( ( arg ) => this.compileNode( arg ) );
+
+		if ( arity === 0 ) {
+			return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+				const fn = env.lookup( name, 0 ) as FilterFn | null;
+				if ( fn === null ) {
+					throw new JQError( `${name}/0 is not defined` );
+				}
+				yield* fn( input, env );
+			};
+		}
+
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const factory = env.lookup( name, arity ) as FilterFactory | null;
+			if ( factory === null ) {
+				throw new JQError( `${name}/${arity} is not defined` );
+			}
+			yield* factory( argFns )( input, env );
 		};
 	}
 
