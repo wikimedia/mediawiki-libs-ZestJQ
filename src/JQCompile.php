@@ -131,6 +131,21 @@ class JQCompile {
 	}
 
 	/**
+	 * Compile a literal node (null, true, false, number, plain string).
+	 * Yields the literal value, ignoring the input.
+	 *
+	 * @param array $node Node with 'value' key
+	 * @return Closure(mixed,JQEnv):Generator a Filter
+	 */
+	private function compileLiteral( array $node ): Closure {
+		$value = $node['value'];
+		return static function ( mixed $input, JQEnv $env ) use ( $value ): Generator {
+			JQUtils::assertNotPath( $value, $env );
+			yield $value;
+		};
+	}
+
+	/**
 	 * Compile a pipe node (left | right).
 	 * Feeds each output of the left filter as input to the right filter,
 	 * yielding all outputs produced across all intermediate values.
@@ -149,21 +164,6 @@ class JQCompile {
 				// position.  O(1) — no loop over path segments needed.
 				yield from $rightFn( $mid, $env->leavePathMode()->maybeEnterPathMode( $nextEnv ) );
 			}
-		};
-	}
-
-	/**
-	 * Compile a literal node (null, true, false, number, plain string).
-	 * Yields the literal value, ignoring the input.
-	 *
-	 * @param array $node Node with 'value' key
-	 * @return Closure(mixed,JQEnv):Generator a Filter
-	 */
-	private function compileLiteral( array $node ): Closure {
-		$value = $node['value'];
-		return static function ( mixed $input, JQEnv $env ) use ( $value ): Generator {
-			JQUtils::assertNotPath( $value, $env );
-			yield $value;
 		};
 	}
 
