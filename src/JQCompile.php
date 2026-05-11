@@ -724,19 +724,17 @@ class JQCompile {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
 				foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
-					$result = $op( $lv, $rv );
-					JQUtils::assertNotPath( $result, $env );
-					yield $result;
+					yield JQUtils::assertNotPath( $op( $lv, $rv ), $env );
 				}
 			}
 		};
 	}
 
 	/**
-	 * Compile an 'and' node. Left-to-right, short-circuits on falsy left:
-	 * yields false without evaluating right. If left is truthy, yields
-	 * bool(right) for each output of right. Uses jq truthiness (null and
-	 * false are falsy; everything else, including 0 and "", is truthy).
+	 * Compile an 'and' node: `left and right`.
+	 *
+	 * Short-circuits: falsy left yields false without evaluating right.
+	 * Truthy left yields bool(rv) for each output of right.
 	 */
 	private function compileAnd( array $node ): Closure {
 		$leftFn  = $this->compileNode( $node['left'] );
@@ -745,13 +743,12 @@ class JQCompile {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
 				if ( !JQUtils::toBoolean( $lv ) ) {
-					JQUtils::assertNotPath( false, $env );
-					yield false;
+					yield JQUtils::assertNotPath( false, $env );
 				} else {
 					foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
-						$result = JQUtils::toBoolean( $rv );
-						JQUtils::assertNotPath( $result, $env );
-						yield $result;
+						yield JQUtils::assertNotPath(
+							JQUtils::toBoolean( $rv ), $env
+						);
 					}
 				}
 			}
@@ -759,9 +756,10 @@ class JQCompile {
 	}
 
 	/**
-	 * Compile an 'or' node. Left-to-right, short-circuits on truthy left:
-	 * yields true without evaluating right. If left is falsy, yields
-	 * bool(right) for each output of right.
+	 * Compile an 'or' node: `left or right`.
+	 *
+	 * Short-circuits: truthy left yields true without evaluating right.
+	 * Falsy left yields bool(rv) for each output of right.
 	 */
 	private function compileOr( array $node ): Closure {
 		$leftFn  = $this->compileNode( $node['left'] );
@@ -770,13 +768,12 @@ class JQCompile {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
 				if ( JQUtils::toBoolean( $lv ) ) {
-					JQUtils::assertNotPath( true, $env );
-					yield true;
+					yield JQUtils::assertNotPath( true, $env );
 				} else {
 					foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
-						$result = JQUtils::toBoolean( $rv );
-						JQUtils::assertNotPath( $result, $env );
-						yield $result;
+						yield JQUtils::assertNotPath(
+							JQUtils::toBoolean( $rv ), $env
+						);
 					}
 				}
 			}
@@ -832,8 +829,7 @@ class JQCompile {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $exprFn( $input, $plainEnv ) as $v ) {
 				$result = -JQUtils::checkNumber( 'negation', $v );
-				JQUtils::assertNotPath( $result, $env );
-				yield $result;
+				yield JQUtils::assertNotPath( $result, $env );
 			}
 		};
 	}
@@ -984,16 +980,16 @@ class JQCompile {
 	private function compileFormat( array $node ): Closure {
 		$formatter = JQUtils::formatterFor( $node['fmt'] );
 		return static function ( mixed $input, JQEnv $env ) use ( $formatter ): Generator {
-			$result = $formatter( $input );
-			JQUtils::assertNotPath( $result, $env );
-			yield $result;
+			yield JQUtils::assertNotPath( $formatter( $input ), $env );
 		};
 	}
 
 	/**
-	 * Compile a binary operation node (left op right).
+	 * Compile a binary operation node: `left op right`.
+	 *
 	 * Evaluates both sides against the original input, then applies the
-	 * operator to each combination of outputs.
+	 * operator to each combination of outputs. Right is the outer loop,
+	 * left is the inner loop (jq semantics).
 	 *
 	 * @param array $node Node with 'op', 'left', and 'right' keys
 	 * @return Closure(mixed,JQEnv):Generator a Filter
@@ -1014,9 +1010,7 @@ class JQCompile {
 			$plainEnv = $env->leavePathMode();
 			foreach ( $rightFn( $input, $plainEnv ) as $rv ) {
 				foreach ( $leftFn( $input, $plainEnv ) as $lv ) {
-					$result = $op( $lv, $rv );
-					JQUtils::assertNotPath( $result, $env );
-					yield $result;
+					yield JQUtils::assertNotPath( $op( $lv, $rv ), $env );
 				}
 			}
 		};

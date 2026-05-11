@@ -2,7 +2,9 @@ import type { ASTNode, JQFilter, JQValue, FilterFn, FilterFactory, JQValueOrPath
 import { JQUtils, JQEnv, JQError, JQBreak, assertNever } from './internal.js';
 
 const {
-	assertNotPath,
+	assertNotPath, checkNumber, toBoolean, typeName,
+	equal, compare, add, subtract, multiply, divide, modulo,
+	formatterFor,
 } = JQUtils;
 
 export class JQCompile {
@@ -41,11 +43,16 @@ export class JQCompile {
 			case 'variable': return this.compileVariable( node );
 			case 'def': return this.compileDef( node );
 			case 'call': return this.compileCall( node );
-			case 'neg': return this.compileNeg( node );
+			case 'if': return this.compileIf( node );
 			case 'comma': return this.compileComma( node );
 			case 'array': return this.compileArray( node );
 			case 'object': return this.compileObject( node );
-			case 'if': return this.compileIf( node );
+			case 'compare': return this.compileCompare( node );
+			case 'and': return this.compileAnd( node );
+			case 'or': return this.compileOr( node );
+			case 'neg': return this.compileNeg( node );
+			case 'format': return this.compileFormat( node );
+			case 'binop': return this.compileBinop( node );
 			default:
 				assertNever( `unimplemented: ${node.type}` );
 		}
@@ -386,7 +393,7 @@ export class JQCompile {
 						for ( const val of valFn( input, plainEnv ) ) {
 							if ( typeof key !== 'string' && typeof key !== 'number' ) {
 								throw new JQError(
-									`Cannot use ${JQUtils.typeName( key as JQValue )} as object key`,
+									`Cannot use ${typeName( key as JQValue )} as object key`,
 								);
 							}
 							next.push( { ...obj, [ String( key ) ]: val as JQValue } );
@@ -397,6 +404,103 @@ export class JQCompile {
 			}
 			for ( const obj of objects ) {
 				yield assertNotPath( obj, env );
+			}
+		};
+	}
+
+	/**
+	 * Compile a compare node (left op right).
+	 * Both operands are evaluated against the original $input (not piped).
+	 * Yields one boolean per combination of left and right outputs.
+	 *
+	 * @param {ASTNode} node Node with 'op', 'left', and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileCompare( node: ASTNode ): FilterFn {
+		const leftFn = this.compileNode( node.left as ASTNode );
+		const rightFn = this.compileNode( node.right as ASTNode );
+		const opStr = node.op as string;
+		let op: ( lv: JQValue, rv: JQValue ) => boolean;
+		switch ( opStr ) {
+			case '==':
+				op = equal;
+				break;
+			case '!=':
+				op = ( lv, rv ) => !equal( lv, rv );
+				break;
+			case '<':
+				op = ( lv, rv ) => compare( lv, rv ) < 0;
+				break;
+			case '<=':
+				op = ( lv, rv ) => compare( lv, rv ) <= 0;
+				break;
+			case '>':
+				op = ( lv, rv ) => compare( lv, rv ) > 0;
+				break;
+			case '>=':
+				op = ( lv, rv ) => compare( lv, rv ) >= 0;
+				break;
+			default:
+				assertNever( `Unknown comparison operator: ${opStr}` );
+		}
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( const lv of leftFn( input, plainEnv ) ) {
+				for ( const rv of rightFn( input, plainEnv ) ) {
+					yield assertNotPath( op( lv as JQValue, rv as JQValue ), env );
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile an 'and' node: `left and right`.
+	 *
+	 * Short-circuits: falsy left yields false without evaluating right.
+	 * Truthy left yields bool(rv) for each output of right.
+	 *
+	 * @param {ASTNode} node Node with 'left' and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileAnd( node: ASTNode ): FilterFn {
+		const leftFn = this.compileNode( node.left as ASTNode );
+		const rightFn = this.compileNode( node.right as ASTNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( const lv of leftFn( input, plainEnv ) ) {
+				if ( !toBoolean( lv as JQValue ) ) {
+					yield assertNotPath( false, env );
+				} else {
+					for ( const rv of rightFn( input, plainEnv ) ) {
+						yield assertNotPath( toBoolean( rv as JQValue ), env );
+					}
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile an 'or' node: `left or right`.
+	 *
+	 * Short-circuits: truthy left yields true without evaluating right.
+	 * Falsy left yields bool(rv) for each output of right.
+	 *
+	 * @param {ASTNode} node Node with 'left' and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileOr( node: ASTNode ): FilterFn {
+		const leftFn = this.compileNode( node.left as ASTNode );
+		const rightFn = this.compileNode( node.right as ASTNode );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( const lv of leftFn( input, plainEnv ) ) {
+				if ( toBoolean( lv as JQValue ) ) {
+					yield assertNotPath( true, env );
+				} else {
+					for ( const rv of rightFn( input, plainEnv ) ) {
+						yield assertNotPath( toBoolean( rv as JQValue ), env );
+					}
+				}
 			}
 		};
 	}
@@ -414,8 +518,67 @@ export class JQCompile {
 		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
 			const plainEnv = env.leavePathMode();
 			for ( const v of exprFn( input, plainEnv ) ) {
-				const result = -JQUtils.checkNumber( 'negation', v );
+				const result = -checkNumber( 'negation', v );
 				yield assertNotPath( result, env );
+			}
+		};
+	}
+
+	/**
+	 * Compile a standalone format node (@base64, @html, etc.).
+	 * Applies the named format to the input value directly.
+	 *
+	 * @param {ASTNode} node Node with 'fmt' key
+	 * @return {FilterFn}
+	 */
+	private compileFormat( node: ASTNode ): FilterFn {
+		const formatter = formatterFor( node.fmt as string );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			yield assertNotPath( formatter( input ), env );
+		};
+	}
+
+	/**
+	 * Compile a binary operation node: `left op right`.
+	 *
+	 * Evaluates both sides against the original input, then applies the
+	 * operator to each combination of outputs. Right is the outer loop,
+	 * left is the inner loop (jq semantics).
+	 *
+	 * @param {ASTNode} node Node with 'op', 'left', and 'right' keys
+	 * @return {FilterFn}
+	 */
+	private compileBinop( node: ASTNode ): FilterFn {
+		const leftFn = this.compileNode( node.left as ASTNode );
+		const rightFn = this.compileNode( node.right as ASTNode );
+		const opStr = node.op as string;
+		let op: ( lv: JQValue, rv: JQValue ) => JQValue;
+		switch ( opStr ) {
+			case '+':
+				op = add;
+				break;
+			case '-':
+				op = subtract;
+				break;
+			case '*':
+				op = multiply;
+				break;
+			case '/':
+				op = divide;
+				break;
+			case '%':
+				op = modulo;
+				break;
+			default:
+				assertNever( `Unknown operator: ${opStr}` );
+		}
+		// jq evaluates right first (outer loop) then left (inner loop)
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			for ( const rv of rightFn( input, plainEnv ) ) {
+				for ( const lv of leftFn( input, plainEnv ) ) {
+					yield assertNotPath( op( lv as JQValue, rv as JQValue ), env );
+				}
 			}
 		};
 	}

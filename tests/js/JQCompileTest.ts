@@ -51,10 +51,20 @@ function upstreamSkipReason( lineno: number ): string | null {
 			// Below this point we list tests which *do* pass the tests, since
 			// we're still in the process of implementation.
 		case 8: case 12: case 16: case 20: case 25: case 31: case 35:
-		case 48: case 54: case 58: case 114: case 243: case 248: case 253:
-		case 257: case 261: case 661: case 789: case 803: case 816: case 820:
-		case 826: case 1322: case 1330: case 1334: case 1338: case 1342:
-		case 1346: case 1350: case 1354: case 1358: case 1362: case 2042:
+		case 48: case 54: case 58: case 72: case 86: case 90: case 94: case 98:
+		case 114: case 243: case 248: case 253: case 257: case 261:
+		case 577: case 581: case 585: case 589: case 593: case 597: case 601: case 605:
+		case 613: case 617: case 621: case 625: case 629: case 633:
+		case 641: case 645: case 649: case 653: case 657: case 661: case 668: case 674:
+		case 681: case 685: case 784: case 789: case 798:
+		case 803: case 812: case 816: case 820: case 826: case 860: case 868:
+		case 1322: case 1330: case 1334: case 1338: case 1342: case 1346:
+		case 1350: case 1354: case 1358: case 1362:
+		case 1390: case 1394: case 1399: case 1403: case 1407: case 1411: case 1416:
+		case 1637:
+		case 1751: case 1755: case 1759: case 1763:
+		case 2042:
+		case 2211:
 			return null;
 
 			// All the rest we'll assume are broken because of something we
