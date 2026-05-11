@@ -2,7 +2,9 @@ import type { ASTNode, JQFilter, JQValue, FilterFn, FilterFactory, JQValueOrPath
 import { JQUtils, JQEnv, JQError, JQBreak, assertNever } from './internal.js';
 
 const {
-	assertNotPath, checkNumber, toBoolean, typeName,
+	assertNotPath,
+	checkNumber, checkObject, checkString, isNumber, adjustIndex,
+	toBoolean, typeName, typeNameAndValue,
 	equal, compare, add, subtract, multiply, divide, modulo,
 	formatterFor,
 } = JQUtils;
@@ -51,6 +53,9 @@ export class JQCompile {
 			case 'and': return this.compileAnd( node );
 			case 'or': return this.compileOr( node );
 			case 'neg': return this.compileNeg( node );
+			case 'field': return this.compileField( node );
+			case 'index': return this.compileIndex( node );
+			case 'string': return this.compileString( node );
 			case 'format': return this.compileFormat( node );
 			case 'binop': return this.compileBinop( node );
 			default:
@@ -525,6 +530,145 @@ export class JQCompile {
 	}
 
 	/**
+	 * Compile a field-access node: `expr.name` or `expr.name?`.
+	 * null input yields null; object input yields the field value (or null if
+	 * absent); any other type throws JQError (suppressed to empty if opt).
+	 *
+	 * @param {ASTNode} node Node with 'expr', 'name', and 'opt' keys
+	 * @return {FilterFn}
+	 */
+	private compileField( node: ASTNode ): FilterFn {
+		const exprFn = this.compileNode( node.expr as ASTNode );
+		const name = node.name as string;
+		const opt = node.opt as boolean;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			for ( const item of exprFn( input, env ) ) {
+				const [ baseEnv, base ] = env.maybeUnwrapPath( item );
+				if ( base === null ) {
+					yield baseEnv.appendPath( name ).maybeWithPath( null );
+					continue;
+				}
+				if ( opt && ( typeof base !== 'object' || Array.isArray( base ) ) ) {
+					continue;
+				}
+				const obj = checkObject( 'field', base );
+				yield baseEnv.appendPath( name ).maybeWithPath(
+					obj[ name ] ?? null,
+				);
+			}
+		};
+	}
+
+	/**
+	 * Compile an index node: `expr[key]` or `expr[key]?`.
+	 *
+	 * The key expression is evaluated against the original input (not the base).
+	 * Supports object indexing by string and array indexing by integer
+	 * (with negative indices counting from the end). null input yields null.
+	 *
+	 * @param {ASTNode} node Node with optional 'expr', required 'key', and 'opt' keys
+	 * @return {FilterFn}
+	 */
+	private compileIndex( node: ASTNode ): FilterFn {
+		const exprFn = node.expr !== undefined ?
+			this.compileNode( node.expr as ASTNode ) : this.compileIdentity();
+		const keyFn = this.compileNode( node.key as ASTNode );
+		const opt = node.opt as boolean;
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			for ( const item of exprFn( input, env ) ) {
+				const [ baseEnv, base ] = env.maybeUnwrapPath( item );
+				// Key is evaluated against the original input, not the base.
+				// e.g. in .a[.b], .b is evaluated against the outer input,
+				// not against the result of .a.  The key expression is also
+				// always evaluated in normal (non-path) mode: the key determines
+				// which slot to access; it is not itself a path to collect.
+				for ( const keyItem of keyFn( input, env.leavePathMode() ) ) {
+					const key = keyItem as JQValue;
+					if ( base === null ) {
+						yield baseEnv.appendPath( key ).maybeWithPath( null );
+					} else if ( typeof base === 'object' && !Array.isArray( base ) ) {
+						if ( opt && typeof key !== 'string' ) {
+							continue;
+						}
+						const k = checkString( 'index', key );
+						const obj = base as Record<string, JQValue>;
+						yield baseEnv.appendPath( k ).maybeWithPath(
+							obj[ k ] ?? null,
+						);
+					} else if ( Array.isArray( base ) ) {
+						if ( Array.isArray( key ) ) {
+							// Sub-array search: find all positions where key appears
+							// as a contiguous sub-sequence of base.
+							// Used by builtin.jq's indices/1 definition.
+							const positions = JQCompile.arraySubarraySearch( base, key );
+							yield baseEnv.appendPath( key ).maybeWithPath( positions );
+						} else if ( opt && !isNumber( key ) ) {
+							continue;
+						} else {
+							const index = adjustIndex( 'index', key, base );
+							yield baseEnv.appendPath( key ).maybeWithPath(
+								index === null ? null : base[ index ],
+							);
+						}
+					} else if ( !opt ) {
+						throw new JQError(
+							`Cannot index ${typeName( base )} with ${typeNameAndValue( key )}`,
+						);
+					}
+				}
+			}
+		};
+	}
+
+	/**
+	 * Compile a string node ("text\(expr)text...").
+	 *
+	 * Parts alternate between str_text (literal text) and str_interp
+	 * (expression to evaluate and interpolate). All combinations of
+	 * interpolated outputs are produced via Cartesian product.
+	 *
+	 * If fmt is set (@html, @base64, …), each interpolated segment is
+	 * formatted before being inserted; literal text parts are left as-is.
+	 * If fmt is null, interpolated values are converted with tostring
+	 * semantics (strings pass through; everything else is JSON-encoded).
+	 *
+	 * @param {ASTNode} node Node with 'fmt' (null or format name) and 'parts' keys
+	 * @return {FilterFn}
+	 */
+	private compileString( node: ASTNode ): FilterFn {
+		const formatter = formatterFor( ( node.fmt as string | null ) ?? 'text' );
+		type CompiledPart =
+			| { kind: 'text'; text: string }
+			| { kind: 'interp'; fn: FilterFn };
+		const compiledParts: CompiledPart[] = ( node.parts as ASTNode[] ).map( ( part ) => {
+			if ( ( part as { type: string } ).type === 'str_interp' ) {
+				return { kind: 'interp' as const, fn: this.compileNode( part.expr as ASTNode ) };
+			}
+			return { kind: 'text' as const, text: part.text as string };
+		} );
+		return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
+			const plainEnv = env.leavePathMode();
+			let strings: string[] = [ '' ];
+			for ( const part of compiledParts ) {
+				if ( part.kind === 'text' ) {
+					strings = strings.map( ( s ) => s + part.text );
+				} else {
+					const next: string[] = [];
+					for ( const prefix of strings ) {
+						for ( const val of part.fn( input, plainEnv ) ) {
+							next.push( prefix + formatter( val as JQValue ) );
+						}
+					}
+					strings = next;
+				}
+			}
+			for ( const s of strings ) {
+				yield assertNotPath( s, env );
+			}
+		};
+	}
+
+	/**
 	 * Compile a standalone format node (@base64, @html, etc.).
 	 * Applies the named format to the input value directly.
 	 *
@@ -581,5 +725,25 @@ export class JQCompile {
 				}
 			}
 		};
+	}
+
+	// Find all starting positions in haystack where needle appears as a
+	// contiguous sub-sequence. Used by indices/1 via compileIndex.
+	private static arraySubarraySearch( haystack: JQValue[], needle: JQValue[] ): JQValue[] {
+		const needleLen = needle.length;
+		const limit = haystack.length - needleLen;
+		const positions: JQValue[] = [];
+		for ( let j = 0; j <= limit; j++ ) {
+			let k = 0;
+			for ( ; k < needleLen; k++ ) {
+				if ( compare( haystack[ j + k ], needle[ k ] ) !== 0 ) {
+					break;
+				}
+			}
+			if ( k === needleLen ) {
+				positions.push( j );
+			}
+		}
+		return positions;
 	}
 }

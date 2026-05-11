@@ -835,7 +835,7 @@ class JQCompile {
 	}
 
 	/**
-	 * Compile a field-access node (expr.name or expr.name?).
+	 * Compile a field-access node: `expr.name` or `expr.name?`.
 	 * null input yields null; object input yields the field value (or null if
 	 * absent); any other type throws JQError (suppressed to empty if opt).
 	 *
@@ -862,7 +862,8 @@ class JQCompile {
 	}
 
 	/**
-	 * Compile an index node (expr[key] or expr[key]?).
+	 * Compile an index node: `expr[key]` or `expr[key]?`.
+	 *
 	 * The key expression is evaluated against the original input (not the base).
 	 * Supports object indexing by string and array indexing by integer
 	 * (with negative indices counting from the end). null input yields null.
@@ -937,8 +938,6 @@ class JQCompile {
 	 */
 	private function compileString( array $node ): Closure {
 		$formatter = JQUtils::formatterFor( $node['fmt'] ?? 'text' );
-		// XXX seems like we should be able to precompile this a bit
-		// more aggressively.
 		$compiledParts = [];
 		foreach ( $node['parts'] as $part ) {
 			if ( $part['type'] === 'str_interp' ) {
@@ -964,8 +963,7 @@ class JQCompile {
 				}
 			}
 			foreach ( $strings as $s ) {
-				JQUtils::assertNotPath( $s, $env );
-				yield $s;
+				yield JQUtils::assertNotPath( $s, $env );
 			}
 		};
 	}
