@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
-const fs = require( 'fs' );
-const path = require( 'path' );
-const { parse, SyntaxError: JQSyntaxError } = require( '../lib/JQGrammar.js' );
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { default as JQGrammar } from '../lib/JQGrammar.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const builtinPath = path.join( __dirname, '../src/builtin.jq' );
 const outPath = path.join( __dirname, '../lib/JQBuiltin.js' );
 
@@ -18,9 +21,9 @@ try {
 
 let ast;
 try {
-	ast = parse( src + '\n__env__', { filename: '<builtin.jq>' } );
+	ast = JQGrammar.parse( src + '\n__env__', { filename: '<builtin.jq>' } );
 } catch ( e ) {
-	if ( e instanceof JQSyntaxError ) {
+	if ( e instanceof JQGrammar.SyntaxError ) {
 		process.stderr.write( `Error: could not parse builtin.jq: ${e.message}\n` );
 		process.exit( 1 );
 	}
@@ -31,11 +34,10 @@ const jsAst = JSON.stringify( ast );
 const content =
 	"'use strict';\n" +
 	'// Generated file — do not edit directly. Regenerate with: npm run build-stdenv\n' +
-	'class JQBuiltin {\n' +
+	'export class JQBuiltin {\n' +
 	'\tstatic AST = ' + jsAst + ';\n' +
 	'\tstatic getAst() { return this.AST; }\n'+
-	'}\n' +
-	'module.exports = { JQBuiltin };\n';
+	'}\n';
 
 try {
 	fs.writeFileSync( outPath, content );
@@ -45,3 +47,4 @@ try {
 }
 
 process.stdout.write( `Written: ${outPath}\n` );
+process.exit( 0 );

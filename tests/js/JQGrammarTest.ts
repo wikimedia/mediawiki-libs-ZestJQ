@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'path';
-import { parse, SyntaxError as JQSyntaxError } from '../../lib/JQGrammar.js';
+import { JQGrammar } from '../../lib/internal.js';
 import { loadTests } from './jqTestLoader.js';
 
 const root = resolve( __dirname, '../..' );
@@ -31,7 +31,7 @@ const failTests = tests.filter( t => t.fail );
 describe( 'JQGrammar — valid queries parse without error', () => {
 	for ( const t of validTests ) {
 		it( t.label, () => {
-			const ast = parse( t.query );
+			const ast = JQGrammar.parse( t.query );
 			expect( ast ).toHaveProperty( 'type' );
 		} );
 	}
@@ -41,7 +41,7 @@ describe( 'JQGrammar — invalid queries throw SyntaxError', () => {
 	for ( const t of failTests ) {
 		const itFn = semanticFailureLines.has( t.lineno ) ? it.skip : it;
 		itFn( t.label, () => {
-			expect( () => parse( t.query ) ).toThrow( JQSyntaxError );
+			expect( () => JQGrammar.parse( t.query ) ).toThrow( JQGrammar.SyntaxError );
 		} );
 	}
 } );

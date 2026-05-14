@@ -13,16 +13,16 @@
 		"tests/phpunit/",
 		"vendor/"
 	],
+	"parserOptions": {
+		"sourceType": "module"
+	},
 	"overrides": [
 		{
 			"files": [ "**/*.ts" ],
 			"extends": [
 				"wikimedia",
 				"@wmde/eslint-config-wikimedia-typescript"
-			],
-			"parserOptions": {
-				"sourceType": "module"
-			}
+			]
 		}
 	]
 }

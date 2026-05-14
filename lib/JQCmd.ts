@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { parse, SyntaxError, JQCompile, JQEnv, JQError, JQHaltException, JQUtils } from './internal.js';
+import { JQGrammar, JQCompile, JQEnv, JQError, JQHaltException, JQUtils } from './internal.js';
 import type { ASTNode, JQFilter, JQValue } from './internal.js';
 
 type JQCmdOptions = {
@@ -86,9 +86,9 @@ export class JQCmd {
 		// Compile the filter once
 		let ast: ASTNode;
 		try {
-			ast = parse( filterExpr, { filename: '<top-level>' } );
+			ast = JQGrammar.parse( filterExpr, { filename: '<top-level>' } );
 		} catch ( e ) {
-			if ( e instanceof SyntaxError ) {
+			if ( e instanceof JQGrammar.SyntaxError ) {
 				JQCmd.writeErr( `zestjq: syntax error in filter: ${e.message}\n` );
 				return 3;
 			}

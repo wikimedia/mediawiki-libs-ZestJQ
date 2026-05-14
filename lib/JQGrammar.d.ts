@@ -12,6 +12,12 @@ export interface JQSyntaxError extends Error {
 	location: unknown;
 }
 
-export declare const SyntaxError: new ( ...args: unknown[] ) => JQSyntaxError;
-export declare const DefaultTracer: new () => unknown;
-export declare function parse( input: string, options?: ParseOptions ): ASTNode;
+export interface Api {
+	SyntaxError: new ( ...args: unknown[] ) => JQSyntaxError;
+	DefaultTracer: new () => unknown;
+	parse( input: string, options?: ParseOptions ): ASTNode;
+}
+
+declare const api: Api;
+
+export default api;

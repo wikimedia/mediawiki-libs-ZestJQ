@@ -1,12 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolve } from 'path';
-import { parse } from '../../lib/JQGrammar.js';
-import type { ASTNode } from '../../lib/JQGrammar.js';
-import { JQCompile } from '../../lib/JQCompile.js';
-import { JQEnv } from '../../lib/JQEnv.js';
-import { JQError } from '../../lib/JQError.js';
-import * as JQUtils from '../../lib/JQUtils.js';
-import type { JQValue } from '../../lib/JQValue.js';
+import { JQGrammar, JQCompile, JQEnv, JQError, JQUtils } from '../../lib/internal.js';
+import type { ASTNode, JQValue } from '../../lib/internal.js';
 import { loadTests, type TestCase } from './jqTestLoader.js';
 
 const root = resolve( __dirname, '../..' );
@@ -262,7 +257,7 @@ function runTest(
 ): void {
 	const inputVal = JQUtils.jsonDecode( input );
 	const expectedVal = expected.map( s => JQUtils.jsonDecode( s ) );
-	const ast = parse( query ) as ASTNode;
+	const ast = JQGrammar.parse( query ) as ASTNode;
 	const fn = JQCompile.compile( ast, JQEnv.getStdEnv() );
 	const result: JQValue[] = [];
 	try {

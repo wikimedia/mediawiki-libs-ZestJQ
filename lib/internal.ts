@@ -16,7 +16,7 @@ export * from './JQValue.js';
 export * from './IOContext.js';
 export * from './JQBreak.js';
 export * from './JQHaltException.js';
-export * from './JQGrammar.js';
+export { default as JQGrammar, ASTNode, ParseOptions } from './JQGrammar.js';
 // JQError will use JQValue, but nothing else
 export * from './JQError.js';
 // JQBuiltin uses JQGrammar (ASTNode) but nothing else

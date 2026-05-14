@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
@@ -16,13 +17,13 @@
 		"jsdoc-wmf-theme": "1.2.0",
 		"typescript": "^5.8",
 		"vitest": "^3.1",
-		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/34/1284734/3"
+		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/49/1287049/1"
 	},
 	"bin": {
 		"zestjq": "./bin/zestjq.js"
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json && cp lib/JQGrammar.js dist/JQGrammar.js && cp lib/JQBuiltin.js dist/JQBuiltin.js",
+		"build": "tsc -p tsconfig.build.json && cp lib/JQGrammar.js lib/JQGrammar.d.ts lib/JQBuiltin.js lib/JQBuiltin.d.ts dist/",
 		"doc": "jsdoc -c jsdoc.json",
 		"typecheck": "npx tsc --noEmit --skipLibCheck",
 		"test": "vitest run && npm run lint && npm run typecheck",
@@ -31,6 +32,6 @@
 		"build-stdenv": "node tools/build-stdenv.js",
 		"regen-jq-parser": "npm run regen-jq-parser-php && npm run regen-jq-parser-js",
 		"regen-jq-parser-php": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar --php src/JQGrammar.peg src/JQGrammar.php",
-		"regen-jq-parser-js": "node node_modules/wikipeg/bin/wikipeg --common-lang --class-name JQGrammar src/JQGrammar.peg lib/JQGrammar.js"
+		"regen-jq-parser-js": "node node_modules/wikipeg/bin/wikipeg --common-lang --esm src/JQGrammar.peg lib/JQGrammar.js"
 	}
 }

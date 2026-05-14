@@ -1,4 +1,4 @@
-import { JQEnv, JQCompile, JQError, JQUtils, parse, SyntaxError } from './internal.js';
+import { JQEnv, JQCompile, JQError, JQUtils, JQGrammar } from './internal.js';
 import type { JQFilter, JQValue } from './internal.js';
 
 /**
@@ -66,10 +66,10 @@ export class JQ {
 	): JQFilter {
 		const effectiveFilename = filename ?? filter;
 		try {
-			const ast = parse( filter );
+			const ast = JQGrammar.parse( filter );
 			return JQCompile.compile( ast, env ?? JQEnv.getStdEnv() );
 		} catch ( e ) {
-			if ( e instanceof SyntaxError ) {
+			if ( e instanceof JQGrammar.SyntaxError ) {
 				const loc = e.location as { start: { line: number; column: number } };
 				const locStr = `${loc.start.line}:${loc.start.column}`;
 				const msg = `Syntax error in ${effectiveFilename} (${locStr}): ${e.message}`;
