@@ -307,6 +307,12 @@ null
 [{"c":10,"d":20},10]
 [{"c":10,"d":20},20]
 
+# alt_pattern and obj_pattern with expression key yields one env per key value
+. as [$x] ?// {("a","b"): $x} ?// {a:$x} | $x
+{"a":1,"b":2}
+1
+2
+
 ##########################################################
 # foreach: multi-value and empty init, update, and pattern
 ##########################################################

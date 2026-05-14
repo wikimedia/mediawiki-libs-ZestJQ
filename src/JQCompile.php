@@ -663,7 +663,7 @@ class JQCompile {
 
 	/**
 	 * Compile an alt_pattern (p1 ?// p2 ?// ...): tries each alternative in
-	 * order, yielding from the first that succeeds. Variables bound only in
+	 * order, yielding all matches from the first that succeeds. Variables bound only in
 	 * non-matching alternatives are null-filled in the resulting env.
 	 */
 	private function compilePatternAlt( array $pat ): Closure {
@@ -686,9 +686,11 @@ class JQCompile {
 						foreach ( $missingPerAlt[$i] as $var ) {
 							$nextEnv = $nextEnv->bind( $var, 0, $nullFn );
 						}
+						// Yield the successful matches
 						yield $nextEnv;
-						return;
 					}
+					// Don't advance to next alternative if we've matched
+					return;
 				} catch ( JQError ) {
 					// this alternative failed; try the next one
 				}

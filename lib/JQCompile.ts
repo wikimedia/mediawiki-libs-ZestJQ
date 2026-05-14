@@ -612,7 +612,7 @@ export class JQCompile {
 
 	/**
 	 * Compile an alt_pattern (p1 ?// p2 ?// ...): tries each alternative in
-	 * order, yielding from the first that succeeds. Variables bound only in
+	 * order, yielding all matches from the first that succeeds. Variables bound only in
 	 * non-matching alternatives are null-filled in the resulting env.
 	 *
 	 * @param {ASTNode} pat Pattern node with 'patterns' key
@@ -634,17 +634,17 @@ export class JQCompile {
 			for ( let i = 0; i < altFns.length; i++ ) {
 				try {
 					// Take only the first successful match from each alternative.
-					// eslint-disable-next-line no-unreachable-loop
 					for ( const nextEnv of altFns[ i ]( val, env ) ) {
 						let finalEnv = nextEnv;
 						// Bind all the missing variables to `null`
 						for ( const varName of missingPerAlt[ i ] ) {
 							finalEnv = finalEnv.bind( varName, 0, nullFn );
 						}
-						// Yield the first successful match, then bail.
+						// Yield the successful matches
 						yield finalEnv;
-						return;
 					}
+					// Don't advance to next alternative if we've matched
+					return;
 				} catch ( e ) {
 					if ( e instanceof JQError ) {
 						// this alternative failed; try the next one
