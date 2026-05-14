@@ -7,6 +7,8 @@
 		}
 	},
 	"devDependencies": {
+		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-terser": "^0.4.4",
 		"@types/node": "^25.6.2",
 		"@types/d3-time-format": "^4.0.3",
 		"@typescript-eslint/eslint-plugin": "^7.8.0",
@@ -17,6 +19,7 @@
 		"jsdoc": "4.0.5",
 		"jsdoc-wmf-theme": "1.2.0",
 		"typescript": "^5.8",
+		"rollup": "^4.0.0",
 		"vitest": "^3.1",
 		"wikipeg": "git+https://gerrit.wikimedia.org/r/wikipeg#refs/changes/49/1287049/1"
 	},
@@ -25,6 +28,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json && cp lib/JQGrammar.js lib/JQGrammar.d.ts lib/JQBuiltin.js lib/JQBuiltin.d.ts dist/",
+		"build:browser": "npm run build && rollup -c rollup.browser.config.mjs",
 		"doc": "jsdoc -c jsdoc.json",
 		"typecheck": "npx tsc --noEmit --skipLibCheck",
 		"test": "vitest run && npm run lint && npm run typecheck",

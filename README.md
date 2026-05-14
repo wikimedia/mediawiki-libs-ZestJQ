@@ -163,14 +163,131 @@ composer fix
 TypeScript installation
 -----------------------
 
+```
+npm install @wikimedia/zest-jq
+```
+
+
 TypeScript library usage (node)
 -------------------------------
+
+### Evaluate a filter against a JSON string
+
+```typescript
+import { JQ } from '@wikimedia/zest-jq';
+
+// evalString() returns a Generator that yields each output value.
+for ( const val of JQ.evalString( '{"name":"jq","version":2}', '.name' ) ) {
+    console.log( val ); // "jq"
+}
+```
+
+### Evaluate a filter against a decoded value
+
+```typescript
+import { JQ } from '@wikimedia/zest-jq';
+
+const input = { items: [ 1, 2, 3 ] };
+
+for ( const val of JQ.eval( input, '.items[]' ) ) {
+    console.log( val ); // 1, 2, 3
+}
+```
+
+### Compile once, evaluate many times
+
+```typescript
+import { JQ } from '@wikimedia/zest-jq';
+
+const filter = JQ.compile( '.[] | select(. > 2)' );
+
+for ( const val of filter( [ 1, 2, 3, 4 ] ) ) {
+    console.log( val ); // 3, 4
+}
+for ( const val of filter( [ 5, 1, 6 ] ) ) {
+    console.log( val ); // 5, 6
+}
+```
+
+### Error handling
+
+```typescript
+import { JQ, JQError } from '@wikimedia/zest-jq';
+
+try {
+    for ( const val of JQ.evalString( '"hello"', '.foo' ) ) {
+        // ...
+    }
+} catch ( e ) {
+    if ( e instanceof JQError ) {
+        console.error( e.message );
+    }
+}
+```
+
 
 TypeScript library usage (browser)
 ----------------------------------
 
+Build the browser bundle from the project root:
+
+```bash
+fresh-node -- npm run build:browser
+```
+
+This produces three files in `dist/browser/`:
+- `zestjq.iife.js` — unminified IIFE bundle (for debugging)
+- `zestjq.iife.min.js` — minified IIFE bundle (recommended for production)
+- `zestjq.esm.js` — ES module bundle (for use with `<script type="module">`)
+
+### Via `<script>` tag (IIFE)
+
+The IIFE bundle exposes all exports as properties of `window.ZestJQ`:
+
+```html
+<script src="zestjq.iife.min.js"></script>
+<script>
+const { JQ, JQError } = ZestJQ;
+
+for ( const val of JQ.evalString( '{"name":"jq"}', '.name' ) ) {
+    console.log( val ); // "jq"
+}
+</script>
+```
+
+### Via ES module
+
+```html
+<script type="module">
+import { JQ, JQError } from './zestjq.esm.js';
+
+for ( const val of JQ.evalString( '{"name":"jq"}', '.name' ) ) {
+    console.log( val ); // "jq"
+}
+</script>
+```
+
+### Compile once, evaluate many times (browser)
+
+```html
+<script type="module">
+import { JQ } from './zestjq.esm.js';
+
+const filter = JQ.compile( '.[] | select(. > 2)' );
+
+for ( const val of filter( [ 1, 2, 3, 4 ] ) ) {
+    console.log( val ); // 3, 4
+}
+</script>
+```
+
+
 Running TypeScript tests
 ------------------------
+
+```bash
+fresh-node -- npm test
+```
 
 
 Command-line tool

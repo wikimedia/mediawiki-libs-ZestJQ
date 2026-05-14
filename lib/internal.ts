@@ -31,5 +31,3 @@ export * from './JQTopLevelEnv.js';
 export * from './JQCompile.js';
 // JQ uses JQCompile
 export * from './JQ.js';
-// JQCmd *should* use JQ, but it actually uses JQCompile
-export * from './JQCmd.js';
