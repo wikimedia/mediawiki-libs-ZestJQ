@@ -333,6 +333,303 @@ echo 'null' | zestjq -n '1, 2, 3'
 ```
 
 
+Cookbook
+--------
+
+Common query patterns using a classic store inventory document.
+
+```json
+{
+  "store": {
+    "book": [
+      { "category": "reference", "author": "Nigel Rees",
+        "title": "Sayings of the Century", "price": 8.95 },
+      { "category": "fiction",   "author": "Evelyn Waugh",
+        "title": "Sword of Honour",        "price": 12.99 },
+      { "category": "fiction",   "author": "Herman Melville",
+        "title": "Moby Dick", "isbn": "0-553-21311-3", "price": 8.99 }
+    ],
+    "bicycle": { "color": "red", "price": 19.95 }
+  }
+}
+```
+
+Setup — replace `$json` / `json` with the JSON string above:
+
+```bash
+STORE='{"store":{"book":[{"category":"reference","author":"Nigel Rees","title":"Sayings of the Century","price":8.95},{"category":"fiction","author":"Evelyn Waugh","title":"Sword of Honour","price":12.99},{"category":"fiction","author":"Herman Melville","title":"Moby Dick","isbn":"0-553-21311-3","price":8.99}],"bicycle":{"color":"red","price":19.95}}}'
+```
+
+```php
+/* PHP */
+use Wikimedia\ZestJQ\JQ;
+use Wikimedia\ZestJQ\JQUtils;
+$store = JQUtils::jsonDecode( $json );
+```
+
+```typescript
+/* JavaScript */
+import { JQ } from '@wikimedia/zest-jq';
+const store = JSON.parse( json );
+```
+
+**Get all authors:**
+
+```bash
+echo "$STORE" | zestjq -c '[.store.book[].author]'
+# → ["Nigel Rees","Evelyn Waugh","Herman Melville"]
+```
+
+```php
+/* PHP */
+foreach ( JQ::eval( $store, '.store.book[].author' ) as $val ) {
+    var_export( $val ); echo "\n";
+}
+// → 'Nigel Rees'
+// → 'Evelyn Waugh'
+// → 'Herman Melville'
+```
+
+```typescript
+/* JavaScript */
+for ( const val of JQ.eval( store, '.store.book[].author' ) ) {
+    console.log( val );
+}
+// → Nigel Rees
+// → Evelyn Waugh
+// → Herman Melville
+```
+
+**Get the first book's title:**
+
+```bash
+echo "$STORE" | zestjq '.store.book[0].title'
+# → "Sayings of the Century"
+```
+
+```php
+/* PHP */
+var_export( JQ::eval( $store, '.store.book[0].title' )->current() );
+// → 'Sayings of the Century'
+```
+
+```typescript
+/* JavaScript */
+const [val] = JQ.eval( store, '.store.book[0].title' );
+console.log( val );
+// → Sayings of the Century
+```
+
+**Every `price` field at any nesting depth:**
+
+```bash
+echo "$STORE" | zestjq -c '[.. | .price? // empty]'
+# → [8.95,12.99,8.99,19.95]
+```
+
+```php
+/* PHP */
+foreach ( JQ::eval( $store, '.. | .price? // empty' ) as $val ) {
+    var_export( $val ); echo "\n";
+}
+// → 8.95
+// → 12.99
+// → 8.99
+// → 19.95
+```
+
+```typescript
+/* JavaScript */
+for ( const val of JQ.eval( store, '.. | .price? // empty' ) ) {
+    console.log( val );
+}
+// → 8.95
+// → 12.99
+// → 8.99
+// → 19.95
+```
+
+**Books cheaper than $10:**
+
+```bash
+echo "$STORE" | zestjq -c '[.store.book[] | select(.price < 10)]'
+# → [{"category":"reference","author":"Nigel Rees","title":"Sayings of the Century","price":8.95},
+# →  {"category":"fiction","author":"Herman Melville","title":"Moby Dick","isbn":"0-553-21311-3","price":8.99}]
+```
+
+```php
+/* PHP */
+foreach ( JQ::eval( $store, '.store.book[] | select(.price < 10)' ) as $val ) {
+    var_export( $val ); echo "\n";
+}
+// → (object) array(
+// →    'category' => 'reference',
+// →    'author' => 'Nigel Rees',
+// →    'title' => 'Sayings of the Century',
+// →    'price' => 8.95,
+// → )
+// → (object) array(
+// →    'category' => 'fiction',
+// →    'author' => 'Herman Melville',
+// →    'title' => 'Moby Dick',
+// →    'isbn' => '0-553-21311-3',
+// →    'price' => 8.99,
+// → )
+```
+
+```typescript
+/* JavaScript */
+for ( const val of JQ.eval( store, '.store.book[] | select(.price < 10)' ) ) {
+    console.log( val );
+}
+// → {
+// →   category: 'reference',
+// →   author: 'Nigel Rees',
+// →   title: 'Sayings of the Century',
+// →   price: 8.95
+// → }
+// → {
+// →   category: 'fiction',
+// →   author: 'Herman Melville',
+// →   title: 'Moby Dick',
+// →   isbn: '0-553-21311-3',
+// →   price: 8.99
+// → }
+```
+
+**Books that have an ISBN:**
+
+```bash
+echo "$STORE" | zestjq -c '[.store.book[] | select(has("isbn"))]'
+# → [{"category":"fiction","author":"Herman Melville","title":"Moby Dick","isbn":"0-553-21311-3","price":8.99}]
+```
+
+```php
+/* PHP */
+foreach ( JQ::eval( $store, '.store.book[] | select(has("isbn"))' ) as $val ) {
+    var_export( $val ); echo "\n";
+}
+// → (object) array(
+// →    'category' => 'fiction',
+// →    'author' => 'Herman Melville',
+// →    'title' => 'Moby Dick',
+// →    'isbn' => '0-553-21311-3',
+// →    'price' => 8.99,
+// → )
+```
+
+```typescript
+/* JavaScript */
+for ( const val of JQ.eval( store, '.store.book[] | select(has("isbn"))' ) ) {
+    console.log( val );
+}
+// → {
+// →   category: 'fiction',
+// →   author: 'Herman Melville',
+// →   title: 'Moby Dick',
+// →   isbn: '0-553-21311-3',
+// →   price: 8.99
+// → }
+```
+
+**First two books:**
+
+```bash
+echo "$STORE" | zestjq -c '.store.book[:2]'
+# → [{"category":"reference","author":"Nigel Rees","title":"Sayings of the Century","price":8.95},
+# →  {"category":"fiction","author":"Evelyn Waugh","title":"Sword of Honour","price":12.99}]
+```
+
+```php
+/* PHP */
+var_export( JQ::eval( $store, '.store.book[:2]' )->current() );
+// → array (
+// →   0 =>
+// →   (object) array(
+// →      'category' => 'reference',
+// →      'author' => 'Nigel Rees',
+// →      'title' => 'Sayings of the Century',
+// →      'price' => 8.95,
+// →   ),
+// →   1 =>
+// →   (object) array(
+// →      'category' => 'fiction',
+// →      'author' => 'Evelyn Waugh',
+// →      'title' => 'Sword of Honour',
+// →      'price' => 12.99,
+// →   ),
+// → )
+```
+
+```typescript
+/* JavaScript */
+const [val] = JQ.eval( store, '.store.book[:2]' );
+console.log( val );
+// → [
+// →   {
+// →     category: 'reference',
+// →     author: 'Nigel Rees',
+// →     title: 'Sayings of the Century',
+// →     price: 8.95
+// →   },
+// →   {
+// →     category: 'fiction',
+// →     author: 'Evelyn Waugh',
+// →     title: 'Sword of Honour',
+// →     price: 12.99
+// →   }
+// → ]
+```
+
+**First and last book:**
+
+```bash
+echo "$STORE" | zestjq -c '.store.book[0,-1]'
+# → {"category":"reference","author":"Nigel Rees","title":"Sayings of the Century","price":8.95}
+# → {"category":"fiction","author":"Herman Melville","title":"Moby Dick","isbn":"0-553-21311-3","price":8.99}
+```
+
+```php
+/* PHP */
+foreach ( JQ::eval( $store, '.store.book[0,-1]' ) as $val ) {
+    var_export( $val ); echo "\n";
+}
+// → (object) array(
+// →    'category' => 'reference',
+// →    'author' => 'Nigel Rees',
+// →    'title' => 'Sayings of the Century',
+// →    'price' => 8.95,
+// → )
+// → (object) array(
+// →    'category' => 'fiction',
+// →    'author' => 'Herman Melville',
+// →    'title' => 'Moby Dick',
+// →    'isbn' => '0-553-21311-3',
+// →    'price' => 8.99,
+// → )
+```
+
+```typescript
+/* JavaScript */
+for ( const val of JQ.eval( store, '.store.book[0,-1]' ) ) {
+    console.log( val );
+}
+// → {
+// →   category: 'reference',
+// →   author: 'Nigel Rees',
+// →   title: 'Sayings of the Century',
+// →   price: 8.95
+// → }
+// → {
+// →   category: 'fiction',
+// →   author: 'Herman Melville',
+// →   title: 'Moby Dick',
+// →   isbn: '0-553-21311-3',
+// →   price: 8.99
+// → }
+```
+
+
 History
 -------
 Upstream `jq` was created by Stephen Dolan and is currently maintained
