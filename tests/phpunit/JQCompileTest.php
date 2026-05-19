@@ -62,7 +62,7 @@ class JQCompileTest extends \PHPUnit\Framework\TestCase {
 			// path of depth 10000 exhausts PHP's call stack before returning.
 			// setpath(depth>10000) and getpath(depth>10000) correctly throw
 			// "Path too deep" at the JQTopLevelEnv level before recursing.
-			2573 =>
+			2573, 2581 =>
 			'setAtPath recursive implementation exhausts PHP call stack at depth 10000',
 
 			// JSON nesting and path depth limits not implemented

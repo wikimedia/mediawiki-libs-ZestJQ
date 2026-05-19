@@ -24,7 +24,7 @@ class JQUtils {
 	/** Maximum array or string size; prevents accidental huge allocations. */
 	public const MAX_SIZE = 1024 * 1024;
 	/** Maximum path size. */
-	public const MAX_PATH = 10000;
+	public const MAX_PATH = 10000 - 1;
 
 	// -----------------------------------------------------------------------
 	// Type selectors
