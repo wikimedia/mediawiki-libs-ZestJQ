@@ -44,7 +44,10 @@
 			"covers-validator",
 			"@phpcs",
 			"@phan",
-			"minus-x check .",
+			"minus-x check ."
+		],
+		"test-with-node": [
+			"@test",
 			"fresh-node -- npm test"
 		],
 		"phan": "phan --allow-polyfill-parser",
