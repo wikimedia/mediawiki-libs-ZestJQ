@@ -13,6 +13,9 @@
 			"homepage": "https://cscott.net"
 		}
 	],
+	"bin": [
+		"tools/zestjq"
+	],
 	"autoload": {
 		"psr-4": {
 			"Wikimedia\\ZestJQ\\": "src/"

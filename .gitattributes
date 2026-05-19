@@ -3,3 +3,15 @@
 /composer.json export-ignore
 /Doxyfile export-ignore
 /phpunit.xml.dist export-ignore
+/CLAUDE.md export-ignore
+/bin/zestjq.js export-ignore
+/dist/ export-ignore
+/jsdoc.json export-ignore
+/lib/ export-ignore
+/package.json export-ignore
+/rollup.browser.config.mjs export-ignore
+/tools/build-stdenv.js export-ignore
+/tsconfig.json export-ignore
+/tsconfig.build.json export-ignore
+/vitest.config.ts export-ignore
+/vitest.setup.ts export-ignore

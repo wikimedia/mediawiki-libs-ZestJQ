@@ -1,5 +1,9 @@
 {
 	"type": "module",
+	"files": [
+		"dist/",
+		"bin/zestjq.js"
+	],
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
