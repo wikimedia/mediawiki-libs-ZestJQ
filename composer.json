@@ -2,7 +2,8 @@
 	"name": "wikimedia/zest-jq",
 	"description": "Implementation of 'jq' JSON-filter language",
 	"keywords": [
-		"jq", "json"
+		"jq",
+		"json"
 	],
 	"license": "MIT",
 	"homepage": "https://www.mediawiki.org/wiki/ZestJQ",
@@ -58,9 +59,9 @@
 		"phpunit": "phpunit",
 		"cover": "phpunit --coverage-html coverage",
 		"fix": [
-			"phpcbf",
 			"minus-x fix .",
-			"fresh-node -- npm run lint:fix"
+			"fresh-node -- npm run lint:fix",
+			"phpcbf"
 		],
 		"update-history": "update-history patch",
 		"build": [

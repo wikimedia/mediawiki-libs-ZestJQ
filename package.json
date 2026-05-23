@@ -19,7 +19,7 @@
 		"@typescript-eslint/parser": "^7.8.0",
 		"@wmde/eslint-config-wikimedia-typescript": "^0.2.14",
 		"eslint": "^8.57.1",
-		"eslint-config-wikimedia": "^0.32.3",
+		"eslint-config-wikimedia": "0.32.4",
 		"jsdoc": "4.0.5",
 		"jsdoc-wmf-theme": "1.2.0",
 		"typescript": "^5.8",
