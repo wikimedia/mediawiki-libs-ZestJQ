@@ -15,7 +15,7 @@ Claude Sonnet 4.6 was used to speed portions of the implementation
 but every line in this code was manually reviewed and I performed
 extensive clean up and refactoring on Claude's output.  (Claude
 became confused and began to call me "the linter" because I was always
-altering what it output.)
+altering what it output...)
 
 Claude was a big help porting the numerous built-in functions in the
 `jq` standard library.  The date-parsing and other related functions
@@ -49,9 +49,9 @@ the following exceptions:
   for some operations.
 
 We've also [fixed some bugs in delete-path
-support](https://github.com/jqlang/jq/issues/3538). Since PHP is a
-memory-safe language, we expect that we do not have any memory
-errors either.
+support](https://github.com/jqlang/jq/issues/3538). Since
+PHP/TypeScript are memory-safe languages, we expect that we do not
+have any memory errors either.
 
 Additional documentation can be found on
 [mediawiki.org](https://www.mediawiki.org/wiki/ZestJQ).

@@ -1,5 +1,9 @@
 # Release History
 
-## v1.0.0
+## 1.1.0 (2026-06-03)
+* Initial release of TypeScript port.
+* Minor improvements to CLI.
 
-* Initial release.
+## 1.0.0 (2026-05-07)
+
+* Initial release, PHP-only.
