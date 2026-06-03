@@ -747,7 +747,7 @@ export class JQTopLevelEnv extends JQEnv {
 			return function* ( input: JQValue, env: JQEnv ): Generator<JQValueOrPath> {
 				for ( const fmtVal of fmtFn( input, env ) ) {
 					const [ str, fmt ] = JQUtils.checkStrings( 'strptime/1', input, fmtVal );
-					const parser = timeParse( fmt );
+					const parser = utcParse( fmt );
 					const d: Date|null = parser( str );
 					if ( d === null ) {
 						throw new JQError( 'Bad date' );
