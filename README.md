@@ -629,6 +629,38 @@ for ( const val of JQ.eval( store, '.store.book[0,-1]' ) ) {
 // → }
 ```
 
+Making a release
+----------------
+Each ZestJQ release is made to the PHP ecosystem
+(composer/packagist.org) and Node/JS ecosystem (npm/npmjs.org)
+together.
+
+1. Begin by running `composer update-history` which will
+update the [`HISTORY.md`](./HISTORY.md) with the next patch version.
+Update the release number in `HISTORY.md` if this is to be a minor or
+major release.
+
+2. Update the version number in [`package.json`](./package.json) to match.
+
+3. Run `npm install --package-lock-only` to update the version number
+in [`package-lock.json`](./package-lock.json).
+
+4. Commit these changes with the commit message "Release <version number>",
+and push to gerrit. When merged, sign and tag the resulting commit
+with the unprefixed version number; eg `git tag -s 1.1.0`.  Push the
+tag to the origin (`git push origin 1.1.0`) to complete the
+PHP/composer/`packagist.org` release.
+
+5. With the tagged release as your local HEAD, `npm build:browser` to
+update the `dist/` directory, then `npm publish` to push the release
+to node/npm/`npmjs.org`.
+
+6. Run `composer update-history` again, which should add an entry to
+`HISTORY.md` for the next "not yet released" version.  Add a `-git`
+suffix to the version number in [`package.json`](./package.json).
+Run `npm install --package-lock-only` to update `package-lock.json`.
+Commit these changes with the commit message "Bump version after
+release" and push to gerrit.
 
 History
 -------

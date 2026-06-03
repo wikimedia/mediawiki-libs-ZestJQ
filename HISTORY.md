@@ -1,5 +1,7 @@
 # Release History
 
+## x.x.x (not yet released)
+
 ## 1.1.0 (2026-06-03)
 * Initial release of TypeScript port.
 * Minor improvements to CLI.
