@@ -1,7 +1,7 @@
 {
 	"name": "zestjq",
 	"description": "TypeScript implementation of 'jq' JSON-filter language",
-	"version": "1.1.0-git",
+	"version": "1.1.1",
 	"author": "C. Scott Ananian <cscott@cscott.net> (https://cscott.net)",
 	"homepage": "https://www.mediawiki.org/wiki/ZestJQ",
 	"repository": {

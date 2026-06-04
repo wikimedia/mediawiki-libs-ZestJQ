@@ -1,8 +1,10 @@
 # Release History
 
-## x.x.x (not yet released)
+## 1.1.1 (2026-06-04)
 * Fix JS implementation of `strptime` built-in (parse as UTC not
-  local time)
+  local time).
+* Fix vendor/bin/zestjq in PHP package.
+* Updated dependencies.
 
 ## 1.1.0 (2026-06-03)
 * Initial release of TypeScript port.
