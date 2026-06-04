@@ -1,8 +1,18 @@
 {
 	"name": "zestjq",
-	"description": "Native implementation of 'jq' JSON-filter language",
+	"description": "TypeScript implementation of 'jq' JSON-filter language",
 	"version": "1.1.0-git",
 	"author": "C. Scott Ananian <cscott@cscott.net> (https://cscott.net)",
+	"homepage": "https://www.mediawiki.org/wiki/ZestJQ",
+	"repository": {
+		"type": "git",
+		"url": "https://gerrit.wikimedia.org/r/mediawiki/libs/ZestJQ"
+	},
+	"license": "MIT",
+	"keywords": [
+		"jq",
+		"json"
+	],
 	"type": "module",
 	"files": [
 		"dist/",

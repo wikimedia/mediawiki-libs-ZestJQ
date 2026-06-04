@@ -6,11 +6,14 @@
 		"json"
 	],
 	"license": "MIT",
-	"homepage": "https://www.mediawiki.org/wiki/ZestJQ",
+	"support": {
+		"source": "https://gerrit.wikimedia.org/r/mediawiki/libs/ZestJQ",
+		"wiki": "https://www.mediawiki.org/wiki/ZestJQ"
+	},
 	"authors": [
 		{
 			"name": "C. Scott Ananian",
-			"email": "cananian@wikimedia.org",
+			"email": "cscott@cscott.net",
 			"homepage": "https://cscott.net"
 		}
 	],
