@@ -1,5 +1,7 @@
 # Release History
 
+## x.x.x (not yet released)
+
 ## 1.1.1 (2026-06-04)
 * Fix JS implementation of `strptime` built-in (parse as UTC not
   local time).
