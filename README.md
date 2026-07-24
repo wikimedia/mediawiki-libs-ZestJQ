@@ -9,6 +9,9 @@ command-line tool.  `ZestJQ` uses the same license as the original
 `jq` code (MIT).  We implement `jq` version 1.8.x (validated against
 upstream test cases as of May 2026).
 
+A live demo of the TypeScript implementation can be found at
+**<https://cscott.github.io/zestjq-css/>**.
+
 This is not a port of the original C codebase, but a reimplementation
 using the manual and the extensive `jq.test` file as a guide.
 Claude Sonnet 4.6 was used to speed portions of the implementation
